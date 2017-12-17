@@ -1,6 +1,6 @@
 ﻿<#
 .Synopsis
-   Short description
+   This Script simulates the CONNECT FOUR board game
 .DESCRIPTION
    Long description
 .EXAMPLE
@@ -27,17 +27,21 @@ function Get-Row {
 
 }
 
-function Get-Col {
+function Get-EmptyPosInCol {
   Param(
     $fnFrame,
     $fnColNum
   )
-  $colVals = @()
+
+  $Contents = ''
   $realCol = $fnColNum - 1
   foreach ($val in (0,7,14,21,28,35)) {
-    $colVals += $fnFrame[$realCol+$val]
+    $Contents = $fnFrame[$realCol+$val]
+    if ($Contents -eq '-') {$EmptyPos = $realCol+$val}
+    else {break}
   }
-  return $colVals
+  
+  return $EmptyPos
 }
 
 function Get-FDiag {
@@ -55,11 +59,18 @@ function Draw-Frame {
   $spc = '  '
   Clear-Host
 
-  Write-Host -ForegroundColor Yellow "$spc-- Connect Four --`n"
-  Write-Host -ForegroundColor Yellow "$spc  1 2 3 4 5 6 7"
+  Write-Host -ForegroundColor Magenta "$spc-- Connect Four --`n"
+  Write-Host -ForegroundColor Magenta "$spc  1 2 3 4 5 6 7"
   foreach ( $fnRow in (0,7,14,21,28,35)){
     Write-Host -NoNewline $spc"  "
-    Write-Host $fnFrame[$fnRow..($fnRow+6)]
+    $EndOfRow = $fnRow + 6
+    foreach ($fnFramePos in ($fnRow..$EndOfRow)) {
+      if ($fnFrame[$fnFramePos] = "R") {$FGcolor = 'Red'}
+      if ($fnFrame[$fnFramePos] = "Y") {$FGcolor = 'Yellow'}
+      if ($fnFrame[$fnFramePos] = "-") {$FGcolor = 'White'}
+      Write-Host -NoNewline -ForegroundColor $FGcolor $fnFrame[$fnFramePos]; Write-Host -NoNewline " "
+    }
+    write-host
   }
   Write-Host
 }
@@ -76,8 +87,17 @@ for ($count = 0;$count -le 41;$count++) {
 Draw-Frame -fnFrame $GameFrame.psobject.Copy()
 
 do {
-  "Red Turn"
-  [int]$kbdRead = Read-Host -Prompt "Select column number"
-  Get-Col -fnFrame $GameFrame.psobject.Copy() -fnColNum $kbdRead
+  Write-Host -NoNewline -ForegroundColor Red  "Red Turn`nType column number "
+  [int]$kbdRead = Read-Host 
+  $TurnPos = Get-EmptyPosInCol -fnFrame $GameFrame.psobject.Copy() -fnColNum $kbdRead
+  $GameFrame[$TurnPos] = "R" 
 
+  Draw-Frame -fnFrame $GameFrame.psobject.Copy()
+
+  Write-Host -NoNewline -ForegroundColor Yellow "Yellow Turn`nType column number "
+  [int]$kbdRead = Read-Host 
+  $TurnPos = Get-EmptyPosInCol -fnFrame $GameFrame.psobject.Copy() -fnColNum $kbdRead
+  $GameFrame[$TurnPos] = "Y" 
+
+  Draw-Frame -fnFrame $GameFrame.psobject.Copy()
 } while ($true)
