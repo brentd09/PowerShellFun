@@ -23,6 +23,20 @@
 [CmdletBinding()]
 Param()
 
+function convert-ArrayToObj {
+  Param (
+    $FnArray,
+    $StringMatch
+  )
+  for ($count = 0; $count -lt $FnArray.count;$count++){
+    $props = [ordered]@{
+      Position = $count 
+      Content = $FnArray[$count]
+    }
+    if ($FnArray[$count] -eq $StringMatch) {new-object -TypeName psobject -Property $props}
+  }
+}  
+
 function Get-Row {
 
 }
@@ -34,6 +48,7 @@ function Get-EmptyPosInCol {
   )
 
   $Contents = ''
+  $EmptyPos = 99 # This is an internal code that signals the col is full if 99 returned
   $realCol = $fnColNum - 1
   foreach ($val in (0,7,14,21,28,35)) {
     $Contents = $fnFrame[$realCol+$val]
@@ -65,14 +80,34 @@ function Draw-Frame {
     Write-Host -NoNewline $spc"  "
     $EndOfRow = $fnRow + 6
     foreach ($fnFramePos in ($fnRow..$EndOfRow)) {
-      if ($fnFrame[$fnFramePos] = "R") {$FGcolor = 'Red'}
-      if ($fnFrame[$fnFramePos] = "Y") {$FGcolor = 'Yellow'}
-      if ($fnFrame[$fnFramePos] = "-") {$FGcolor = 'White'}
+      if ($fnFrame[$fnFramePos] -eq "R") {$FGcolor = 'Red'}
+      elseif ($fnFrame[$fnFramePos] -eq "Y") {$FGcolor = 'Yellow'}
+      else {$FGcolor = 'darkgray'}
       Write-Host -NoNewline -ForegroundColor $FGcolor $fnFrame[$fnFramePos]; Write-Host -NoNewline " "
     }
     write-host
   }
   Write-Host
+}
+
+function Select-Col {
+  param (
+    $fnFrame,
+    $fnColor
+  )
+  [string]$kbdRead = ''
+  If ($fnColor -like "Y*") {$Col = "Yellow";$ColLetter = "Y"}
+  else {$Col = "Red";$ColLetter = "R"}
+  do { 
+    Write-Host -NoNewline -ForegroundColor $Col  "$Col Turn`nType column number "
+    $kbdRead = Read-Host 
+    if ( $kbdRead -match "[1234567]") {
+      $kbdReadInt = $kbdRead -as [int]
+      $TurnPos = Get-EmptyPosInCol -fnFrame $fnFrame.psobject.Copy() -fnColNum $kbdRead
+    }
+  } until ($TurnPos -ne 99 -and $kbdReadint -in @(1..7)) 
+  $fnFrame[$TurnPos] = $ColLetter 
+  return $fnFrame
 }
 
 ##########################################################
@@ -83,21 +118,10 @@ $GameFrame = @()
 for ($count = 0;$count -le 41;$count++) {
   $GameFrame += "-"
 }
-
 Draw-Frame -fnFrame $GameFrame.psobject.Copy()
-
 do {
-  Write-Host -NoNewline -ForegroundColor Red  "Red Turn`nType column number "
-  [int]$kbdRead = Read-Host 
-  $TurnPos = Get-EmptyPosInCol -fnFrame $GameFrame.psobject.Copy() -fnColNum $kbdRead
-  $GameFrame[$TurnPos] = "R" 
-
+  $GameFrame = Select-Col -fnFrame $GameFrame.psobject.Copy() -fnColor "R"
   Draw-Frame -fnFrame $GameFrame.psobject.Copy()
-
-  Write-Host -NoNewline -ForegroundColor Yellow "Yellow Turn`nType column number "
-  [int]$kbdRead = Read-Host 
-  $TurnPos = Get-EmptyPosInCol -fnFrame $GameFrame.psobject.Copy() -fnColNum $kbdRead
-  $GameFrame[$TurnPos] = "Y" 
-
+  $GameFrame = Select-Col -fnFrame $GameFrame.psobject.Copy() -fnColor "Y"
   Draw-Frame -fnFrame $GameFrame.psobject.Copy()
 } while ($true)
