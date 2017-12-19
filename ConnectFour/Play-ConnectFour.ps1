@@ -2,28 +2,16 @@
 .Synopsis
    This Script simulates the CONNECT FOUR board game
 .DESCRIPTION
-   Long description
-.EXAMPLE
-   Example of how to use this cmdlet
-.EXAMPLE
-   Another example of how to use this cmdlet
-.INPUTS
-   Inputs to this cmdlet (if any)
-.OUTPUTS
-   Output from this cmdlet (if any)
+   This Script simulates the CONNECT FOUR board game
 .NOTES
    General notes
-.COMPONENT
-   The component this cmdlet belongs to
-.ROLE
-   The role this cmdlet belongs to
-.FUNCTIONALITY
-   The functionality that best describes this cmdlet
+   Created by Brent Denny
+           on 16 Dec 2017   
 #>
 [CmdletBinding()]
 Param()
 
-function convert-ArrayToObj {
+function Convert-ArrayToObj {
   Param (
     $FnArray,
     $StringMatch
@@ -36,10 +24,6 @@ function convert-ArrayToObj {
     if ($FnArray[$count] -eq $StringMatch) {new-object -TypeName psobject -Property $props}
   }
 }  
-
-function Get-Row {
-
-}
 
 function Get-EmptyPosInCol {
   Param(
@@ -59,12 +43,61 @@ function Get-EmptyPosInCol {
   return $EmptyPos
 }
 
-function Get-FDiag {
+function Get-Row {
+  param(
+    $fnFrame,
+    $WhichRow
+  )
+  $Row = @()
+  $Start = $WhichRow * 7
+  $End = $Start + 6
+  $Row = $fnFrame[$Start..$End]
+  return $Row
+}
 
+function Get-Col {
+  param(
+    $fnFrame,
+    $WhichCol
+  )
+  $Col = @()
+  
+  $S = $WhichCol 
+  $Inc = 7
+  $Col = $fnFrame[$S,$S+($Inc*1),$S+($Inc*2),$S+($Inc*3),$S+($Inc*4),$S+($Inc*5)]
+  return $Col
+}
+
+function Get-FDiag {
+  param(
+    $fnFrame,
+    $WhichDiag
+  )
+  $Diag = @()
+  $StartPos = @(3,4,5,6,13,20)
+  $CurrPos = $StartPos[$WhichDiag]
+  $Number =@(4,5,6,6,5,4)
+  1..$Number[$WhichDiag] | foreach {
+    $Diag += $fnFrame[$CurrPos]
+    $CurrPos = $CurrPos + 6
+  }
+  Return $Diag
 }
 
 function Get-RDiag {
-
+  param(
+    $fnFrame,
+    $WhichDiag
+  )
+  $Diag = @()
+  $StartPos = @(14,7,0,1,2,3)
+  $CurrPos = $StartPos[$WhichDiag]
+  $Number =@(4,5,6,6,5,4)
+  1..$Number[$WhichDiag] | foreach {
+    $Diag += $fnFrame[$CurrPos]
+    $CurrPos = $CurrPos + 8
+  }
+  Return $Diag
 }
 
 function Draw-Frame {
@@ -110,6 +143,21 @@ function Select-Col {
   return $fnFrame
 }
 
+function Check-Winner {
+  param (
+    $fnFrame,
+    $fnColor
+  )
+  foreach ($num in (0..6)) {
+    $CheckCol = Get-Col -fnFrame $fnFrame -WhichCol $num
+    $checkRow = Get-Row -fnFrame $fnFrame -WhichRow $num
+    $checkFDiag = Get-FDiag -fnFrame $fnFrame -WhichDiag $num
+    $checkRDiag = Get-RDiag -fnFrame $fnFrame -WhichDiag $num
+    # check for winner
+  } 
+
+}
+
 ##########################################################
 ## MAIN CODE
 
@@ -122,6 +170,8 @@ Draw-Frame -fnFrame $GameFrame.psobject.Copy()
 do {
   $GameFrame = Select-Col -fnFrame $GameFrame.psobject.Copy() -fnColor "R"
   Draw-Frame -fnFrame $GameFrame.psobject.Copy()
+  $Winner = Check-Winner -fnFrame $GameFrame.psobject.Copy() -fnColor "R"
   $GameFrame = Select-Col -fnFrame $GameFrame.psobject.Copy() -fnColor "Y"
   Draw-Frame -fnFrame $GameFrame.psobject.Copy()
+  $Winner = Check-Winner -fnFrame $GameFrame.psobject.Copy() -fnColor "Y"
 } while ($true)
