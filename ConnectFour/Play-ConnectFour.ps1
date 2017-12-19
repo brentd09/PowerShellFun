@@ -64,7 +64,7 @@ function Get-Col {
   
   $S = $WhichCol 
   $Inc = 7
-  $Col = $fnFrame[$S,$S+($Inc*1),$S+($Inc*2),$S+($Inc*3),$S+($Inc*4),$S+($Inc*5)]
+  $Col = $fnFrame[$S,($S+($Inc*1)),($S+($Inc*2)),($S+($Inc*3)),($S+($Inc*4)),($S+($Inc*5))]
   return $Col
 }
 
@@ -102,13 +102,14 @@ function Get-RDiag {
 
 function Draw-Frame {
   Param ( 
-    $fnFrame 
+    $fnFrame,
+    $fnWinner
   )
   $spc = '  '
   Clear-Host
 
-  Write-Host -ForegroundColor Magenta "$spc-- Connect Four --`n"
-  Write-Host -ForegroundColor Magenta "$spc  1 2 3 4 5 6 7"
+  Write-Host -ForegroundColor green "$spc-- Connect Four --`n"
+  Write-Host -ForegroundColor green "$spc  1 2 3 4 5 6 7"
   foreach ( $fnRow in (0,7,14,21,28,35)){
     Write-Host -NoNewline $spc"  "
     $EndOfRow = $fnRow + 6
@@ -121,6 +122,13 @@ function Draw-Frame {
     write-host
   }
   Write-Host
+  if ($fnWinner.state -eq 'win') {
+    if ( $fnWinner.color -eq 'Y' ) {$DispColor = "Yellow"}
+    else {$DispColor = "Red"}
+    Write-Host -ForegroundColor $DispColor "$DispColor is the WINNER"
+    break
+  }
+
 }
 
 function Select-Col {
@@ -132,7 +140,8 @@ function Select-Col {
   If ($fnColor -like "Y*") {$Col = "Yellow";$ColLetter = "Y"}
   else {$Col = "Red";$ColLetter = "R"}
   do { 
-    Write-Host -NoNewline -ForegroundColor $Col  "$Col Turn`nType column number "
+    Write-Host -ForegroundColor $Col  "   $Col Turn`n"
+    write-host -NoNewline "  Type column number "
     $kbdRead = Read-Host 
     if ( $kbdRead -match "[1234567]") {
       $kbdReadInt = $kbdRead -as [int]
@@ -144,19 +153,52 @@ function Select-Col {
 }
 
 function Check-Winner {
+  Param (
+    $fnLine,
+    $fnColor
+  )
+  $numElements = $fnLine.count
+  $firstIndex = $fnLine.indexof($fnColor)
+  $failIndex = $numElements - 3
+  $NumOfColor = ($fnLine -eq $fnColor).count
+  if ($firstIndex -ge $failIndex -or $NumOfColor -lt 4) {return $false}
+  $tests = $numElements - 3
+  0..$tests | ForEach-Object {
+    $inline = ($fnLine[$_..($_+3)] -eq $fnColor).count
+    if ($inline -eq 4) {return $true}
+  }
+  return $false
+}
+
+function Check-Line {
   param (
     $fnFrame,
     $fnColor
   )
   $winner = $false
   foreach ($num in (0..5)) {
-    $CheckCol = Get-Col -fnFrame $fnFrame -WhichCol $num
-    $checkRow = Get-Row -fnFrame $fnFrame -WhichRow $num
-    $checkFDiag = Get-FDiag -fnFrame $fnFrame -WhichDiag $num
-    $checkRDiag = Get-RDiag -fnFrame $fnFrame -WhichDiag $num
+    $Line = Get-Col -fnFrame $fnFrame -WhichCol $num
+    if (Check-Winner -fnLine $line -fnColor $fnColor) {
+      return ( New-Object -TypeName psobject -Property @{State = "Win";Color = $fnColor})
+    }
+    $Line = Get-Row -fnFrame $fnFrame -WhichRow $num
+    if (Check-Winner -fnLine $line -fnColor $fnColor) {
+      return ( New-Object -TypeName psobject -Property @{State = "Win";Color = $fnColor})
+    }
+    $Line = Get-FDiag -fnFrame $fnFrame -WhichDiag $num
+    if (Check-Winner -fnLine $line -fnColor $fnColor) {
+      return ( New-Object -TypeName psobject -Property @{State = "Win";Color = $fnColor})
+    }
+    $Line = Get-RDiag -fnFrame $fnFrame -WhichDiag $num
+    if (Check-Winner -fnLine $line -fnColor $fnColor) {
+      return ( New-Object -TypeName psobject -Property @{State = "Win";Color = $fnColor})
+    }
     # check for winner
   } 
-  $CheckCol = Get-Col -fnFrame $fnFrame -WhichCol 6
+  $Line = Get-Col -fnFrame $fnFrame -WhichCol 6
+  if (Check-Winner -fnLine $line -fnColor $fnColor) {
+    return ( New-Object -TypeName psobject -Property @{State = "Win";Color = $fnColor})
+  }
   #check for winner
 }
 
@@ -171,9 +213,9 @@ for ($count = 0;$count -le 41;$count++) {
 Draw-Frame -fnFrame $GameFrame.psobject.Copy()
 do {
   $GameFrame = Select-Col -fnFrame $GameFrame.psobject.Copy() -fnColor "R"
-  Draw-Frame -fnFrame $GameFrame.psobject.Copy()
-  $Winner = Check-Winner -fnFrame $GameFrame.psobject.Copy() -fnColor "R"
+  $Winner = Check-Line -fnFrame $GameFrame.psobject.Copy() -fnColor "R"
+  Draw-Frame -fnFrame $GameFrame.psobject.Copy() -fnWinner $Winner
   $GameFrame = Select-Col -fnFrame $GameFrame.psobject.Copy() -fnColor "Y"
-  Draw-Frame -fnFrame $GameFrame.psobject.Copy()
-  $Winner = Check-Winner -fnFrame $GameFrame.psobject.Copy() -fnColor "Y"
+  $Winner = Check-Line -fnFrame $GameFrame.psobject.Copy() -fnColor "Y"
+  Draw-Frame -fnFrame $GameFrame.psobject.Copy() -fnWinner $Winner
 } while ($true)
