@@ -148,14 +148,16 @@ function Check-Winner {
     $fnFrame,
     $fnColor
   )
-  foreach ($num in (0..6)) {
+  $winner = $false
+  foreach ($num in (0..5)) {
     $CheckCol = Get-Col -fnFrame $fnFrame -WhichCol $num
     $checkRow = Get-Row -fnFrame $fnFrame -WhichRow $num
     $checkFDiag = Get-FDiag -fnFrame $fnFrame -WhichDiag $num
     $checkRDiag = Get-RDiag -fnFrame $fnFrame -WhichDiag $num
     # check for winner
   } 
-
+  $CheckCol = Get-Col -fnFrame $fnFrame -WhichCol 6
+  #check for winner
 }
 
 ##########################################################
