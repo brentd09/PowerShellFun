@@ -117,11 +117,17 @@ function Draw-Frame {
       if ($fnFrame[$fnFramePos] -eq "R") {$FGcolor = 'Red'}
       elseif ($fnFrame[$fnFramePos] -eq "Y") {$FGcolor = 'Yellow'}
       else {$FGcolor = 'darkgray'}
-      Write-Host -NoNewline -ForegroundColor $FGcolor $fnFrame[$fnFramePos]; Write-Host -NoNewline " "
+      if ($fnFrame[$fnFramePos] -match "[RY]" ) { $displayChar = "O"}
+      else {$displayChar = "-"}
+      Write-Host -NoNewline -ForegroundColor $FGcolor $displayChar ; Write-Host -NoNewline " "
     }
     write-host
   }
   Write-Host
+  if ($fnWinner.color -eq "D") {
+    Write-Host -ForegroundColor Cyan "  The game is a DRAW"
+    break
+  }
   if ($fnWinner.state -eq 'win') {
     if ( $fnWinner.color -eq 'Y' ) {$DispColor = "Yellow"}
     else {$DispColor = "Red"}
@@ -176,6 +182,10 @@ function Check-Line {
     $fnColor
   )
   $winner = $false
+  $blanksRemaining = ($fnFrame -eq "-").count
+  if ($blanksRemaining -eq 0) {
+    return ( New-Object -TypeName psobject -Property @{State = "Win";Color = "D"})
+  }
   foreach ($num in (0..5)) {
     $Line = Get-Col -fnFrame $fnFrame -WhichCol $num
     if (Check-Winner -fnLine $line -fnColor $fnColor) {
@@ -193,7 +203,6 @@ function Check-Line {
     if (Check-Winner -fnLine $line -fnColor $fnColor) {
       return ( New-Object -TypeName psobject -Property @{State = "Win";Color = $fnColor})
     }
-    # check for winner
   } 
   $Line = Get-Col -fnFrame $fnFrame -WhichCol 6
   if (Check-Winner -fnLine $line -fnColor $fnColor) {
