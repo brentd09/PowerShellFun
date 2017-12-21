@@ -26,8 +26,11 @@
 #>
 function Draw-Board {
   Param (
-    $fnBoard
+    $BoardObj
   )  
+  $numOfWhite = ($BoardObj | where {$_.color -eq "W"}).count
+  $numOfBlack = ($BoardObj | where {$_.color -eq "B"}).count
+
   Write-Host -ForegroundColor Yellow  "  --  REVERSE  --"
   Write-Host -ForegroundColor Yellow "  1 2 3 4 5 6 7 8"
   foreach ($start in (0,8,16,24,32,40,48,56)) {
@@ -35,78 +38,41 @@ function Draw-Board {
     $letter = [char]$num
     Write-Host -ForegroundColor Yellow -NoNewline $letter
     Write-Host -NoNewline " "
-    Write-Host $fnBoard[$start..($Start+7)]
+    Write-Host $BoardObj[$start..($Start+7)].color
   }
+  Write-Host
+  Write-Host "Black: $numOfBlack"
+  Write-Host "White: $numOfWhite"
 }
 
-function Get-Row {
-  Param (
-    $fnBoard,
-    $fnRowNum
-  )
-  $Row = @()
-  $start = $fnRowNum * 8
-  $end = $start + 7
-  $Row = $fnBoard[$start..$end]
-  return $Row
-}
+function Convert-ArrayToObject {
+  Param ($fnBoard)
 
-function Get-Col {
-  Param (
-    $fnBoard,
-    $fnColNum
-  )
-  $Col = @()
-  $cn = $fnColNum
-  $Col = $fnBoard[(0+$cn),(8+$cn),(16+$cn),(24+$cn),(32+$cn),(40+$cn),(48+$cn),(56+$cn)]
-  return $Col
-}
-
-function Get-FDiag {
-  Param (
-    $fnBoard,
-    [int]$fnFDNum
-  )
-  $FDiag = @()
-  $Length = @(3,4,5,6,7,8,7,6,5,4,3)
-  $start = @(2,3,4,5,6,7,15,23,31,39,47)
-  $jump = 7
   $count = 0
-  1..($Length[$fnFDNum]) |  ForEach-Object {
-    $pos = $start[$fnFDNum] + $count
-    $FDiag += $fnBoard[$pos]
-    $count = $count + $jump
+  foreach ($val in $fnBoard) {
+    $col = $count % 8
+    $row = [math]::Truncate($count/8)
+    $objProp = [ordered]@{
+      index = $count
+      Color = $val
+      Column = $col
+      Row = $row
+      FwDiag = $row + $col
+      RvDiag = 7 + $col - $row
+    }
+    new-object -TypeName psobject -Property $objProp
+    $count++
   }
-  return $FDiag
-}
+}   
 
-function Get-RDiag {
+function Find-LegalMoves {
   Param (
-    $fnBoard,
-    $fnRDNum
+    $BoardObj,
+    $Color
   )
-  $RDiag = @()
-  $Length = @(3,4,5,6,7,8,7,6,5,4,3)
-  $start = @(40,32,24,16,8,0,1,2,3,4,5)
-  $jump = 9
-  $count = 0
-  1..($Length[$fnRDNum]) |  ForEach-Object {
-    $pos = $start[$fnRDNum] + $count
-    $RDiag += $fnBoard[$pos]
-    $count = $count + $jump
-  }
-  return $RDiag
-
+  $CurrentPos = $BoardObj | Where-Object {$_.color -eq $Color}
+  $CurrentPos
 }
-
-function Choose-Location {
-
-}
-
-function Find-PossibleMoves {
-
-}
-
 
 
 ##########################################
@@ -119,5 +85,7 @@ $MainBoard = @()
   elseif ($_ -in  @(28,35)) {$MainBoard += "B"}
   else {$MainBoard += "-"}
 }
+$MainBoardObj = Convert-ArrayToObject -fnBoard $MainBoard
 
-Draw-Board -fnBoard $MainBoard.psobject.Copy()
+
+Draw-Board -BoardObj $MainBoardObj.psobject.Copy()
