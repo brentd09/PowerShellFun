@@ -35,10 +35,16 @@ function Draw-Board {
   Write-Host -ForegroundColor Yellow "  1 2 3 4 5 6 7 8"
   foreach ($start in (0,8,16,24,32,40,48,56)) {
     $num = ($start / 8) + 65
-    $letter = [char]$num
+    $letter = [char]$num # Build the A B C... on the left of the board
     Write-Host -ForegroundColor Yellow -NoNewline $letter
     Write-Host -NoNewline " "
-    Write-Host $BoardObj[$start..($Start+7)].color
+    $start..($Start+7) | foreach {
+      if ($BoardObj[$_].color -eq "W") {$fgColor = "White"; $Piece = "O "}
+      if ($BoardObj[$_].color -eq "B") {$fgColor = "Black"; $Piece = "O "}
+      if ($BoardObj[$_].color -eq "-") {$fgColor = "darkgray"; $Piece = "- "}
+      Write-Host -NoNewline -ForegroundColor $FGColor $Piece 
+    }
+    write-host
   }
   Write-Host
   Write-Host "Black: $numOfBlack"
