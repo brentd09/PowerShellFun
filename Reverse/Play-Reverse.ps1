@@ -29,26 +29,29 @@ function Draw-Board {
     $BoardObj
   )  
   $numOfWhite = ($BoardObj | where {$_.color -eq "W"}).count
-  $numOfBlack = ($BoardObj | where {$_.color -eq "B"}).count
-
-  Write-Host -ForegroundColor Yellow  "  --  REVERSE  --"
-  Write-Host -ForegroundColor Yellow "  1 2 3 4 5 6 7 8"
+  $numOfRed = ($BoardObj | where {$_.color -eq "R"}).count
+  $LeftSpc = '  '
+  Clear-Host
+  Write-Host  -ForegroundColor Cyan "`n$LeftSpc                         --SCORE--"
+  Write-Host  -NoNewline -ForegroundColor Cyan  "$LeftSpc  --  REVERSE  --"
+  Write-Host -ForegroundColor White   "        White: $numOfWhite"
+  Write-Host -NoNewline -ForegroundColor Yellow "$LeftSpc  1 2 3 4 5 6 7 8"
+  Write-Host -ForegroundColor Red "        Red:   $numOfRed"
   foreach ($start in (0,8,16,24,32,40,48,56)) {
     $num = ($start / 8) + 65
     $letter = [char]$num # Build the A B C... on the left of the board
-    Write-Host -ForegroundColor Yellow -NoNewline $letter
+    Write-Host -ForegroundColor Yellow -NoNewline $LeftSpc$letter
     Write-Host -NoNewline " "
     $start..($Start+7) | foreach {
       if ($BoardObj[$_].color -eq "W") {$fgColor = "White"; $Piece = "O "}
-      if ($BoardObj[$_].color -eq "B") {$fgColor = "Black"; $Piece = "O "}
+      if ($BoardObj[$_].color -eq "R") {$fgColor = "Red"; $Piece = "O "}
       if ($BoardObj[$_].color -eq "-") {$fgColor = "darkgray"; $Piece = "- "}
       Write-Host -NoNewline -ForegroundColor $FGColor $Piece 
     }
     write-host
   }
-  Write-Host
-  Write-Host "Black: $numOfBlack"
-  Write-Host "White: $numOfWhite"
+
+
 }
 
 function Convert-ArrayToObject {
@@ -80,6 +83,19 @@ function Find-LegalMoves {
   $CurrentPos
 }
 
+function Get-NextMove {
+  Param (
+    $ValidMoves,
+    $Color
+  )
+  $RaWMove = Read-Host -Prompt "Please enter your next move"
+  $Letter = ($RaWMove -replace '[^abcdefgh]','').Tolower()
+  $Number = $RaWMove -replace '[^01234567]',''
+  $Row = [byte][char]$Letter[0] - 97
+  $Col = [int]$Number[0] - 48 
+
+}
+
 
 ##########################################
 ##   MAIN CODE
@@ -88,7 +104,7 @@ function Find-LegalMoves {
 $MainBoard = @()
 0..63 | ForEach-Object {
   if ($_ -in  @(27,36))     {$MainBoard += "W"}
-  elseif ($_ -in  @(28,35)) {$MainBoard += "B"}
+  elseif ($_ -in  @(28,35)) {$MainBoard += "R"}
   else {$MainBoard += "-"}
 }
 $MainBoardObj = Convert-ArrayToObject -fnBoard $MainBoard
