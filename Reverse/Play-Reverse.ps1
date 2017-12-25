@@ -85,15 +85,24 @@ function Find-LegalMoves {
 
 function Get-NextMove {
   Param (
-    $ValidMoves,
     $Color
   )
-  $RaWMove = Read-Host -Prompt "Please enter your next move"
-  $Letter = ($RaWMove -replace '[^abcdefgh]','').Tolower()
-  $Number = $RaWMove -replace '[^01234567]',''
-  $Row = [byte][char]$Letter[0] - 97
-  $Col = [int]$Number[0] - 48 
-
+  do {
+    $RaWMove = Read-Host -Prompt "Please enter your next move"
+    $Letter = ($RaWMove -replace '[^abcdefgh]','').Tolower()
+    $Number = $RaWMove -replace '[^01234567]',''
+    $Row = [byte][char]$Letter[0] - 97
+    $Col = [int]$Number[0] - 48 
+  } until ($row -in 0..7 -and $Col -in 0..7)
+  $Pos = $Row * 8 + $Col
+  $objProp = [ordered]@{
+    Row = $Row
+    Col = $Col
+    Pos  = $Pos
+    Color = $Color
+  }
+  $Move = New-Object -TypeName psobject -Property $objProp
+  return $Move
 }
 
 
