@@ -23,6 +23,8 @@
   48 49 50 51 52 53 54 55
   56 57 58 59 60 61 62 63
 #>
+
+
 function Draw-Board {
   Param (
     $BoardObj
@@ -53,6 +55,25 @@ function Draw-Board {
 
 }
 
+function Get-SurrColor {
+  Param (
+    $BoardObj,
+    $Move
+  )
+  # these are the positions to check when the position is either in the 
+  # or middle or left edge etc or corner top right etc.
+  $mid = @(-9,-8,-7,1,9,8,7,-1)
+  $le = @(-8,-7,1,9,8)
+  $te = @(-9,-8,-7,1,9)
+  $re = @(8,7,-1,-9,-8)
+  $be = @(-1,-9,-8,-7,1)
+  $ctl = @(1,9,8)
+  $ctr = @(8,7,-1)
+  $cbl = @(-8,-7,1)
+  $cbr = @(-1,-9,-8)
+
+}
+
 function Convert-ArrayToObject {
   Param ($fnBoard)
 
@@ -73,13 +94,18 @@ function Convert-ArrayToObject {
   }
 }   
 
-function Find-LegalMoves {
+function Check-MoveIsLegal {
   Param (
     $BoardObj,
-    $Color
+    $Move
   )
-  $CurrentPos = $BoardObj | Where-Object {$_.color -eq $Color}
-  $CurrentPos
+  if ($Move.color -eq 'W') {$OpColor = 'R'}
+  elseif ($Move.color -eq 'R') {$OpColor = 'W'}
+  else {$OpColor = '-'}
+  $MoveLegal = $true
+  if ($Move.Color -ne '-') {$MoveLegal = $false; return $MoveLegal}
+  if ($OpColor ) {}
+
 }
 
 function Get-NextMove {
