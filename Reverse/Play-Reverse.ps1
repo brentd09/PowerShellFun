@@ -23,8 +23,6 @@
   48 49 50 51 52 53 54 55
   56 57 58 59 60 61 62 63
 #>
-
-
 function Draw-Board {
   Param (
     $BoardObj
@@ -33,9 +31,8 @@ function Draw-Board {
   $numOfRed = ($BoardObj | where {$_.color -eq "R"}).count
   $LeftSpc = '  '
   Clear-Host
-  Write-Host  -ForegroundColor Cyan "`n$LeftSpc                         --SCORE--"
-  Write-Host  -NoNewline -ForegroundColor Cyan  "$LeftSpc  --  REVERSE  --"
-  Write-Host -ForegroundColor White   "        White: $numOfWhite"
+  Write-Host  -ForegroundColor Cyan "`n$LeftSpc  --  REVERSE  --        --SCORE--"
+  Write-Host -ForegroundColor White   "$LeftSpc                         White: $numOfWhite"
   Write-Host -NoNewline -ForegroundColor Yellow "$LeftSpc  1 2 3 4 5 6 7 8"
   Write-Host -ForegroundColor Red "        Red:   $numOfRed"
   foreach ($start in (0,8,16,24,32,40,48,56)) {
@@ -51,10 +48,7 @@ function Draw-Board {
     }
     write-host
   }
-
-
 }
-
 function Get-SurrColor {
   Param (
     $BoardObj,
@@ -73,7 +67,6 @@ function Get-SurrColor {
   $cbr = @(-1,-9,-8)
 
 }
-
 function Convert-ArrayToObject {
   Param ($fnBoard)
 
@@ -93,7 +86,6 @@ function Convert-ArrayToObject {
     $count++
   }
 }   
-
 function Check-MoveIsLegal {
   Param (
     $BoardObj,
@@ -107,7 +99,6 @@ function Check-MoveIsLegal {
   if ($OpColor ) {}
 
 }
-
 function Get-NextMove {
   Param (
     $Color
@@ -123,11 +114,18 @@ function Get-NextMove {
   $objProp = [ordered]@{
     Row = $Row
     Col = $Col
-    Pos  = $Pos
+    Index  = $Pos
     Color = $Color
   }
   $Move = New-Object -TypeName psobject -Property $objProp
   return $Move
+}
+function Approve-Move {
+  Param (
+    $BoardObj,
+    $MoveObj
+  )
+
 }
 
 
