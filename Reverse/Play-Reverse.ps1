@@ -49,6 +49,7 @@ function Draw-Board {
     write-host
   }
 }
+
 function Get-SurrColor {
   Param (
     $BoardObj,
@@ -67,6 +68,7 @@ function Get-SurrColor {
   $cbr = @(-1,-9,-8)
 
 }
+
 function Convert-ArrayToObject {
   Param ($fnBoard)
 
@@ -77,7 +79,7 @@ function Convert-ArrayToObject {
     $objProp = [ordered]@{
       index = $count
       Color = $val
-      Column = $col
+      Col = $col
       Row = $row
       FwDiag = $row + $col
       RvDiag = 7 + $col - $row
@@ -86,6 +88,7 @@ function Convert-ArrayToObject {
     $count++
   }
 }   
+
 function Check-MoveIsLegal {
   Param (
     $BoardObj,
@@ -99,6 +102,7 @@ function Check-MoveIsLegal {
   if ($OpColor ) {}
 
 }
+
 function Get-NextMove {
   Param (
     $Color
@@ -120,12 +124,61 @@ function Get-NextMove {
   $Move = New-Object -TypeName psobject -Property $objProp
   return $Move
 }
-function Approve-Move {
+
+function Complete-Move {
   Param (
     $BoardObj,
     $MoveObj
   )
+  $MoveValid = $true
+  $Moveindex = $MoveObj.Index
+  # Adding the movecolor to the object so that it now has the current value on board as .col and
+  # the color of the move as .movecol
+  $MoveLoc = $BoardObj[$Moveindex] | Select-Object -Property *,@{n='MoveCol';e={$MoveObj.Color}}
+  if ($MoveLoc.Color -ne '-') {$MoveValid = $false; return $MoveLoc}
+  $RowObj = $BoardObj | Where-Object {$_.row -eq $MoveLoc.Row}
+  $ColObj = $BoardObj | Where-Object {$_.col -eq $MoveLoc.Col}
+  $FwDiagObj = $BoardObj | Where-Object {$_.fwdiag -eq $MoveLoc.FwDiag}
+  $RvDiagObj = $BoardObj | Where-Object {$_.rvdiag -eq $MoveLoc.RvDiag}
 
+  $PosInRow = $RowObj.index.IndexOf($MoveLoc.index)
+  $RowCount = $RowObj.count - 1
+  $PosInCol = $RowCol.index.IndexOf($MoveLoc.index)
+  $ColCount = $RowCol.count - 1
+  $PosInFwDiag = $FwDiagObj.index.IndexOf($MoveLoc.index)
+  $FwDiagCount = $FwDiagObj.count - 1
+  $PosInRvDiag = $RvDiagObj.index.IndexOf($MoveLoc.index)
+  $RvDiagCount = $RvDiagObj.count - 1
+
+
+  #check Row --> larger index
+  if ($PosInRow -le ($RowCount -2)) {
+    # Complete the move if valid
+  }
+  
+
+  #check row <-- smaller index
+  if ($PosInRow -ge 2) {
+    # Complete the move if valid
+  }
+  #check col --> larger index
+  if ($PosInCol -le ($ColCount -2)) {
+    # Complete the move if valid
+  }
+
+
+  #check col <-- smaller index
+  if ($PosInCol -ge 2) {
+    # Complete the move if valid
+  }
+
+  #Check Fw Diag / --> larger index
+
+  #Check Fw Diag / --> smaller index
+
+  #Check Rv Diag \ --> larger index
+
+  #Check Rv Diag \ --> smaller index
 }
 
 
