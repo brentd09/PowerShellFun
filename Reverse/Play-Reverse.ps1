@@ -110,9 +110,9 @@ function Get-NextMove {
   do {
     $RaWMove = Read-Host -Prompt "Please enter your next move"
     $Letter = ($RaWMove -replace '[^abcdefgh]','').Tolower()
-    $Number = $RaWMove -replace '[^01234567]',''
+    $Number = $RaWMove -replace '[^12345678]',''
     $Row = [byte][char]$Letter[0] - 97
-    $Col = [int]$Number[0] - 48 
+    $Col = [int]$Number[0] - 49
   } until ($row -in 0..7 -and $Col -in 0..7)
   $Pos = $Row * 8 + $Col
   $objProp = [ordered]@{
@@ -130,12 +130,16 @@ function Complete-Move {
     $BoardObj,
     $MoveObj
   )
-  $MoveValid = $true
+  $MoveValid = $false
   $Moveindex = $MoveObj.Index
   # Adding the movecolor to the object so that it now has the current value on board as .col and
   # the color of the move as .movecol
   $MoveLoc = $BoardObj[$Moveindex] | Select-Object -Property *,@{n='MoveCol';e={$MoveObj.Color}}
   if ($MoveLoc.Color -ne '-') {$MoveValid = $false; return $MoveLoc}
+
+  If ($MoveLoc.MoveCol -eq "R") {$OppMoveCol = "W"}
+  If ($MoveLoc.MoveCol -eq "W") {$OppMoveCol = "R"}
+
   $RowObj = $BoardObj | Where-Object {$_.row -eq $MoveLoc.Row}
   $ColObj = $BoardObj | Where-Object {$_.col -eq $MoveLoc.Col}
   $FwDiagObj = $BoardObj | Where-Object {$_.fwdiag -eq $MoveLoc.FwDiag}
@@ -152,20 +156,23 @@ function Complete-Move {
 
 
   #check Row --> larger index
-  if ($PosInRow -le ($RowCount -2)) {
+  if ($PosInRow -le ($RowCount - 2)) {
+    $StartPos = $PosInRow + 1 
+    $EndPos   = $RowCount - 1
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      
+    }
     # Complete the move if valid
   }
-  
 
   #check row <-- smaller index
   if ($PosInRow -ge 2) {
     # Complete the move if valid
   }
   #check col --> larger index
-  if ($PosInCol -le ($ColCount -2)) {
+  if ($PosInCol -le ($ColCount - 2)) {
     # Complete the move if valid
   }
-
 
   #check col <-- smaller index
   if ($PosInCol -ge 2) {
@@ -173,12 +180,25 @@ function Complete-Move {
   }
 
   #Check Fw Diag / --> larger index
+  if ($PosInFwDiag -le ($FwDiagCount - 2)) {
+    # Complete the move if valid
+  }
 
   #Check Fw Diag / --> smaller index
+  if ($PosInFwDiag -ge 2) {
+    # Complete the move if valid
+  }
 
   #Check Rv Diag \ --> larger index
+  if ($PosInRvDiag -le ($RvDiagCount - 2)) {
+    # Complete the move if valid
+  }
 
   #Check Rv Diag \ --> smaller index
+  if ($PosInRvDiag -ge 2) {
+    # Complete the move if valid
+  }
+
 }
 
 
