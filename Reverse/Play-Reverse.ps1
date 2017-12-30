@@ -108,7 +108,9 @@ function Get-NextMove {
     $Color
   )
   do {
-    $RaWMove = Read-Host -Prompt "Please enter your next move"
+    if ($Color -eq "R") {$PromptColor = "Red"}
+    if ($Color -eq "W") {$PromptColor = "White"}
+    $RaWMove = Read-Host -Prompt "$PromptColor, Please enter your next move"
     $Letter = ($RaWMove -replace '[^abcdefgh]','').Tolower()
     $Number = $RaWMove -replace '[^12345678]',''
     $Row = [byte][char]$Letter[0] - 97
@@ -147,22 +149,30 @@ function Complete-Move {
 
   $PosInRow = $RowObj.index.IndexOf($MoveLoc.index)
   $RowCount = $RowObj.count - 1
-  $PosInCol = $RowCol.index.IndexOf($MoveLoc.index)
-  $ColCount = $RowCol.count - 1
+  $PosInCol = $ColObj.index.IndexOf($MoveLoc.index)
+  $ColCount = $ColObj.count - 1
   $PosInFwDiag = $FwDiagObj.index.IndexOf($MoveLoc.index)
   $FwDiagCount = $FwDiagObj.count - 1
   $PosInRvDiag = $RvDiagObj.index.IndexOf($MoveLoc.index)
   $RvDiagCount = $RvDiagObj.count - 1
-
+  $MasterChangeList = @()
 
   #check Row --> larger index
   if ($PosInRow -le ($RowCount - 2)) {
+    $ChangeList = @()
+    $OppInLine = $false
     $StartPos = $PosInRow + 1 
     $EndPos   = $RowCount - 1
     foreach ($Pos in ($StartPos..$EndPos)) {
-      
+      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppMoveCol = $true
+      }
+      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+      }
     }
-    # Complete the move if valid
   }
 
   #check row <-- smaller index
@@ -171,6 +181,21 @@ function Complete-Move {
   }
   #check col --> larger index
   if ($PosInCol -le ($ColCount - 2)) {
+    $ChangeList = @()
+    $OppInLine = $false
+    $StartPos = $PosInCol + 1 
+    $EndPos   = $ColCount - 1
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppMoveCol = $true
+      }
+      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+      }
+    }
+
     # Complete the move if valid
   }
 
@@ -181,6 +206,21 @@ function Complete-Move {
 
   #Check Fw Diag / --> larger index
   if ($PosInFwDiag -le ($FwDiagCount - 2)) {
+    $ChangeList = @()
+    $OppInLine = $false
+    $StartPos = $PosInFwDiag + 1 
+    $EndPos   = $FwDiagCount - 1
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppMoveCol = $true
+      }
+      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+      }
+    }
+
     # Complete the move if valid
   }
 
@@ -191,6 +231,21 @@ function Complete-Move {
 
   #Check Rv Diag \ --> larger index
   if ($PosInRvDiag -le ($RvDiagCount - 2)) {
+    $ChangeList = @()
+    $OppInLine = $false
+    $StartPos = $PosInRvDiag + 1 
+    $EndPos   = $RvDiagCount - 1
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppMoveCol = $true
+      }
+      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+      }
+    }
+
     # Complete the move if valid
   }
 
@@ -198,7 +253,13 @@ function Complete-Move {
   if ($PosInRvDiag -ge 2) {
     # Complete the move if valid
   }
-
+  $objProp = @{
+    MasterChangeList = $MasterChangeList
+    MoveValid = $MoveValid
+    OppColor = $OppMoveCol
+  }
+  $RetObj = New-Object -TypeName psobject -Property $objProp
+  return $RetObj
 }
 
 
@@ -213,6 +274,19 @@ $MainBoard = @()
   else {$MainBoard += "-"}
 }
 $MainBoardObj = Convert-ArrayToObject -fnBoard $MainBoard
-
-
 Draw-Board -BoardObj $MainBoardObj.psobject.Copy()
+$Turn = "-"
+Do {
+  #red turn
+  if ($Turn -eq '-' ) {$Turn = 'R'}
+  elseif ($Turn -eq 'R' ) {$Turn = 'W'}
+  elseif ($Turn -eq 'W' ) {$Turn = 'R'}
+  do {
+    $NextMove = Get-NextMove -Color $Turn
+    $MoveInfo = Complete-Move -BoardObj $MainBoardObj -MoveObj $NextMove
+  } until ($MoveInfo.MoveValid -eq $true)
+  foreach ($Pos in $MoveInfo.MasterChangeList) {
+    $MainBoardObj[$Pos].Color = $MoveInfo.OppColor
+  }
+  Draw-Board -BoardObj $MainBoardObj.psobject.Copy()
+} while ($true)
