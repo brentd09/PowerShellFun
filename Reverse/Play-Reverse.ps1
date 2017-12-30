@@ -162,15 +162,20 @@ function Complete-Move {
     $ChangeList = @()
     $OppInLine = $false
     $StartPos = $PosInRow + 1 
-    $EndPos   = $RowCount - 1
+    $EndPos   = $RowCount 
     foreach ($Pos in ($StartPos..$EndPos)) {
-      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
-        $OppMoveCol = $true
+      if ($RowObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
       }
-      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+      if ($RowObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppInLine = $true
+      }
+      if ($RowObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
         $MasterChangeList += $ChangeList
         $MoveValid = $true
+        break
       }
     }
   }
@@ -184,15 +189,20 @@ function Complete-Move {
     $ChangeList = @()
     $OppInLine = $false
     $StartPos = $PosInCol + 1 
-    $EndPos   = $ColCount - 1
+    $EndPos   = $ColCount 
     foreach ($Pos in ($StartPos..$EndPos)) {
-      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
-        $OppMoveCol = $true
+      if ($ColObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
       }
-      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+      if ($ColObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppInLine = $true
+      }
+      if ($ColObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
         $MasterChangeList += $ChangeList
         $MoveValid = $true
+        break
       }
     }
 
@@ -209,15 +219,20 @@ function Complete-Move {
     $ChangeList = @()
     $OppInLine = $false
     $StartPos = $PosInFwDiag + 1 
-    $EndPos   = $FwDiagCount - 1
+    $EndPos   = $FwDiagCount 
     foreach ($Pos in ($StartPos..$EndPos)) {
-      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
-        $OppMoveCol = $true
+      if ($FwDiagObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
       }
-      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+      if ($FwDiagObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppInLine = $true
+      }
+      if ($FwDiagObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
         $MasterChangeList += $ChangeList
         $MoveValid = $true
+        break
       }
     }
 
@@ -234,15 +249,20 @@ function Complete-Move {
     $ChangeList = @()
     $OppInLine = $false
     $StartPos = $PosInRvDiag + 1 
-    $EndPos   = $RvDiagCount - 1
+    $EndPos   = $RvDiagCount 
     foreach ($Pos in ($StartPos..$EndPos)) {
-      if ($MoveObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
-        $OppMoveCol = $true
+      if ($RvDiagObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
       }
-      if ($MoveObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+      if ($RvDiagObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $Pos
+        $OppInLine = $true
+      }
+      if ($RvDiagObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
         $MasterChangeList += $ChangeList
         $MoveValid = $true
+        break
       }
     }
 
