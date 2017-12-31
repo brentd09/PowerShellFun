@@ -50,25 +50,6 @@ function Draw-Board {
   }
 }
 
-function Get-SurrColor {
-  Param (
-    $BoardObj,
-    $Move
-  )
-  # these are the positions to check when the position is either in the 
-  # or middle or left edge etc or corner top right etc.
-  $mid = @(-9,-8,-7,1,9,8,7,-1)
-  $le = @(-8,-7,1,9,8)
-  $te = @(-9,-8,-7,1,9)
-  $re = @(8,7,-1,-9,-8)
-  $be = @(-1,-9,-8,-7,1)
-  $ctl = @(1,9,8)
-  $ctr = @(8,7,-1)
-  $cbl = @(-8,-7,1)
-  $cbr = @(-1,-9,-8)
-
-}
-
 function Convert-ArrayToObject {
   Param ($fnBoard)
 
@@ -89,17 +70,29 @@ function Convert-ArrayToObject {
   }
 }   
 
-function Check-MoveIsLegal {
+###function Check-MoveIsLegal {
+###  Param (
+###    $BoardObj,
+###    $Move
+###  )
+###  if ($Move.color -eq 'W') {$OpColor = 'R'}
+###  elseif ($Move.color -eq 'R') {$OpColor = 'W'}
+###  else {$OpColor = '-'}
+###  $MoveLegal = $true
+###  if ($Move.Color -ne '-') {$MoveLegal = $false; return $MoveLegal}
+###  if ($OpColor ) {}
+###
+###}
+
+function Get-LegalMoves {
   Param (
     $BoardObj,
-    $Move
+    $color
   )
-  if ($Move.color -eq 'W') {$OpColor = 'R'}
-  elseif ($Move.color -eq 'R') {$OpColor = 'W'}
-  else {$OpColor = '-'}
-  $MoveLegal = $true
-  if ($Move.Color -ne '-') {$MoveLegal = $false; return $MoveLegal}
-  if ($OpColor ) {}
+  $EmptyBoardObj = $BoardObj | Where-Object {$_color -eq '-'}
+  foreach ($EmptySpot in $EmptyBoardObj) {
+    
+  }
 
 }
 
