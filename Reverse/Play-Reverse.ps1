@@ -169,7 +169,7 @@ function Complete-Move {
         break
       }
       if ($RowObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
+        $ChangeList += $RowObj[$Pos].index
         $OppInLine = $true
       }
       if ($RowObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
@@ -196,7 +196,7 @@ function Complete-Move {
         break
       }
       if ($ColObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
+        $ChangeList += $ColObj[$Pos].index
         $OppInLine = $true
       }
       if ($ColObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
@@ -226,7 +226,7 @@ function Complete-Move {
         break
       }
       if ($FwDiagObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
+        $ChangeList += $FwDiagObj[$Pos].index
         $OppInLine = $true
       }
       if ($FwDiagObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
@@ -256,7 +256,7 @@ function Complete-Move {
         break
       }
       if ($RvDiagObj[$Pos].Color -eq $OppMoveCol) {
-        $ChangeList += $Pos
+        $ChangeList += $RvDiagObj[$Pos].index
         $OppInLine = $true
       }
       if ($RvDiagObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
@@ -265,18 +265,19 @@ function Complete-Move {
         break
       }
     }
-
-    # Complete the move if valid
   }
 
   #Check Rv Diag \ --> smaller index
   if ($PosInRvDiag -ge 2) {
     # Complete the move if valid
   }
+  if ($MoveValid -eq $true) {
+    $MasterChangeList += $Moveindex
+  }
   $objProp = @{
     MasterChangeList = $MasterChangeList
     MoveValid = $MoveValid
-    OppColor = $OppMoveCol
+    MoveColor = $MoveLoc.MoveCol
   }
   $RetObj = New-Object -TypeName psobject -Property $objProp
   return $RetObj
@@ -306,7 +307,7 @@ Do {
     $MoveInfo = Complete-Move -BoardObj $MainBoardObj -MoveObj $NextMove
   } until ($MoveInfo.MoveValid -eq $true)
   foreach ($Pos in $MoveInfo.MasterChangeList) {
-    $MainBoardObj[$Pos].Color = $MoveInfo.OppColor
+    $MainBoardObj[$Pos].Color = $MoveInfo.MoveColor
   }
   Draw-Board -BoardObj $MainBoardObj.psobject.Copy()
 } while ($true)
