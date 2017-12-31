@@ -110,7 +110,8 @@ function Get-NextMove {
   do {
     if ($Color -eq "R") {$PromptColor = "Red"}
     if ($Color -eq "W") {$PromptColor = "White"}
-    $RaWMove = Read-Host -Prompt "$PromptColor, Please enter your next move"
+    Write-Host -NoNewline -ForegroundColor $PromptColor "`n$PromptColor, Please enter your next move: "
+    $RaWMove = Read-Host
     $Letter = ($RaWMove -replace '[^abcdefgh]','').Tolower()
     $Number = $RaWMove -replace '[^12345678]',''
     $Row = [byte][char]$Letter[0] - 97
@@ -183,7 +184,27 @@ function Complete-Move {
   #check row <-- smaller index
   if ($PosInRow -ge 2) {
     # Complete the move if valid
+    $ChangeList = @()
+    $OppInLine = $false
+    $StartPos = $PosInRow - 1 
+    $EndPos   = 0
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      if ($RowObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
+      }
+      if ($RowObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $RowObj[$Pos].index
+        $OppInLine = $true
+      }
+      if ($RowObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+        break
+      }
+    }
   }
+
   #check col --> larger index
   if ($PosInCol -le ($ColCount - 2)) {
     $ChangeList = @()
@@ -205,13 +226,30 @@ function Complete-Move {
         break
       }
     }
-
-    # Complete the move if valid
   }
 
   #check col <-- smaller index
   if ($PosInCol -ge 2) {
-    # Complete the move if valid
+    $ChangeList = @()
+    $OppInLine = $false
+    $StartPos = $PosInCol - 1 
+    $EndPos   = 0
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      if ($ColObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
+      }
+      if ($ColObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $ColObj[$Pos].index
+        $OppInLine = $true
+      }
+      if ($ColObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+        break
+      }
+    }
+
   }
 
   #Check Fw Diag / --> larger index
@@ -235,13 +273,29 @@ function Complete-Move {
         break
       }
     }
-
-    # Complete the move if valid
   }
 
   #Check Fw Diag / --> smaller index
   if ($PosInFwDiag -ge 2) {
-    # Complete the move if valid
+    $ChangeList = @()
+    $OppInLine = $false
+    $StartPos = $PosInFwDiag - 1 
+    $EndPos   = 0 
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      if ($FwDiagObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
+      }
+      if ($FwDiagObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $FwDiagObj[$Pos].index
+        $OppInLine = $true
+      }
+      if ($FwDiagObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+        break
+      }
+    }
   }
 
   #Check Rv Diag \ --> larger index
@@ -269,7 +323,25 @@ function Complete-Move {
 
   #Check Rv Diag \ --> smaller index
   if ($PosInRvDiag -ge 2) {
-    # Complete the move if valid
+    $ChangeList = @()
+    $OppInLine = $false
+    $StartPos = $PosInRvDiag - 1 
+    $EndPos   = 0
+    foreach ($Pos in ($StartPos..$EndPos)) {
+      if ($RvDiagObj[$Pos].Color -eq '-') {
+        $OppInLine = $false
+        break
+      }
+      if ($RvDiagObj[$Pos].Color -eq $OppMoveCol) {
+        $ChangeList += $RvDiagObj[$Pos].index
+        $OppInLine = $true
+      }
+      if ($RvDiagObj[$Pos].Color -eq $MoveLoc.MoveCol -and $OppInLine -eq $true) {
+        $MasterChangeList += $ChangeList
+        $MoveValid = $true
+        break
+      }
+    }
   }
   if ($MoveValid -eq $true) {
     $MasterChangeList += $Moveindex
