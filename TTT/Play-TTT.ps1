@@ -65,6 +65,27 @@ function Draw-Board {
   Write-Host 
 }
 
+function Get-RowColDiag {
+  Param (
+    $Board
+  )
+  $Col = @(); $Row = @(); $Diag = @()
+  foreach ($Num in (0..2)) {
+    $Col += $Board[(0+$Num),(3+$Num),(6+$Num)] -join ''
+    $Row += $Board[(0+(3*$Num)),(1+(3*$Num)),(2+(3*$Num))] -join ''
+  }
+  $Diag += $Board[0,4,8] -join ''
+  $Diag += $Board[2,4,6] -join ''
+  $props = @{
+    Row = $Row
+    Col = $Col
+    Diag = $Diag
+  }
+  $RCDObj = new-object -TypeName psobject -Property $props
+  return $RCDObj
+  # row -match "XX\s|X\sX|\sXX" this is to test the danger lines
+}
+
 function Pick-Location {
   Param (
     $Board,
