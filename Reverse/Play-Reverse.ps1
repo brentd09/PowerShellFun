@@ -89,11 +89,25 @@ function Get-LegalMoves {
     $BoardObj,
     $color
   )
-  $EmptyBoardObj = $BoardObj | Where-Object {$_color -eq '-'}
+  $EmptyBoardObj = $BoardObj | Where-Object {$_.color -eq '-'}
   foreach ($EmptySpot in $EmptyBoardObj) {
-    
+    $objProp = @{
+      Row = $EmptySpot.Row
+      Col = $EmptySpot.Col
+      Index  = $EmptySpot.index
+      Color = $EmptySpot.Color
+    }
+    $PosObj = New-Object -TypeName psobject -Property $objProp
+    $MoveResult = Complete-Move -BoardObj $BoardObj -MoveObj $PosObj
+    if ($MoveResult.MoveValid -eq $true) {
+      $ValidProp = @{
+        Color = $Color
+        Index = $EmptySpot.Index
+      }
+      $ValidSpot = New-Object -TypeName psobject -Property $ValidProp
+      $ValidSpot
+    }
   }
-
 }
 
 function Get-NextMove {
@@ -173,7 +187,6 @@ function Complete-Move {
       }
     }
   }
-
   #check row <-- smaller index
   if ($PosInRow -ge 2) {
     # Complete the move if valid
@@ -197,7 +210,6 @@ function Complete-Move {
       }
     }
   }
-
   #check col --> larger index
   if ($PosInCol -le ($ColCount - 2)) {
     $ChangeList = @()
@@ -220,7 +232,6 @@ function Complete-Move {
       }
     }
   }
-
   #check col <-- smaller index
   if ($PosInCol -ge 2) {
     $ChangeList = @()
@@ -244,7 +255,6 @@ function Complete-Move {
     }
 
   }
-
   #Check Fw Diag / --> larger index
   if ($PosInFwDiag -le ($FwDiagCount - 2)) {
     $ChangeList = @()
@@ -267,7 +277,6 @@ function Complete-Move {
       }
     }
   }
-
   #Check Fw Diag / --> smaller index
   if ($PosInFwDiag -ge 2) {
     $ChangeList = @()
@@ -290,7 +299,6 @@ function Complete-Move {
       }
     }
   }
-
   #Check Rv Diag \ --> larger index
   if ($PosInRvDiag -le ($RvDiagCount - 2)) {
     $ChangeList = @()
@@ -313,7 +321,6 @@ function Complete-Move {
       }
     }
   }
-
   #Check Rv Diag \ --> smaller index
   if ($PosInRvDiag -ge 2) {
     $ChangeList = @()
@@ -368,6 +375,8 @@ Do {
   elseif ($Turn -eq 'R' ) {$Turn = 'W'}
   elseif ($Turn -eq 'W' ) {$Turn = 'R'}
   do {
+    $RedValidMoves = Get-LegalMoves -BoardObj $MainBoardObj.psobject.Copy() -color "R"
+    $WhiteValidMoves = Get-LegalMoves -BoardObj $MainBoardObj.psobject.Copy() -color "W"
     $NextMove = Get-NextMove -Color $Turn
     $MoveInfo = Complete-Move -BoardObj $MainBoardObj -MoveObj $NextMove
   } until ($MoveInfo.MoveValid -eq $true)

@@ -2,47 +2,66 @@
 .SYNOPSIS
    Tic Tac Toe game
 .DESCRIPTION
-   
+   This is a standard Tic Tac Toe game, it is currently 
+   run with two players hoever there are plans to add 
+   some AI to this game so that you could play the 
+   computer
 .EXAMPLE
-   
+   Play-TTT 
+
+   This launches the TTT game as a two player game 
 .EXAMPLE
-   
-.INPUTS
-   
-.OUTPUTS
-   
-.NOTES
-   
-.FUNCTIONALITY
-   
+   Play-TTT  -Computer
+
+   This launches the TTT game as a computer opponent
+.Parameter Computer
+   Computer is a switch parameter that tells the game 
+   the computer should be the opponent.
+.Notes
+   Created
+     By: Brent Denny
+     On: 5 Jan 2018
 #>
+[CmdLetBinding()]
+Param (
+  [switch]$Computer
+)
 
 function Draw-Board {
   Param ($Board)
 
   Clear-Host
+  $EntryColors = @('White','White','White','White','White','White','White','White','White')
+  $GridColor = "Yellow"
+  $XColor = "Red"
+  $OColor = "white"
+  $TitleCol = "Yellow"
+  foreach ($Pos in (0..8)){
+    if ($Board[$pos] -eq "X"){ $EntryColors[$Pos] = $XColor}
+    if ($Board[$pos] -eq "O"){ $EntryColors[$Pos] = $OColor}
+  }
   $Bdr = "  "
-  Write-Host -ForegroundColor Yellow "${Bdr}Tic Tac Toe`n"
+  Write-Host -ForegroundColor $GridColor "${Bdr}Tic Tac Toe`n"
   Write-Host -NoNewline "$Bdr "
-  Write-Host -NoNewline $Board[0]
-  Write-Host -ForegroundColor Yellow -NoNewline " | "  
-  write-host -NoNewline $Board[1]
-  write-host -ForegroundColor Yellow -NoNewline " | "
-  Write-Host $Board[2]
-  Write-Host -ForegroundColor Yellow "${Bdr}---+---+---"
+  Write-Host -ForegroundColor $EntryColors[0] -NoNewline $Board[0]
+  Write-Host -ForegroundColor $GridColor -NoNewline " | "  
+  write-host -ForegroundColor $EntryColors[1] -NoNewline $Board[1]
+  write-host -ForegroundColor $GridColor -NoNewline " | "
+  Write-Host -ForegroundColor $EntryColors[2] $Board[2]
+  Write-Host -ForegroundColor $GridColor "${Bdr}---+---+---"
   Write-Host -NoNewline "$Bdr "
-  Write-Host -NoNewline $Board[3]
-  Write-Host -ForegroundColor Yellow -NoNewline " | "  
-  write-host -NoNewline $Board[4]
-  write-host -ForegroundColor Yellow -NoNewline " | "
-  Write-Host $Board[5]
-  Write-Host -ForegroundColor Yellow "${Bdr}---+---+---"
+  Write-Host -ForegroundColor $EntryColors[3] -NoNewline $Board[3]
+  Write-Host -ForegroundColor $GridColor -NoNewline " | "  
+  write-host -ForegroundColor $EntryColors[4] -NoNewline $Board[4]
+  write-host -ForegroundColor $GridColor -NoNewline " | "
+  Write-Host -ForegroundColor $EntryColors[5] $Board[5]
+  Write-Host -ForegroundColor $GridColor "${Bdr}---+---+---"
   Write-Host -NoNewline "$Bdr "
-  Write-Host -NoNewline $Board[6]
-  Write-Host -ForegroundColor Yellow -NoNewline " | "  
-  write-host -NoNewline $Board[7]
-  write-host -ForegroundColor Yellow -NoNewline " | "
-  Write-Host $Board[8]
+  Write-Host -ForegroundColor $EntryColors[6] -NoNewline $Board[6]
+  Write-Host -ForegroundColor $GridColor -NoNewline " | "  
+  write-host -ForegroundColor $EntryColors[7] -NoNewline $Board[7]
+  write-host -ForegroundColor $GridColor -NoNewline " | "
+  Write-Host -ForegroundColor $EntryColors[8] $Board[8]
   Write-Host 
 }
 
@@ -106,14 +125,15 @@ function Check-Winner {
 ##################################
 #  MAIN CODE
 
+
 $MainBoard = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
 Draw-Board -Board $MainBoard
-$Turn = "X"
+$Turn = @("X","O") | Get-Random
 do {
   $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn
   Draw-Board -Board $MainBoard
   if ($Turn -eq "X") {$Turn = "O"}
-  else {$Turn = "X"} 
+  elseif ($Turn -eq "O") {$Turn = "X"} 
   $PossWin = Check-Winner -Board $MainBoard
 } until ($MainBoard -notcontains " " -or $PossWin.Winner -eq $true)
 if ($PossWin.Winner -eq $true) {
