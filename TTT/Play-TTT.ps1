@@ -24,7 +24,7 @@
 #>
 [CmdLetBinding()]
 Param (
-  [switch]$Computer
+  [switch]$Computer 
 )
 
 function Draw-Board {
@@ -89,13 +89,19 @@ function Get-RowColDiag {
 function Pick-Location {
   Param (
     $Board,
-    $WhichTurn
+    $WhichTurn,
+    $Pos = 99
   )
-  do {
-    Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play $WhichTurn (1,2,3 top, 4,5,6 Middle, 7,8,9 bottom) "
-    $Location = Read-Host 
-    $arrayLoc = $Location - 1
-  } until (1..9 -contains $Location -and $Board[$arrayLoc] -eq " ") 
+  if ($Pos -in 0..8) {
+    $arrayLoc = $Pos
+  }
+  else {
+    do {
+      Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play $WhichTurn (1,2,3 top, 4,5,6 Middle, 7,8,9 bottom) "
+      $Location = Read-Host 
+      $arrayLoc = $Location - 1
+    } until (1..9 -contains $Location -and $Board[$arrayLoc] -eq " ") 
+  }
   $Board[$arrayLoc] = $WhichTurn
   return $Board
 }
@@ -107,9 +113,9 @@ function Check-Winner {
   $Winner = $false
   $WhichWin = ' '
   foreach ($Col in (0..2)) {
-    if ($Board[$col + 0] -eq $Board[$col + 1] -and $Board[$col + 0] -eq $Board[$col + 2] -and $Board[$col + 0] -match "[XO]") {
+    if ($Board[($col*3) + 0] -eq $Board[($col*3) + 1] -and $Board[($col*3) + 0] -eq $Board[($col*3) + 2] -and $Board[($col*3) + 0] -match "[XO]") {
       $Winner = $true
-      $WhichWin = $Board[$col + 0]
+      $WhichWin = $Board[($col*3) + 0]
     }
     if ($Board[$col + 0] -eq $Board[$col + 3] -and $Board[$col + 0] -eq $Board[$col + 6] -and $Board[$col + 0] -match "[XO]" ) {
       $Winner = $true
@@ -142,6 +148,48 @@ function Check-Winner {
   }
 }
 
+function Get-BestOPos {
+  param ( 
+    $Board,
+    $RCD
+  )
+  $Threat = $false; $ThreatPos = @(); $RowCount = 0; $ColCount = 0
+  $DiagCount = 0; $SqrCount = 0; $BlankPos = @()
+  foreach ($Row in $RCD.Row) {
+    if ($Row -match "XX\s") {$Threat=$true; $ThreatPos += ($RowCount*3)+2}
+    if ($Row -match "X\sX") {$Threat=$true; $ThreatPos += ($RowCount*3)+1}
+    if ($Row -match "\sXX") {$Threat=$true; $ThreatPos += ($RowCount*3)}
+    $RowCount++
+  }
+  foreach ($Col in $RCD.Col) {
+    if ($Col -match "XX\s") {$Threat=$true; $ThreatPos += $ColCount+6}
+    if ($Col -match "X\sX") {$Threat=$true; $ThreatPos += $ColCount+3}
+    if ($Col -match "\sXX") {$Threat=$true; $ThreatPos += $ColCount}
+    $ColCount++
+  }
+  if ($RCD.Diag[0] -match "XX\s") {$Threat=$true; $ThreatPos += 8}
+  if ($RCD.Diag[0] -match "X\sX") {$Threat=$true; $ThreatPos += 4}
+  if ($RCD.Diag[0] -match "\sXX") {$Threat=$true; $ThreatPos += 0}
+
+  if ($RCD.Diag[1] -match "XX\s") {$Threat=$true; $ThreatPos += 6}
+  if ($RCD.Diag[1] -match "X\sX") {$Threat=$true; $ThreatPos += 4}
+  if ($RCD.Diag[1] -match "\sXX") {$Threat=$true; $ThreatPos += 2}
+
+  if ($Threat -eq $true) {$ThreatPos = $ThreatPos | Select-Object -Unique}
+  foreach ($Sqr in $Board) {
+    if ($Sqr -eq " ") {$BlankPos += $SqrCount}
+    $SqrCount++
+  }
+
+  $ThreatProp = @{
+    Threat = $Threat
+    Pos = $ThreatPos
+    Blanks = $BlankPos
+  }
+  $PlacementObj = New-Object -TypeName psobject -Property $ThreatProp
+  return $PlacementObj
+
+}
 
 ##################################
 #  MAIN CODE
@@ -151,11 +199,26 @@ $MainBoard = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
 Draw-Board -Board $MainBoard
 $Turn = @("X","O") | Get-Random
 do {
-  $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn
+  if ($Computer -eq $true -and $Turn -eq 'O') {
+    $RowColDiag = Get-RowColDiag -Board $MainBoard
+    $Move = Get-BestOPos -Board $MainBoard -RCD $RowColDiag
+    if ($Move.Threat -eq $true) {
+      $Pos = $Move.Pos | Get-Random
+      $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $Pos
+    }
+    else {
+      #temp fix
+      $TempPos = $Move.Blanks | Get-Random
+      $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $TempPos
+    }
+  }
+  else {
+    $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn
+  }
   Draw-Board -Board $MainBoard
-  if ($Turn -eq "X") {$Turn = "O"}
-  elseif ($Turn -eq "O") {$Turn = "X"} 
   $PossWin = Check-Winner -Board $MainBoard
+  if ($Turn -eq "X" ) {$Turn = "O"}
+  elseif ($Turn -eq "O" ) {$Turn = "X"} 
 } until ($MainBoard -notcontains " " -or $PossWin.Winner -eq $true)
 if ($PossWin.Winner -eq $true) {
   Write-Host -ForegroundColor Green "The Winner is $($PossWin.WhichWin)"
