@@ -29,13 +29,13 @@
 #>
 [CmdLetBinding()]
 Param (
-  [switch]$Computer = $true
+  [switch]$Computer
 )
 
 function Draw-Board {
   Param ($Board,$Border)
 
-  #Clear-Host
+  Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
   $GridColor = "Yellow"
   $XColor = "Red"
