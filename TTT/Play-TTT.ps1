@@ -29,13 +29,13 @@
 #>
 [CmdLetBinding()]
 Param (
-  [switch]$Computer
+  [switch]$Computer = $true
 )
 
 function Draw-Board {
   Param ($Board,$Border)
 
-  Clear-Host
+  #Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
   $GridColor = "Yellow"
   $XColor = "Red"
@@ -197,7 +197,7 @@ function Get-BestOPos {
 
 
   $RowCount = 0; $ColCount = 0; $DiagCount = 0; $SqrCount = 0; 
-  $OffencePos = @(); $Offence =$false
+  $OffencePos = @(); $Offence =$false;$BuildPos = @();$build = $false
   foreach ($Row in $RCD.Row) {
     if ($Row -match "OO\s") {$Offence = $true; $OffencePos += ($RowCount*3)+2}
     if ($Row -match "O\s\s") {$Build = $true; $BuildPos += ($RowCount*3)+2; $BuildPos += ($RowCount*3)+1}
@@ -232,8 +232,11 @@ function Get-BestOPos {
   }
   if ($Threat -eq $true) {$ThreatPos = $ThreatPos | Select-Object -Unique | Get-Random}
   if ($Offence -eq $true) {$ThreatPos = $OffencePos | Select-Object -Unique | Get-Random}
-  if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $true) {$BuildPos | Get-Random} 
-  if ($Offence -eq $false -and $Threat -eq $false) { $Offence = $true; $ThreatPos = $BlankPos | Get-Random } 
+  if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $true) {
+    if ($BuildPos -contains 4) {$ThreatPos = 4}
+    else {$ThreatPos = $BuildPos | Get-Random}
+  } 
+  if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $false) { $Offence = $true; $ThreatPos = $BlankPos | Get-Random } 
   $ThreatProp = @{
     Threat = $Threat
     Offence = $Offence
