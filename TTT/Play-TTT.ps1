@@ -122,13 +122,13 @@ function Check-Winner {
       $WhichWin = $Board[$col + 0]
     }
   }
-  if ($Board[0] -eq $Board[4] -and $Board[0] -eq $Board[8]  -and $Board[$col + 0] -match "[XO]" ) {
+  if ($Board[0] -eq $Board[4] -and $Board[0] -eq $Board[8]  -and $Board[0] -match "[XO]" ) {
     $Winner = $true
-    $WhichWin = $Board[$col + 0]
+    $WhichWin = $Board[0]
   }
-  if ($Board[2] -eq $Board[4] -and $Board[2] -eq $Board[6] -and $Board[$col + 0] -match "[XO]" ) {
+  if ($Board[2] -eq $Board[4] -and $Board[2] -eq $Board[6] -and $Board[2] -match "[XO]" ) {
     $Winner = $true
-    $WhichWin = $Board[$col + 0]
+    $WhichWin = $Board[2]
   }
   If ($Winner -eq $true) {
     $WinProp = @{
@@ -208,8 +208,9 @@ do {
     }
     else {
       #temp fix
-      $TempPos = $Move.Blanks | Get-Random
-      $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $TempPos
+      $MovePos = $Move.Blanks | Get-Random
+      Start-Sleep -Seconds 2
+      $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $MovePos
     }
   }
   else {
