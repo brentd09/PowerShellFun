@@ -236,7 +236,16 @@ function Get-BestOPos {
     if ($BuildPos -contains 4) {$ThreatPos = 4}
     else {$ThreatPos = $BuildPos | Get-Random}
   } 
-  if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $false) { $Offence = $true; $ThreatPos = $BlankPos | Get-Random } 
+  if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $false) { 
+    if ($BlankPos.Count -eq 8 -and $Board[4] -eq "X"){
+      $Offence = $true
+      $ThreatPos = @(0,2,6,8) | get-random
+    }
+    else {
+      $Offence = $true
+      $ThreatPos = $BlankPos | Get-Random 
+    }
+  } 
   $ThreatProp = @{
     Threat = $Threat
     Offence = $Offence
