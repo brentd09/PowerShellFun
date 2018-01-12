@@ -154,7 +154,7 @@ function Get-BestOPos {
     $RCD
   )
   $Threat = $false; $ThreatPos = @(); $RowCount = 0; $ColCount = 0
-  $DiagCount = 0; $SqrCount = 0; $BlankPos = @()
+  $DiagCount = 0; $SqrCount = 0; $BlankPos = @(); $Offence = $false
   foreach ($Row in $RCD.Row) {
     if ($Row -match "XX\s") {$Threat=$true; $ThreatPos += ($RowCount*3)+2}
     if ($Row -match "X\sX") {$Threat=$true; $ThreatPos += ($RowCount*3)+1}
@@ -175,16 +175,39 @@ function Get-BestOPos {
   if ($RCD.Diag[1] -match "X\sX") {$Threat=$true; $ThreatPos += 4}
   if ($RCD.Diag[1] -match "\sXX") {$Threat=$true; $ThreatPos += 2}
 
-  if ($Threat -eq $true) {$ThreatPos = $ThreatPos | Select-Object -Unique}
+  if ($Threat -eq $true) {$ThreatPos = $ThreatPos | Select-Object -Unique | Get-Random}
+  else {
+    $RowCount = 0; $ColCount = 0; $DiagCount = 0; $SqrCount = 0
+    foreach ($Row in $RCD.Row) {
+      if ($Row -match "OO\s") {$Offence = $true; $ThreatPos += ($RowCount*3)+2}
+      if ($Row -match "O\sO") {$Offence = $true; $ThreatPos += ($RowCount*3)+1}
+      if ($Row -match "\sOO") {$Offence = $true; $ThreatPos += ($RowCount*3)}
+      $RowCount++
+    }
+    foreach ($Col in $RCD.Col) {
+      if ($Col -match "OO\s") {$Offence = $true; $ThreatPos += $ColCount+6}
+      if ($Col -match "O\sO") {$Offence = $true; $ThreatPos += $ColCount+3}
+      if ($Col -match "\sOO") {$Offence = $true; $ThreatPos += $ColCount}
+      $ColCount++
+    }
+    if ($RCD.Diag[0] -match "OO\s") {$Offence = $true; $ThreatPos += 8}
+    if ($RCD.Diag[0] -match "O\sO") {$Offence = $true; $ThreatPos += 4}
+    if ($RCD.Diag[0] -match "\sOO") {$Offence = $true; $ThreatPos += 0}
+    
+    if ($RCD.Diag[1] -match "OO\s") {$Offence = $true; $ThreatPos += 6}
+    if ($RCD.Diag[1] -match "O\sO") {$Offence = $true; $ThreatPos += 4}
+    if ($RCD.Diag[1] -match "\sOO") {$Offence = $true; $ThreatPos += 2}
+  }
   foreach ($Sqr in $Board) {
     if ($Sqr -eq " ") {$BlankPos += $SqrCount}
     $SqrCount++
   }
-
+  If ($Offence -eq $false) { $Offence = $true; $ThreatPos = $BlankPos | Get-Random } 
   $ThreatProp = @{
     Threat = $Threat
     Pos = $ThreatPos
     Blanks = $BlankPos
+    Offence = $Offence
   }
   $PlacementObj = New-Object -TypeName psobject -Property $ThreatProp
   return $PlacementObj
@@ -208,8 +231,8 @@ do {
     }
     else {
       #temp fix
-      $MovePos = $Move.Blanks | Get-Random
-      Start-Sleep -Seconds 2
+      $MovePos = $Move.Pos
+      Start-Sleep -Seconds 1
       $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $MovePos
     }
   }
