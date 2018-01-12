@@ -96,12 +96,16 @@ function Pick-Location {
     $WhichTurn,
     $Pos = 99
   )
+  if ($WhichTurn -eq "X") {$Color = "Red"}
+  else {$Color = "White"}
   if ($Pos -in 0..8) {
     $arrayLoc = $Pos
   }
   else {
     do {
-      Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play $WhichTurn (1,2,3 top, 4,5,6 Middle, 7,8,9 bottom) "
+      Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play "
+      Write-Host -ForegroundColor $Color -NoNewline $WhichTurn
+      Write-Host -ForegroundColor Yellow -NoNewline " (1,2,3 top, 4,5,6 Middle, 7,8,9 bottom) "
       $Location = Read-Host 
       $arrayLoc = $Location - 1
     } until (1..9 -contains $Location -and $Board[$arrayLoc] -eq " ") 
