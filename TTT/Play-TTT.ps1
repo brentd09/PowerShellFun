@@ -3,9 +3,14 @@
    Tic Tac Toe game
 .DESCRIPTION
    This is a standard Tic Tac Toe game, it is currently 
-   run with two players hoever there are plans to add 
-   some AI to this game so that you could play the 
-   computer
+   run with two players unless you issue the -Computer
+   Parameter which instructs the script to turn on the 
+   Computer opponent logic.
+   Logic Process:
+   1. Seek to win with this turn
+   2. Block opponent with this turn
+   3. Build a line with this turn
+   4. Randomly select a blank Position
 .EXAMPLE
    Play-TTT 
 
@@ -24,11 +29,11 @@
 #>
 [CmdLetBinding()]
 Param (
-  [switch]$Computer 
+  [switch]$Computer
 )
 
 function Draw-Board {
-  Param ($Board)
+  Param ($Board,$Border)
 
   Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
@@ -40,23 +45,22 @@ function Draw-Board {
     if ($Board[$pos] -eq "X"){ $EntryColors[$Pos] = $XColor}
     if ($Board[$pos] -eq "O"){ $EntryColors[$Pos] = $OColor}
   }
-  $Bdr = "  "
-  Write-Host -ForegroundColor $GridColor "${Bdr}Tic Tac Toe`n"
-  Write-Host -NoNewline "$Bdr "
+  Write-Host -ForegroundColor $GridColor "`n${Border}Tic Tac Toe`n"
+  Write-Host -NoNewline "$Border "
   Write-Host -ForegroundColor $EntryColors[0] -NoNewline $Board[0]
   Write-Host -ForegroundColor $GridColor -NoNewline " | "  
   write-host -ForegroundColor $EntryColors[1] -NoNewline $Board[1]
   write-host -ForegroundColor $GridColor -NoNewline " | "
   Write-Host -ForegroundColor $EntryColors[2] $Board[2]
-  Write-Host -ForegroundColor $GridColor "${Bdr}---+---+---"
-  Write-Host -NoNewline "$Bdr "
+  Write-Host -ForegroundColor $GridColor "${Border}---+---+---"
+  Write-Host -NoNewline "$Border "
   Write-Host -ForegroundColor $EntryColors[3] -NoNewline $Board[3]
   Write-Host -ForegroundColor $GridColor -NoNewline " | "  
   write-host -ForegroundColor $EntryColors[4] -NoNewline $Board[4]
   write-host -ForegroundColor $GridColor -NoNewline " | "
   Write-Host -ForegroundColor $EntryColors[5] $Board[5]
-  Write-Host -ForegroundColor $GridColor "${Bdr}---+---+---"
-  Write-Host -NoNewline "$Bdr "
+  Write-Host -ForegroundColor $GridColor "${Border}---+---+---"
+  Write-Host -NoNewline "$Border "
   Write-Host -ForegroundColor $EntryColors[6] -NoNewline $Board[6]
   Write-Host -ForegroundColor $GridColor -NoNewline " | "  
   write-host -ForegroundColor $EntryColors[7] -NoNewline $Board[7]
@@ -131,9 +135,12 @@ function Check-Winner {
     $WhichWin = $Board[2]
   }
   If ($Winner -eq $true) {
+    if ($WhichWin -eq "X") {$WinnerColor = "Red"}
+    if ($WhichWin -eq "O") {$WinnerColor = "White"}
     $WinProp = @{
       Winner = $Winner
       WhichWin = $WhichWin
+      WinnerCol = $WinnerColor 
     }
     $WinObj = New-Object -TypeName psobject -Property $WinProp
     return $WinObj
@@ -153,17 +160,6 @@ function Get-BestOPos {
     $Board,
     $RCD
   )
-
-
-<#
-   NEED TO RETHINK
-   1. move to win
-   2. move to counter
-   3. move to grow line
-   4. move to start
-#>  
-
-
   $Threat = $false; $ThreatPos = @(); $RowCount = 0; $ColCount = 0
   $DiagCount = 0; $SqrCount = 0; $BlankPos = @(); $Offence = $false
   foreach ($Row in $RCD.Row) {
@@ -178,6 +174,15 @@ function Get-BestOPos {
     if ($Col -match "\sXX") {$Threat=$true; $ThreatPos += $ColCount}
     $ColCount++
   }
+  foreach ($Diag in $RCD.Diag) {
+    if ($Diag -match "XX\s") {$Offence = $true; $ThreatPos += 8 - (2 * $DiagCount)}
+    if ($Diag -match "X\sX") {$Offence = $true; $ThreatPos += 4}
+    if ($Diag -match "\sXX") {$Offence = $true; $ThreatPos += 0 + (2 * $DiagCount)}
+    $DiagCount++
+  }
+
+
+
   if ($RCD.Diag[0] -match "XX\s") {$Threat=$true; $ThreatPos += 8}
   if ($RCD.Diag[0] -match "X\sX") {$Threat=$true; $ThreatPos += 4}
   if ($RCD.Diag[0] -match "\sXX") {$Threat=$true; $ThreatPos += 0}
@@ -186,51 +191,61 @@ function Get-BestOPos {
   if ($RCD.Diag[1] -match "X\sX") {$Threat=$true; $ThreatPos += 4}
   if ($RCD.Diag[1] -match "\sXX") {$Threat=$true; $ThreatPos += 2}
 
-  if ($Threat -eq $true) {$ThreatPos = $ThreatPos | Select-Object -Unique | Get-Random}
-  else {
-    $RowCount = 0; $ColCount = 0; $DiagCount = 0; $SqrCount = 0
-    foreach ($Row in $RCD.Row) {
-      if ($Row -match "OO\s") {$Offence = $true; $ThreatPos += ($RowCount*3)+2}
-      if ($Row -match "O\sO") {$Offence = $true; $ThreatPos += ($RowCount*3)+1}
-      if ($Row -match "\sOO") {$Offence = $true; $ThreatPos += ($RowCount*3)}
-      $RowCount++
-    }
-    foreach ($Col in $RCD.Col) {
-      if ($Col -match "OO\s") {$Offence = $true; $ThreatPos += $ColCount+6}
-      if ($Col -match "O\sO") {$Offence = $true; $ThreatPos += $ColCount+3}
-      if ($Col -match "\sOO") {$Offence = $true; $ThreatPos += $ColCount}
-      $ColCount++
-    }
-    if ($RCD.Diag[0] -match "OO\s") {$Offence = $true; $ThreatPos += 8}
-    if ($RCD.Diag[0] -match "O\sO") {$Offence = $true; $ThreatPos += 4}
-    if ($RCD.Diag[0] -match "\sOO") {$Offence = $true; $ThreatPos += 0}
-    
-    if ($RCD.Diag[1] -match "OO\s") {$Offence = $true; $ThreatPos += 6}
-    if ($RCD.Diag[1] -match "O\sO") {$Offence = $true; $ThreatPos += 4}
-    if ($RCD.Diag[1] -match "\sOO") {$Offence = $true; $ThreatPos += 2}
+
+  $RowCount = 0; $ColCount = 0; $DiagCount = 0; $SqrCount = 0; 
+  $OffencePos = @(); $Offence =$false
+  foreach ($Row in $RCD.Row) {
+    if ($Row -match "OO\s") {$Offence = $true; $OffencePos += ($RowCount*3)+2}
+    if ($Row -match "O\s\s") {$Build = $true; $BuildPos += ($RowCount*3)+2; $BuildPos += ($RowCount*3)+1}
+    if ($Row -match "O\sO") {$Offence = $true; $OffencePos += ($RowCount*3)+1}
+    if ($Row -match "\s\sO") {$Build = $true; $BuildPos += ($RowCount*3)+1; $BuildPos += ($RowCount*3)}
+    if ($Row -match "\sOO") {$Offence = $true; $OffencePos += ($RowCount*3)}
+    if ($Row -match "\sO\s") {$Build = $true; $BuildPos += ($RowCount*3); $BuildPos += ($RowCount*3)+2}
+    $RowCount++
   }
+  foreach ($Col in $RCD.Col) {
+    if ($Col -match "OO\s") {$Offence = $true; $OffencePos += $ColCount+6}
+    if ($Col -match "O\s\s") {$Build = $true; $BuildPos += $ColCount+6; $BuildPos += $ColCount+3}
+    if ($Col -match "O\sO") {$Offence = $true; $OffencePos += $ColCount+3}
+    if ($Col -match "\s\sO") {$Build = $true; $BuildPos += $ColCount+3; $BuildPos += $ColCount}
+    if ($Col -match "\sOO") {$Offence = $true; $OffencePos += $ColCount}
+    if ($Col -match "\sO\s") {$Build = $true; $BuildPos += $ColCount; $BuildPos += $ColCount+6}
+    $ColCount++
+  }
+  foreach ($Diag in $RCD.Diag) {
+    if ($Diag -match "OO\s") {$Offence = $true; $OffencePos += 8 - (2 * $DiagCount)}
+    if ($Diag -match "O\s\s") {$Build = $true; $BuildPos += 8 - (2 * $DiagCount); $BuildPos += $BuildPos += 4}
+    if ($Diag -match "O\sO") {$Offence = $true; $OffencePos += 4}
+    if ($Diag -match "\s\sO") {$Build = $true; $BuildPos += 4; $BuildPos += 0 + (2 * $DiagCount)}
+    if ($Diag -match "\sOO") {$Offence = $true; $OffencePos += 0 + (2 * $DiagCount)}
+    if ($Diag -match "\sO\s") {$Build = $true; $BuildPos += 0 + (2 * $DiagCount); $BuildPos += 8 - (2 * $DiagCount)}
+    $DiagCount++
+  }
+  
   foreach ($Sqr in $Board) {
     if ($Sqr -eq " ") {$BlankPos += $SqrCount}
     $SqrCount++
   }
-  If ($Offence -eq $false) { $Offence = $true; $ThreatPos = $BlankPos | Get-Random } 
+  if ($Threat -eq $true) {$ThreatPos = $ThreatPos | Select-Object -Unique | Get-Random}
+  if ($Offence -eq $true) {$ThreatPos = $OffencePos | Select-Object -Unique | Get-Random}
+  if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $true) {$BuildPos | Get-Random} 
+  if ($Offence -eq $false -and $Threat -eq $false) { $Offence = $true; $ThreatPos = $BlankPos | Get-Random } 
   $ThreatProp = @{
     Threat = $Threat
+    Offence = $Offence
+    Build = $Build
     Pos = $ThreatPos
     Blanks = $BlankPos
-    Offence = $Offence
   }
   $PlacementObj = New-Object -TypeName psobject -Property $ThreatProp
   return $PlacementObj
-
 }
 
 ##################################
 #  MAIN CODE
-
-
 $MainBoard = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
-Draw-Board -Board $MainBoard
+$Border = "  "
+Draw-Board -Board $MainBoard -Border $Border
 $Turn = @("X","O") | Get-Random
 do {
   if ($Computer -eq $true -and $Turn -eq 'O') {
@@ -241,20 +256,24 @@ do {
       $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $Pos
     }
     else {
-      #temp fix
       $MovePos = $Move.Pos
-      Start-Sleep -Seconds 1
+      Start-Sleep -Milliseconds 300
       $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $MovePos
     }
   }
   else {
     $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn
   }
-  Draw-Board -Board $MainBoard
+  Draw-Board -Board $MainBoard -Border $Border
   $PossWin = Check-Winner -Board $MainBoard
   if ($Turn -eq "X" ) {$Turn = "O"}
   elseif ($Turn -eq "O" ) {$Turn = "X"} 
 } until ($MainBoard -notcontains " " -or $PossWin.Winner -eq $true)
 if ($PossWin.Winner -eq $true) {
-  Write-Host -ForegroundColor Green "The Winner is $($PossWin.WhichWin)"
+  Write-Host -NoNewline -ForegroundColor Green "${Border}The Winner is "
+  Write-Host -ForegroundColor $PossWin.WinnerCol $($PossWin.WhichWin)
 }
+else {
+  Write-Host -ForegroundColor Yellow "${Border}This game is a TIED GAME"
+}
+Write-Host "`n`n`n"
