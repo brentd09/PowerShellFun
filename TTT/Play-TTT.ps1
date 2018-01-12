@@ -153,6 +153,17 @@ function Get-BestOPos {
     $Board,
     $RCD
   )
+
+
+<#
+   NEED TO RETHINK
+   1. move to win
+   2. move to counter
+   3. move to grow line
+   4. move to start
+#>  
+
+
   $Threat = $false; $ThreatPos = @(); $RowCount = 0; $ColCount = 0
   $DiagCount = 0; $SqrCount = 0; $BlankPos = @(); $Offence = $false
   foreach ($Row in $RCD.Row) {
