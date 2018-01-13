@@ -259,37 +259,41 @@ function Get-BestOPos {
 
 ##################################
 #  MAIN CODE
-$MainBoard = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
-$Border = "  "
-Draw-Board -Board $MainBoard -Border $Border
-$Turn = @("X","O") | Get-Random
 do {
-  if ($Computer -eq $true -and $Turn -eq 'O') {
-    $RowColDiag = Get-RowColDiag -Board $MainBoard
-    $Move = Get-BestOPos -Board $MainBoard -RCD $RowColDiag
-    if ($Move.Threat -eq $true) {
-      $Pos = $Move.Pos | Get-Random
-      $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $Pos
+  $MainBoard = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
+  $Border = "  "
+  Draw-Board -Board $MainBoard -Border $Border
+  $Turn = @("X","O") | Get-Random
+  do {
+    if ($Computer -eq $true -and $Turn -eq 'O') {
+      $RowColDiag = Get-RowColDiag -Board $MainBoard
+      $Move = Get-BestOPos -Board $MainBoard -RCD $RowColDiag
+      if ($Move.Threat -eq $true) {
+        $Pos = $Move.Pos | Get-Random
+        $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $Pos
+      }
+      else {
+        $MovePos = $Move.Pos
+        Start-Sleep -Milliseconds 300
+        $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $MovePos
+      }
     }
     else {
-      $MovePos = $Move.Pos
-      Start-Sleep -Milliseconds 300
-      $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn -Pos $MovePos
+      $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn
     }
+    Draw-Board -Board $MainBoard -Border $Border
+    $PossWin = Check-Winner -Board $MainBoard
+    if ($Turn -eq "X" ) {$Turn = "O"}
+    elseif ($Turn -eq "O" ) {$Turn = "X"} 
+  } until ($MainBoard -notcontains " " -or $PossWin.Winner -eq $true)
+  if ($PossWin.Winner -eq $true) {
+    Write-Host -NoNewline -ForegroundColor Green "${Border}The Winner is "
+    Write-Host -ForegroundColor $PossWin.WinnerCol $($PossWin.WhichWin)
   }
   else {
-    $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn
+    Write-Host -ForegroundColor Yellow "${Border}This game is a TIED GAME"
   }
-  Draw-Board -Board $MainBoard -Border $Border
-  $PossWin = Check-Winner -Board $MainBoard
-  if ($Turn -eq "X" ) {$Turn = "O"}
-  elseif ($Turn -eq "O" ) {$Turn = "X"} 
-} until ($MainBoard -notcontains " " -or $PossWin.Winner -eq $true)
-if ($PossWin.Winner -eq $true) {
-  Write-Host -NoNewline -ForegroundColor Green "${Border}The Winner is "
-  Write-Host -ForegroundColor $PossWin.WinnerCol $($PossWin.WhichWin)
-}
-else {
-  Write-Host -ForegroundColor Yellow "${Border}This game is a TIED GAME"
-}
-Write-Host "`n`n`n"
+  Write-Host "`n`n"
+  Write-Host -ForegroundColor Green -NoNewline "Would you like to play again "
+  $Again = Read-Host
+} While ($Again -Like "y*")
