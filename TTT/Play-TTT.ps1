@@ -109,7 +109,7 @@ function Pick-Location {
     do {
       Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play "
       Write-Host -ForegroundColor $Color -NoNewline $WhichTurn
-      Write-Host -ForegroundColor Yellow -NoNewline " "
+      Write-Host -ForegroundColor Yellow -NoNewline ": "
       $Location = Read-Host 
       $arrayLoc = $Location - 1
     } until (1..9 -contains $Location -and $Board[$arrayLoc] -eq " ") 
@@ -247,7 +247,8 @@ function Get-BestOPos {
     }
     elseif ($BlankPos.Count -eq 8 -and ($Board[0] -eq "X" -or $Board[2] -eq "X" -or $Board[6] -eq "X" -or $Board[8] -eq "X" )) {
       $Offence = $true
-      $ThreatPos = @(1,3,5,7) | get-random
+      if ($Board[4] -eq ' ') {$ThreatPos = 4}
+      else {$ThreatPos = @(1,3,5,7) | get-random}
     }
     else {
       $Offence = $true
