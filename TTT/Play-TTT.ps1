@@ -29,7 +29,7 @@
 #>
 [CmdLetBinding()]
 Param (
-  [switch]$Computer
+  [switch]$Computer 
 )
 
 function Draw-Board {
@@ -238,6 +238,9 @@ function Get-BestOPos {
   if ($Offence -eq $true) {$ThreatPos = $OffencePos | Select-Object -Unique | Get-Random}
   if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $true) {
     if ($BuildPos -contains 4) {$ThreatPos = 4}
+    elseif ($BlankPos.count -eq 6 -and ($Board[0] -eq "X" -and $Board[8] -eq "X") -or ($Board[2] -eq "X" -and $Board[6] -eq "X" )) {
+      $ThreatPos = @(1,3,5,7) | get-random
+    }
     else {$ThreatPos = $BuildPos | Get-Random}
   } 
   if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $false) { 
@@ -249,9 +252,6 @@ function Get-BestOPos {
       $Offence = $true
       if ($Board[4] -eq ' ') {$ThreatPos = 4}
       else {$ThreatPos = @(1,3,5,7) | get-random}
-    }
-    elseif ($BlankPos.count -eq 6 -and ($Board[0] -eq "X" -and $Board[8] -eq "X") -or ($Board[2] -eq "X" -and $Board[6] -eq "X" )) {
-      $ThreatPos = @(1,3,5,7) | get-random
     }
     else {
       $Offence = $true
