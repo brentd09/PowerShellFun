@@ -250,6 +250,9 @@ function Get-BestOPos {
       if ($Board[4] -eq ' ') {$ThreatPos = 4}
       else {$ThreatPos = @(1,3,5,7) | get-random}
     }
+    elseif ($BlankPos.count -eq 6 -and ($Board[0] -eq "X" -and $Board[8] -eq "X") -or ($Board[2] -eq "X" -and $Board[6] -eq "X" )) {
+      $ThreatPos = @(1,3,5,7) | get-random
+    }
     else {
       $Offence = $true
       $ThreatPos = $BlankPos | Get-Random 
