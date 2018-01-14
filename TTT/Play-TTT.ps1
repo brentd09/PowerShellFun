@@ -37,35 +37,39 @@ function Draw-Board {
 
   Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
+  $ShowSqr = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
   $GridColor = "Yellow"
   $XColor = "Red"
   $OColor = "white"
   $TitleCol = "Yellow"
   foreach ($Pos in (0..8)){
-    if ($Board[$pos] -eq "X"){ $EntryColors[$Pos] = $XColor}
-    if ($Board[$pos] -eq "O"){ $EntryColors[$Pos] = $OColor}
+    if ($Board[$Pos] -eq "X") { $EntryColors[$Pos] = $XColor}
+    if ($Board[$Pos] -eq "O") { $EntryColors[$Pos] = $OColor}
+    if ($Board[$Pos] -eq " ") { $EntryColors[$Pos] = "darkgray"}
+    if ($Board[$Pos] -match "[XO]") {$ShowSqr[$Pos] = $Board[$Pos]}
+    else {$ShowSqr[$Pos] = $Pos + 1}
   }
   Write-Host -ForegroundColor $GridColor "`n${Border}Tic Tac Toe`n"
   Write-Host -NoNewline "$Border "
-  Write-Host -ForegroundColor $EntryColors[0] -NoNewline $Board[0]
+  Write-Host -ForegroundColor $EntryColors[0] -NoNewline $ShowSqr[0]
   Write-Host -ForegroundColor $GridColor -NoNewline " | "  
-  write-host -ForegroundColor $EntryColors[1] -NoNewline $Board[1]
+  write-host -ForegroundColor $EntryColors[1] -NoNewline $ShowSqr[1]
   write-host -ForegroundColor $GridColor -NoNewline " | "
-  Write-Host -ForegroundColor $EntryColors[2] $Board[2]
+  Write-Host -ForegroundColor $EntryColors[2] $ShowSqr[2]
   Write-Host -ForegroundColor $GridColor "${Border}---+---+---"
   Write-Host -NoNewline "$Border "
-  Write-Host -ForegroundColor $EntryColors[3] -NoNewline $Board[3]
+  Write-Host -ForegroundColor $EntryColors[3] -NoNewline $ShowSqr[3]
   Write-Host -ForegroundColor $GridColor -NoNewline " | "  
-  write-host -ForegroundColor $EntryColors[4] -NoNewline $Board[4]
+  write-host -ForegroundColor $EntryColors[4] -NoNewline $ShowSqr[4]
   write-host -ForegroundColor $GridColor -NoNewline " | "
-  Write-Host -ForegroundColor $EntryColors[5] $Board[5]
+  Write-Host -ForegroundColor $EntryColors[5] $ShowSqr[5]
   Write-Host -ForegroundColor $GridColor "${Border}---+---+---"
   Write-Host -NoNewline "$Border "
-  Write-Host -ForegroundColor $EntryColors[6] -NoNewline $Board[6]
+  Write-Host -ForegroundColor $EntryColors[6] -NoNewline $ShowSqr[6]
   Write-Host -ForegroundColor $GridColor -NoNewline " | "  
-  write-host -ForegroundColor $EntryColors[7] -NoNewline $Board[7]
+  write-host -ForegroundColor $EntryColors[7] -NoNewline $ShowSqr[7]
   write-host -ForegroundColor $GridColor -NoNewline " | "
-  Write-Host -ForegroundColor $EntryColors[8] $Board[8]
+  Write-Host -ForegroundColor $EntryColors[8] $ShowSqr[8]
   Write-Host 
 }
 
@@ -105,7 +109,7 @@ function Pick-Location {
     do {
       Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play "
       Write-Host -ForegroundColor $Color -NoNewline $WhichTurn
-      Write-Host -ForegroundColor Yellow -NoNewline " (1,2,3 top, 4,5,6 Middle, 7,8,9 bottom) "
+      Write-Host -ForegroundColor Yellow -NoNewline " "
       $Location = Read-Host 
       $arrayLoc = $Location - 1
     } until (1..9 -contains $Location -and $Board[$arrayLoc] -eq " ") 
@@ -266,7 +270,7 @@ function Get-BestOPos {
 do {
   $MainBoard = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
   $Border = "  "
-  Draw-Board -Board $MainBoard -Border $Border
+  Draw-Board -Board $MainBoard.psobject.Copy() -Border $Border
   $Turn = @("X","O") | Get-Random
   do {
     if ($Computer -eq $true -and $Turn -eq 'O') {
@@ -285,7 +289,7 @@ do {
     else {
       $MainBoard = Pick-Location -Board $MainBoard -WhichTurn $Turn
     }
-    Draw-Board -Board $MainBoard -Border $Border
+    Draw-Board -Board $MainBoard.psobject.Copy() -Border $Border
     $PossWin = Check-Winner -Board $MainBoard
     if ($Turn -eq "X" ) {$Turn = "O"}
     elseif ($Turn -eq "O" ) {$Turn = "X"} 
