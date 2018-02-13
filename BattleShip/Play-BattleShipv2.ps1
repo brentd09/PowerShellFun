@@ -47,6 +47,40 @@ function Display-Grid {
   }
 }
 
+function Place-Ship {
+  Param (
+    $Grid
+  )
+  foreach ($Ship in "AAAAA","BBBB","CCC","SSS","DD") {
+    do {
+      $GoodPos = $true
+      $ShipLen = $Ship.length - 1
+      $RandDir = "V","H" | Get-Random
+      if ($RandDir -eq 'V') {
+        $VAdjusted = 9 - $Shiplen 
+        $HAdjusted = 9
+        $RandCol = 0..$VAdjusted | Get-Random 
+        $RandRow = 0..$HAdjusted | Get-Random 
+        foreach ($Pos in (0..$ShipLen)) {
+          $PotentialPos = $Grid | Where-Object {$_.Row -eq $RandRow -and $_.Col -eq ($RandCol+$Pos) }
+          if ($PotentialPos.ship -match '[ABSCD]') {$GoodPos = $false}
+        }
+      }
+      if ($RandDir -eq 'H') {
+        $HAdjusted = 9 - $ShipLen 
+        $VAdjusted 
+        $RandCol = 0..$VAdjusted | Get-Random 
+        $RandRow = 0..$HAdjusted | Get-Random 
+        foreach ($Pos in (0..$ShipLen)) {
+          $PotentialPos = $Grid | Where-Object {$_.Row -eq ($RandRow+$Pos) -and $_.Col -eq $RandCol }
+          if ($PotentialPos.ship -match '[ABSCD]') {$GoodPos = $false}
+        }
+      }
+    } until ($GoodPos -eq $true)
+    if ($RandDir -eq 'V') {}
+    if ($RandDir -eq 'H') {}
+  }
+}
 
 
 
