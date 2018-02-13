@@ -56,6 +56,8 @@ function Place-Ship {
       $GoodPos = $true
       $ShipLen = $Ship.length - 1
       $RandDir = "V","H" | Get-Random
+      ### Guess a position for the ship placement and then check no other ship is there already, 
+      ### re-guess if required
       if ($RandDir -eq 'V') {
         $VAdjusted = 9 - $Shiplen 
         $HAdjusted = 9
@@ -77,6 +79,7 @@ function Place-Ship {
         }
       }
     } until ($GoodPos -eq $true)
+    ### Add the Ship values in the guessed positions AAAAA or SSS etc.
     if ($RandDir -eq 'V') {}
     if ($RandDir -eq 'H') {}
   }
