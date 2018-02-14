@@ -13,35 +13,30 @@
 
 function Init-Board {
   foreach ($Num in (0..99)) {
-    $Nth = $Num - 10;$Sth = $Num + 10;$Est = $Num + 1;$Wst = $num - 1
-    $RowNum = [System.Math]::Truncate( $Num / 10 )
-    $ColNum = $Num % 10
+    $Nth      = $Num - 10;$Sth = $Num + 10;$Est = $Num + 1;$Wst = $num - 1
+    $RowNum   = [System.Math]::Truncate( $Num / 10 )
+    $ColNum   = $Num % 10
     $ShipChar = '-'
-    $PegChar = '-'
+    $PegChar  = '-'
     if ($RowNum -in (1..8) -and $ColNum -in (1..8)) {$NSEW = @($Nth,$Sth,$Est,$Wst)}
     elseif ($RowNum -eq 0 -and $ColNum -eq 0) {$NSEW = @($Sth,$Est)}
     elseif ($RowNum -eq 0 -and $ColNum -eq 9) {$NSEW = @($Sth,$Wst)}
     elseif ($RowNum -eq 9 -and $ColNum -eq 0) {$NSEW = @($Nth,$Est)}
     elseif ($RowNum -eq 9 -and $ColNum -eq 9) {$NSEW = @($Nth,$Wst)}
-                                                                   
     elseif ($RowNum -eq 0 -and $ColNum -in (1..8)) {$NSEW = @($Sth,$Est,$Wst)}
-                                                                   
     elseif ($RowNum -eq 9 -and $ColNum -in (1..8)) {$NSEW = @($Nth,$Est,$Wst)}
-                                                                   
     elseif ($RowNum -in (1..8) -and $ColNum -eq 0) {$NSEW = @($Nth,$Sth,$Est)}
-                                                                   
     elseif ($RowNum -in (1..8) -and $ColNum -eq 9) {$NSEW = @($Nth,$Sth,$Wst)}
-    
     [PSCustomObject][ordered]@{
-      Row = $RowNum
-      Col = $ColNum
-      Pos = $Num
-      Ship = $ShipChar
+      Row     = $RowNum
+      Col     = $ColNum
+      Pos     = $Num
+      Ship    = $ShipChar
       ShipCol = "green"
-      Peg = $PegChar
-      PegCol = "White"
+      Peg     = $PegChar
+      PegCol  = "White"
       PegChosen = $false
-      NSEW = $NSEW
+      NSEW    = $NSEW
     }
   }
 }
@@ -142,7 +137,7 @@ function Find-LikelyHits {
     }
   }
   if ($Choices.count -gt 0) {
-    $Choice =  $Choices | Get-Random
+    $Choice = $Choices | Get-Random
     $Random = $false
   }
   else {
@@ -153,9 +148,31 @@ function Find-LikelyHits {
     Choice = $Choice
     Random = $Random
   }
-  # find which ships have been sunk
-  # find hits that are close together on rows
-  # find hits that are close together on cols
+  <#
+
+    Look at our choices vs NSEW
+    Look for rows and col that have the same value with the other that is in close proximity
+    make next guess based on evidence
+    fill the row or col until there is a miss and then guess another shot randomly
+
+    $Choices
+    80
+    72
+    92
+    83
+    
+    [DBG]: PS C:\Users\Administrator>> $hits |ft
+    
+    Row Col Pos Ship ShipCol Peg PegCol PegChosen NSEW            
+    --- --- --- ---- ------- --- ------ --------- ----            
+      8   1  81 X    Red     H   Red         True {71, 91, 82, 80}
+      8   2  82 X    Red     H   Red         True {72, 92, 83, 81}
+    
+    # find which ships have been sunk
+    # find hits that are close together on rows
+    # find hits that are close together on cols
+
+  #>
 
 }
 
