@@ -13,10 +13,25 @@
 
 function Init-Board {
   foreach ($Num in (0..99)) {
+    $Nth = $Num - 10;$Sth = $Num + 10;$Est = $Num + 1;$Wst = $num - 1
     $RowNum = [System.Math]::Truncate( $Num / 10 )
     $ColNum = $Num % 10
     $ShipChar = '-'
     $PegChar = '-'
+    if ($RowNum -in (1..8) -and $ColNum -in (1..8)) {$NSEW = @($Nth,$Sth,$Est,$Wst)}
+    elseif ($RowNum -eq 0 -and $ColNum -eq 0) {$NSEW = @($Sth,$Est)}
+    elseif ($RowNum -eq 0 -and $ColNum -eq 9) {$NSEW = @($Sth,$Wst)}
+    elseif ($RowNum -eq 9 -and $ColNum -eq 0) {$NSEW = @($Nth,$Est)}
+    elseif ($RowNum -eq 9 -and $ColNum -eq 9) {$NSEW = @($Nth,$Wst)}
+                                                                   
+    elseif ($RowNum -eq 0 -and $ColNum -in (1..8)) {$NSEW = @($Sth,$Est,$Wst)}
+                                                                   
+    elseif ($RowNum -eq 9 -and $ColNum -in (1..8)) {$NSEW = @($Nth,$Est,$Wst)}
+                                                                   
+    elseif ($RowNum -in (1..8) -and $ColNum -eq 0) {$NSEW = @($Nth,$Sth,$Est)}
+                                                                   
+    elseif ($RowNum -in (1..8) -and $ColNum -eq 9) {$NSEW = @($Nth,$Sth,$Wst)}
+    
     [PSCustomObject][ordered]@{
       Row = $RowNum
       Col = $ColNum
@@ -26,6 +41,7 @@ function Init-Board {
       Peg = $PegChar
       PegCol = "White"
       PegChosen = $false
+      NSEW = $NSEW
     }
   }
 }
@@ -111,26 +127,66 @@ function Place-Ship {
   $Grid
 }
 
+
+function Find-LikelyHits {
+  Param (
+    $Grid
+  )
+  $Choices = @()
+  $Hits = $grid | Where-Object {$_.ship -eq "X"}
+  foreach ($Hit in $Hits) {
+    foreach ($Direction in $Hit.NSEW) {
+      if ($grid[$Direction].PegChosen -eq $false) {
+        $Choices += $Direction
+      }
+    }
+  }
+  if ($Choices.count -gt 0) {
+    $Choice =  $Choices | Get-Random
+    $Random = $false
+  }
+  else {
+    $Choice = $null
+    $Random = $true
+  }
+  [PSCustomObject][Ordered]@{
+    Choice = $Choice
+    Random = $Random
+  }
+  # find which ships have been sunk
+  # find hits that are close together on rows
+  # find hits that are close together on cols
+
+}
+
 function Guess-Move {
   Param (
     $OpponentGrid,
     [Switch]$ComputersTurn
+
+
   )
   if ($ComputersTurn -eq $true) {
-    $GuessArray = @(1,3,5,7,9,12,14,16,18,20,21,23,25,27,29,32,34,36,38,40,41,43,45,47,49,52,54,56,58,60,61,63,65,67,69,72,74,76,78,80,81,83,85,87,89,92,94,96,98,0,2,4,6,8,11,13,15,17,19,20,22,24,26,28,31,33,35,37,39,40,42,44,46,48,51,53,55,57,59,60,62,64,66,68,71,73,75,77,79,80,82,84,86,88,91,93,95,97,99)
-    $PosRemaining = ($OpponentGrid | where {$_.Pegchosen -eq $false -and $_.Pos -in $GuessArray} ).Pos
-    $RandGuessPos = $PosRemaining | get-random
-    if ($OpponentGrid[$RandGuessPos].Ship -match "[ABCDS]") {
-      $OpponentGrid[$RandGuessPos].Peg = "H"
-      $OpponentGrid[$RandGuessPos].Pegcol = "Red"
-      $OpponentGrid[$RandGuessPos].PegChosen = $true 
-      $OpponentGrid[$RandGuessPos].Ship = "X"
-      $OpponentGrid[$RandGuessPos].ShipCol = "Red" 
+    $Likely = Find-LikelyHits -Grid $OpponentGrid.psobject.copy()
+    if ($Likely.Random -eq $true) {
+      $GuessArray = @(1,3,5,7,9,12,14,16,18,20,21,23,25,27,29,32,34,36,38,40,41,43,45,47,49,52,54,56,58,60,61,63,65,67,69,72,74,76,78,80,81,83,85,87,89,92,94,96,98)
+      $PosRemaining = ($OpponentGrid | where {$_.Pegchosen -eq $false -and $_.Pos -in $GuessArray} ).Pos
+      $GuessPos = $PosRemaining | get-random
     }
     else {
-      $OpponentGrid[$RandGuessPos].Peg = "M"
-      $OpponentGrid[$RandGuessPos].Pegcol = "Gray"
-      $OpponentGrid[$RandGuessPos].PegChosen = $true        
+      $GuessPos = $Likely.Choice
+    }
+    if ($OpponentGrid[$GuessPos].Ship -match "[ABCDS]") {
+      $OpponentGrid[$GuessPos].Peg = "H"
+      $OpponentGrid[$GuessPos].Pegcol = "Red"
+      $OpponentGrid[$GuessPos].PegChosen = $true 
+      $OpponentGrid[$GuessPos].Ship = "X"
+      $OpponentGrid[$GuessPos].ShipCol = "Red" 
+    }
+    else {
+      $OpponentGrid[$GuessPos].Peg = "M"
+      $OpponentGrid[$GuessPos].Pegcol = "Gray"
+      $OpponentGrid[$GuessPos].PegChosen = $true        
     }
   }
   else {
@@ -202,5 +258,10 @@ do {
   $PlayersBoard = Guess-Move -OpponentGrid $PlayersBoard.psobject.Copy() -ComputersTurn
   $ComputerBoard = Guess-Move -OpponentGrid $ComputerBoard.psobject.Copy()
   $Winner = Check-Winner -PlayerGrid $PlayersBoard -ComputersGrid $ComputerBoard
-  if ($winner -ne 'none') {Write-Host -ForegroundColor Yellow "`nThe winner is " $Winner}
+  if ($winner -ne 'none') {
+    Clear-Host
+    Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
+    Display-Grid -Grid $PlayersBoard -Ships -WhosBoard "Player"
+    Write-Host -ForegroundColor Yellow "`nThe winner is " $Winner
+  }
 } until ($Winner -ne 'none')
