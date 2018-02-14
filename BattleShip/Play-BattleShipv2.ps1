@@ -17,7 +17,7 @@ function Init-Board {
     $ColNum = $Num % 10
     $ShipChar = '-'
     $PegChar = '-'
-    [PSCustomObject]@{
+    [PSCustomObject][ordered]@{
       Row = $RowNum
       Col = $ColNum
       Pos = $Num
@@ -25,6 +25,7 @@ function Init-Board {
       ShipCol = "green"
       Peg = $PegChar
       PegCol = "White"
+      PegChosen = $false
     }
   }
 }
@@ -32,12 +33,22 @@ function Init-Board {
 function Display-Grid {  
   Param (
     $Grid,
-    [switch]$Ships
+    [String]$WhosBoard,
+    [switch]$Ships,
+    [switch]$Key
   )
-  $Color = "Yellow"  
-  Write-Host -ForegroundColor $Color "   0  1  2  3  4  5  6  7  8  9"
+  if ($Key -eq $true) {
+  $KeyColor = "Cyan"
+    Write-Host -ForegroundColor Yellow 'KEY:' 
+    Write-Host -ForegroundColor Cyan 'SHIPS: '' A - Aircraft Carrier, B - Battleship, C - Cruiser, D - Destroyer, S - Submarine'
+    Write-Host -ForegroundColor Cyan 'ATTACKS : M - Missed, H - HIT  '
+  }
+  Write-Host
+  $CoordsColor = "Yellow"  
+  Write-Host -ForegroundColor $CoordsColor $WhosBoard
+  Write-Host -ForegroundColor $CoordsColor "   0  1  2  3  4  5  6  7  8  9"
   foreach ($DisplayRow in (0..9)) {
-    Write-Host -NoNewline -ForegroundColor $Color "$([Char]($DisplayRow+65))  "
+    Write-Host -NoNewline -ForegroundColor $CoordsColor "$([Char]($DisplayRow+65))  "
     foreach ($DisplayCol in (0..9)) {
       $DisplayPos = ($DisplayRow * 10) + $DisplayCol
       if ($Ships -eq $false) { Write-Host -NoNewline -ForegroundColor $Grid[$DisplayPos].PegCol $Grid[$DisplayPos].Peg " "}
@@ -51,8 +62,10 @@ function Place-Ship {
   Param (
     $Grid
   )
+  $ShipCol = "White"
   foreach ($Ship in "AAAAA","BBBB","CCC","SSS","DD") {
     do {
+      $ShipChar = $Ship.substring(0,1)
       $GoodPos = $true
       $ShipLen = $Ship.length - 1
       $RandDir = "V","H" | Get-Random
@@ -70,7 +83,7 @@ function Place-Ship {
       }
       if ($RandDir -eq 'H') {
         $HAdjusted = 9 - $ShipLen 
-        $VAdjusted 
+        $VAdjusted = 9
         $RandCol = 0..$VAdjusted | Get-Random 
         $RandRow = 0..$HAdjusted | Get-Random 
         foreach ($Pos in (0..$ShipLen)) {
@@ -80,27 +93,114 @@ function Place-Ship {
       }
     } until ($GoodPos -eq $true)
     ### Add the Ship values in the guessed positions AAAAA or SSS etc.
-    if ($RandDir -eq 'V') {}
-    if ($RandDir -eq 'H') {}
+    if ($RandDir -eq 'V') {
+      foreach ($Pos in (0..$ShipLen)) {
+        $ArrayPos = ($RandRow * 10) + ($RandCol + $Pos)
+        $Grid[$ArrayPos].Ship = $ShipChar
+        $Grid[$ArrayPos].ShipCol = $ShipCol
+      }
+    }
+    if ($RandDir -eq 'H') {
+      foreach ($Pos in (0..$ShipLen)) {
+        $ArrayPos = (($RandRow +$Pos) * 10) + $RandCol
+        $Grid[$ArrayPos].Ship = $ShipChar
+        $Grid[$ArrayPos].ShipCol = $ShipCol
+      }
+    }
   }
+  $Grid
+}
+
+function Guess-Move {
+  Param (
+    $OpponentGrid,
+    [Switch]$ComputersTurn
+  )
+  if ($ComputersTurn -eq $true) {
+    $GuessArray = @(1,3,5,7,9,12,14,16,18,20,21,23,25,27,29,32,34,36,38,40,41,43,45,47,49,52,54,56,58,60,61,63,65,67,69,72,74,76,78,80,81,83,85,87,89,92,94,96,98,0,2,4,6,8,11,13,15,17,19,20,22,24,26,28,31,33,35,37,39,40,42,44,46,48,51,53,55,57,59,60,62,64,66,68,71,73,75,77,79,80,82,84,86,88,91,93,95,97,99)
+    $PosRemaining = ($OpponentGrid | where {$_.Pegchosen -eq $false -and $_.Pos -in $GuessArray} ).Pos
+    $RandGuessPos = $PosRemaining | get-random
+    if ($OpponentGrid[$RandGuessPos].Ship -match "[ABCDS]") {
+      $OpponentGrid[$RandGuessPos].Peg = "H"
+      $OpponentGrid[$RandGuessPos].Pegcol = "Red"
+      $OpponentGrid[$RandGuessPos].PegChosen = $true 
+      $OpponentGrid[$RandGuessPos].Ship = "X"
+      $OpponentGrid[$RandGuessPos].ShipCol = "Red" 
+    }
+    else {
+      $OpponentGrid[$RandGuessPos].Peg = "M"
+      $OpponentGrid[$RandGuessPos].Pegcol = "Gray"
+      $OpponentGrid[$RandGuessPos].PegChosen = $true        
+    }
+  }
+  else {
+    do {
+      do {
+        Write-Host
+        Write-Host -ForegroundColor Yellow "Enter the coordinates for next attack in the form D7 or 7D"
+        $Guess = Read-Host 
+        $Guess = ($Guess -replace "[^A-J0-9]",'').ToUpper()
+        if ($Guess -match "^[0-9][A-J]$") {$Guess = $Guess -replace "^(.)(.)$",'$2$1'}
+      } until ($Guess -match "^[A-J][0-9]$")  
+      $GuessRow = [int](([byte][char]$Guess[0]-65).ToString())
+      $GuessCol = [int]($guess[1].tostring())
+      $GuessPos = ( $GuessRow * 10 ) + $GuessCol
+    } until ($OpponentGrid[$GuessPos].PegChosen -eq $false)
+    if ($OpponentGrid[$GuessPos].Ship -match "[ABCDS]") {
+      $OpponentGrid[$GuessPos].Peg = "H"
+      $OpponentGrid[$GuessPos].Pegcol = "Red"
+      $OpponentGrid[$GuessPos].PegChosen = $true  
+      $OpponentGrid[$GuessPos].Ship = "X"
+      $OpponentGrid[$GuessPos].ShipCol = "Red" 
+    }
+    else {
+      $OpponentGrid[$GuessPos].Peg = "M"
+      $OpponentGrid[$GuessPos].Pegcol = "Gray"
+      $OpponentGrid[$GuessPos].PegChosen = $true        
+    }
+  }
+  return $OpponentGrid
+}
+
+function Check-Winner {
+  Param (
+    $PlayersGrid,
+    $ComputersGrid
+  )
+  $ComputerGuesses = $PlayersGrid | Where-Object {$_.Ship -match "X"}  
+  $PlayerGuesses = $ComputersGrid | Where-Object {$_.Ship -match "X"}
+  if ($ComputerGuesses.count -eq 17) {$win = "Computer"}
+  elseif ($PlayerGuesses.count -eq 17) {$win = "Player"}
+  else {$win = "None"}
+  $win
 }
 
 
 
 
-
-
-
-
 ######  MainCode
+$ComputerBoard = $null
+$PlayersBoard = $null
 
 #Init boards
-$ComputerBoard = Init-Board
-$PlayersBoard  = Init-Board
-
-Clear-Host
-Write-Host -ForegroundColor Yellow "Computer"
-Display-Grid -Grid $ComputerBoard
-Write-Host -ForegroundColor Yellow "`nPlayer"
-Display-Grid -Grid $PlayersBoard -Ships
-
+do {
+  $ComputerBoard = Init-Board
+  $PlayersBoard  = Init-Board
+  $ComputerBoard = Place-Ship -Grid $ComputerBoard.PSObject.copy()
+  $PlayersBoard  = Place-Ship -Grid $PlayersBoard.PSObject.copy()
+  Clear-Host
+  Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
+  Display-Grid -Grid $PlayersBoard -Ships -WhosBoard "Player"
+  $Happy = Read-Host -Prompt "`nAre you happy with the Ship placement?"
+  if ($Happy -like "y*") {$PlayerHappy = $true}
+  else {$PlayerHappy = $false}
+} until ($PlayerHappy -eq $true)
+do {
+  Clear-Host
+  Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
+  Display-Grid -Grid $PlayersBoard -Ships -WhosBoard "Player"
+  $PlayersBoard = Guess-Move -OpponentGrid $PlayersBoard.psobject.Copy() -ComputersTurn
+  $ComputerBoard = Guess-Move -OpponentGrid $ComputerBoard.psobject.Copy()
+  $Winner = Check-Winner -PlayerGrid $PlayersBoard -ComputersGrid $ComputerBoard
+  if ($winner -ne 'none') {Write-Host -ForegroundColor Yellow "`nThe winner is " $Winner}
+} until ($Winner -ne 'none')
