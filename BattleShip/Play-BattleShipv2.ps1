@@ -1,16 +1,40 @@
-﻿<# Board Array for game
-  0  1  2  3  4  5  6  7  8  9 
- 10 11 12 13 14 15 16 17 18 19 
- 20 21 22 23 24 25 26 27 28 29 
- 30 31 32 33 34 35 36 37 38 39 
- 40 41 42 43 44 45 46 47 48 49 
- 50 51 52 53 54 55 56 57 58 59 
- 60 61 62 63 64 65 66 67 68 69 
- 70 71 72 73 74 75 76 77 78 79 
- 80 81 82 83 84 85 86 87 88 89 
- 90 91 92 93 94 95 96 97 98 99 
+﻿<#
+.Synopsis
+   Battleship Game
+.DESCRIPTION
+   The game will randomise positions for the ships for the player and the computer,
+   you will be asked for your name and then whether you are happy with the placement
+   of the ships. The comuter and the player take turns choosing an attack position and
+   the game shows a H for hit or M for missed shot, first on to sink the opponents 
+   ships is the winner.
+   This game shows the players ships, and an attackboard above showing how successful
+   the player has been at attacking the computer's ships,
+   The game uses a large array of 100 elements like this
+        Board Array for game
+      0  1  2  3  4  5  6  7  8  9 
+     10 11 12 13 14 15 16 17 18 19 
+     20 21 22 23 24 25 26 27 28 29 
+     30 31 32 33 34 35 36 37 38 39 
+     40 41 42 43 44 45 46 47 48 49 
+     50 51 52 53 54 55 56 57 58 59 
+     60 61 62 63 64 65 66 67 68 69 
+     70 71 72 73 74 75 76 77 78 79 
+     80 81 82 83 84 85 86 87 88 89 
+     90 91 92 93 94 95 96 97 98 99
+   This game differs from the first version manily in the coding, in this version each
+   position on the grid above references a complete object where the object properties
+   are as follows
+   Row  Col  Pos  Ship  ShipCol  Peg  PegCol  PegChosen  NSEW
+   ---  ---  ---  ----  -------  ---  ------  ---------  ----
+   
+   the NSEW property deals with actual positions directly North South East and West of 
+   the current position, this aids when searching for the next possible hit position.
+.EXAMPLE
+   BattleShipV2
+.NOTES
+   Created by: Brent Denny
+   Created on: 12 Feb 2018
 #>
-
 function Init-Board {
   foreach ($Num in (0..99)) {
     $Nth      = $Num - 10;$Sth = $Num + 10;$Est = $Num + 1;$Wst = $num - 1
@@ -18,6 +42,8 @@ function Init-Board {
     $ColNum   = $Num % 10
     $ShipChar = '-'
     $PegChar  = '-'
+    # Determine NSEW from position corners only have two values, sides have three
+    # and inner postions have four values
     if ($RowNum -in (1..8) -and $ColNum -in (1..8)) {$NSEW = @($Nth,$Sth,$Est,$Wst)}
     elseif ($RowNum -eq 0 -and $ColNum -eq 0) {$NSEW = @($Sth,$Est)}
     elseif ($RowNum -eq 0 -and $ColNum -eq 9) {$NSEW = @($Sth,$Wst)}
@@ -48,15 +74,19 @@ function Display-Grid {
     [switch]$Ships,
     [switch]$Key
   )
+  # this will show the grid for computer or player, the KEY or LEGEND is optional and the 
+  # function displays the peg board by default unless -ships are chosen at launch
   if ($Key -eq $true) {
   $KeyColor = "Cyan"
+
     Write-Host -ForegroundColor Yellow 'KEY:' 
     Write-Host -ForegroundColor Cyan 'SHIPS: '' A - Aircraft Carrier, B - Battleship, C - Cruiser, D - Destroyer, S - Submarine'
     Write-Host -ForegroundColor Cyan 'ATTACKS : M - Missed, H - HIT  '
   }
   Write-Host
   $CoordsColor = "Yellow"  
-  Write-Host -ForegroundColor $CoordsColor $WhosBoard
+  $NameColor = "Green"
+  Write-Host -ForegroundColor $NameColor $WhosBoard
   Write-Host -ForegroundColor $CoordsColor "   0  1  2  3  4  5  6  7  8  9"
   foreach ($DisplayRow in (0..9)) {
     Write-Host -NoNewline -ForegroundColor $CoordsColor "$([Char]($DisplayRow+65))  "
@@ -80,8 +110,8 @@ function Place-Ship {
       $GoodPos = $true
       $ShipLen = $Ship.length - 1
       $RandDir = "V","H" | Get-Random
-      ### Guess a position for the ship placement and then check no other ship is there already, 
-      ### re-guess if required
+      # Guess a position for the ship placement and then check no other ship is there already, 
+      # re-guess if required
       if ($RandDir -eq 'V') {
         $VAdjusted = 9 - $Shiplen 
         $HAdjusted = 9
@@ -127,6 +157,8 @@ function Find-LikelyHits {
   Param (
     $Grid
   )
+  # Randomise the choice of computer hit unless there are previous hits
+  # if hits exist use the NSEW property to discover other possible hits
   $Choices = @()
   $Hits = $grid | Where-Object {$_.ship -eq "X"}
   foreach ($Hit in $Hits) {
@@ -137,10 +169,6 @@ function Find-LikelyHits {
     }
   }
   if ($Choices.count -gt 0) {
-    # Check to see if there is a pattern of hits that the computer can exploit
-    # before going to randomise the choices array. This might be done by using 
-    # Sort-Object -Property Row | Where-Object {$_.Count -gt 1}
-    # Sort-Object -Property Col | Where-Object {$_.Count -gt 1}
     $Choice = $Choices | Get-Random
     $Random = $false
   }
@@ -152,32 +180,6 @@ function Find-LikelyHits {
     Choice = $Choice
     Random = $Random
   }
-  <#
-
-    Look at our choices vs NSEW
-    Look for rows and col that have the same value with the other that is in close proximity
-    make next guess based on evidence
-    fill the row or col until there is a miss and then guess another shot randomly
-
-    $Choices
-    80
-    72
-    92
-    83
-    
-    [DBG]: PS C:\Users\Administrator>> $hits |ft
-    
-    Row Col Pos Ship ShipCol Peg PegCol PegChosen NSEW            
-    --- --- --- ---- ------- --- ------ --------- ----            
-      8   1  81 X    Red     H   Red         True {71, 91, 82, 80}
-      8   2  82 X    Red     H   Red         True {72, 92, 83, 81}
-    
-    # find which ships have been sunk
-    # find hits that are close together on rows
-    # find hits that are close together on cols
-
-  #>
-
 }
 
 function Guess-Move {
@@ -190,9 +192,10 @@ function Guess-Move {
   if ($ComputersTurn -eq $true) {
     $Likely = Find-LikelyHits -Grid $OpponentGrid.psobject.copy()
     if ($Likely.Random -eq $true) {
-      #$GuessArray = @(1,3,5,7,9,12,14,16,18,20,21,23,25,27,29,32,34,36,38,40,41,43,45,47,49,52,54,56,58,60,61,63,65,67,69,72,74,76,78,80,81,83,85,87,89,92,94,96,98)
+      #$GuessArray = @(1,3,5,7,9,13,16,21,23,25,27,29,33,36,40,41,43,45,47,49,60,61,63,65,67,69,80,81,83,85,87,89,92,94,96,98)
       $GuessArray = @(0,3,6,9,11,14,17,22,25,28,30,33,36,39,41,44,47,52,55,58,60,63,66,69,71,74,77,82,85,88,90,93,96,99)
       $PosRemaining = ($OpponentGrid | where {$_.Pegchosen -eq $false -and $_.Pos -in $GuessArray} ).Pos
+      if ($PosRemaining.count -eq 0) {$PosRemaining = ($OpponentGrid | Where-Object {$_.PegChosen -eq $false}).Pos }
       $GuessPos = $PosRemaining | get-random
     }
     else {
@@ -258,6 +261,7 @@ function Check-Winner {
 
 
 ######  MainCode
+$QuestionColor = "Red"
 $ComputerBoard = $null
 $PlayersBoard = $null
 Clear-Host
@@ -271,7 +275,8 @@ do {
   Clear-Host
   Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
   Display-Grid -Grid $PlayersBoard -Ships -WhosBoard $PlayerName
-  $Happy = Read-Host -Prompt "`nAre you happy with the Ship placement?"
+  Write-Host -ForegroundColor $QuestionColor -NoNewline "`nAre you happy with the Ship placement? "
+  $Happy = Read-Host 
   if ($Happy -like "y*") {$PlayerHappy = $true}
   else {$PlayerHappy = $false}
 } until ($PlayerHappy -eq $true)
@@ -280,8 +285,11 @@ do {
   Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
   Display-Grid -Grid $PlayersBoard -Ships -WhosBoard $PlayerName
   $PlayersBoard = Guess-Move -OpponentGrid $PlayersBoard.psobject.Copy() -ComputersTurn
-  $ComputerBoard = Guess-Move -OpponentGrid $ComputerBoard.psobject.Copy()
   $Winner = Check-Winner -PlayersGrid $PlayersBoard -PersonName $PlayerName -ComputersGrid $ComputerBoard
+  if ($Winner -ne 'Computer') { 
+    $ComputerBoard = Guess-Move -OpponentGrid $ComputerBoard.psobject.Copy()
+    $Winner = Check-Winner -PlayersGrid $PlayersBoard -PersonName $PlayerName -ComputersGrid $ComputerBoard
+  }
   if ($winner -ne 'none') {
     Clear-Host
     Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
