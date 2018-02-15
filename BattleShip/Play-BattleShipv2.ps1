@@ -137,6 +137,10 @@ function Find-LikelyHits {
     }
   }
   if ($Choices.count -gt 0) {
+    # Check to see if there is a pattern of hits that the computer can exploit
+    # before going to randomise the choices array. This might be done by using 
+    # Sort-Object -Property Row | Where-Object {$_.Count -gt 1}
+    # Sort-Object -Property Col | Where-Object {$_.Count -gt 1}
     $Choice = $Choices | Get-Random
     $Random = $false
   }
@@ -186,7 +190,8 @@ function Guess-Move {
   if ($ComputersTurn -eq $true) {
     $Likely = Find-LikelyHits -Grid $OpponentGrid.psobject.copy()
     if ($Likely.Random -eq $true) {
-      $GuessArray = @(1,3,5,7,9,12,14,16,18,20,21,23,25,27,29,32,34,36,38,40,41,43,45,47,49,52,54,56,58,60,61,63,65,67,69,72,74,76,78,80,81,83,85,87,89,92,94,96,98)
+      #$GuessArray = @(1,3,5,7,9,12,14,16,18,20,21,23,25,27,29,32,34,36,38,40,41,43,45,47,49,52,54,56,58,60,61,63,65,67,69,72,74,76,78,80,81,83,85,87,89,92,94,96,98)
+      $GuessArray = @(0,3,6,9,11,14,17,22,25,28,30,33,36,39,41,44,47,52,55,58,60,63,66,69,71,74,77,82,85,88,90,93,96,99)
       $PosRemaining = ($OpponentGrid | where {$_.Pegchosen -eq $false -and $_.Pos -in $GuessArray} ).Pos
       $GuessPos = $PosRemaining | get-random
     }
@@ -238,12 +243,13 @@ function Guess-Move {
 function Check-Winner {
   Param (
     $PlayersGrid,
+    $PersonName,
     $ComputersGrid
   )
   $ComputerGuesses = $PlayersGrid | Where-Object {$_.Ship -match "X"}  
   $PlayerGuesses = $ComputersGrid | Where-Object {$_.Ship -match "X"}
   if ($ComputerGuesses.count -eq 17) {$win = "Computer"}
-  elseif ($PlayerGuesses.count -eq 17) {$win = "Player"}
+  elseif ($PlayerGuesses.count -eq 17) {$win = $PersonName}
   else {$win = "None"}
   $win
 }
@@ -254,7 +260,8 @@ function Check-Winner {
 ######  MainCode
 $ComputerBoard = $null
 $PlayersBoard = $null
-
+Clear-Host
+$PlayerName = Read-Host -Prompt "What is your name"
 #Init boards
 do {
   $ComputerBoard = Init-Board
@@ -263,7 +270,7 @@ do {
   $PlayersBoard  = Place-Ship -Grid $PlayersBoard.PSObject.copy()
   Clear-Host
   Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
-  Display-Grid -Grid $PlayersBoard -Ships -WhosBoard "Player"
+  Display-Grid -Grid $PlayersBoard -Ships -WhosBoard $PlayerName
   $Happy = Read-Host -Prompt "`nAre you happy with the Ship placement?"
   if ($Happy -like "y*") {$PlayerHappy = $true}
   else {$PlayerHappy = $false}
@@ -271,14 +278,14 @@ do {
 do {
   Clear-Host
   Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
-  Display-Grid -Grid $PlayersBoard -Ships -WhosBoard "Player"
+  Display-Grid -Grid $PlayersBoard -Ships -WhosBoard $PlayerName
   $PlayersBoard = Guess-Move -OpponentGrid $PlayersBoard.psobject.Copy() -ComputersTurn
   $ComputerBoard = Guess-Move -OpponentGrid $ComputerBoard.psobject.Copy()
-  $Winner = Check-Winner -PlayerGrid $PlayersBoard -ComputersGrid $ComputerBoard
+  $Winner = Check-Winner -PlayersGrid $PlayersBoard -PersonName $PlayerName -ComputersGrid $ComputerBoard
   if ($winner -ne 'none') {
     Clear-Host
     Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
-    Display-Grid -Grid $PlayersBoard -Ships -WhosBoard "Player"
-    Write-Host -ForegroundColor Yellow "`nThe winner is " $Winner
+    Display-Grid -Grid $PlayersBoard -Ships -WhosBoard $PlayerName
+    Write-Host -ForegroundColor Yellow "`nThe winner is "$Winner
   }
 } until ($Winner -ne 'none')
