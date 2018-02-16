@@ -114,7 +114,12 @@ function Draw-Board {
   )
   $BoardLinesRequired = 10 - $TurnNumber
   Clear-Host
-  Write-Host -ForegroundColor Yellow "`n`n         MASTER MIND`n"
+  Write-Host -NoNewline -ForegroundColor Yellow "`n`n         MASTER MIND         "
+  Write-Host -NoNewline -BackgroundColor DarkGray -ForegroundColor Black " BLACK-PIN " 
+  Write-Host  -ForegroundColor Yellow " Correct Place     " 
+  Write-Host -NoNewline "                             "      
+  Write-Host -NoNewline -BackgroundColor DarkGray -ForegroundColor White " WHITE-PIN "
+  Write-Host  -ForegroundColor Yellow " Wrong Place"    
   write-host -NoNewline (" " * $BoardSpecs.LGutter)
   write-host -BackgroundColor DarkGray (" " * $BoardSpecs.Overall)
   write-host -NoNewline (" " * $BoardSpecs.LGutter)
