@@ -81,14 +81,19 @@ function Show-Board {
   )
   foreach ($ShowRow in (0..8)) {
     foreach ($ShowCol in (0..8)) {
-      
+      $BoardPosObj = $fnBoardObj | Where-Object {$_.Row -eq $ShowRow -and $_.Col -eq $ShowCol}
+      Write-Host -NoNewline $BoardPosObj.Value
+      if ($ShowCol -lt 8) {Write-Host -NoNewline " "}
+      if ($ShowCol -eq 2 -or $ShowCol -eq 5) {Write-Host -NoNewline -ForegroundColor Yellow "| "}
     } # foreach showcol
+    Write-Host # This is to seperate the rows
+    if ($ShowRow -eq 2 -or $ShowRow -eq 5) {Write-Host -ForegroundColor Yellow "----------------------"}
+
   } #foreach showrow
 }
 #MAIN CODE
 
 $RawBoard = New-RawBoard -Board $SudokuBoard
 $BoardObj = Get-BoardObjects -fnRawBoard $RawBoard -fnBlockList $BlockList
-$BoardObj
 $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj
-$MissingObj
+Show-Board -fnBoardObj $BoardObj
