@@ -18,7 +18,7 @@ function New-RawBoard {
   }
 }
 
-function New-BoardObjects {
+function Get-BoardObjects {
   Param (
     [string]$fnRawBoard,
     $fnBlockList
@@ -42,8 +42,38 @@ function New-BoardObjects {
   }
 }
 
+function Get-MissingObjects {
+  Param (
+    [string]$fnBoardObj
+  )
+  $CompleteSet = 1..9
+  foreach ($PosNum in (0..80)) {
+    if ($fnBoardObj[$PosNum].Value -eq '-'){ 
+      $Row = $fnBoardObj[$PosNum].Row
+      $Col = $fnBoardObj[$PosNum].Col
+      $Blk = $fnBoardObj[$PosNum].Block
+      
+      $RowNumbers = $fnBoardObj | Where-Object {$_.Row -eq $Row} 
+      $ColNumbers = $fnBoardObj | Where-Object {$_.Col -eq $Col}
+      $BlkNumbers = $fnBoardObj | Where-Object {$_.Block -eq $Blk}    
+      $AllNumbers = ($RowNumbers+$ColNumbers+$BlkNumbers) 
+      $Missing    = $CompleteSet | Where-Object {$AllNumbers -notcontains $_}
+      $MissingObjProp = [ordered]@{
+        Position = $PosNum
+        Row      = $Row
+        Col      = $Col
+        Block    = $Blk
+        Values   = $AllNumbers
+        Missing  = $Missing
+      }
+      New-Object -TypeName psobject -Property $MissingObjProp
+    }
+  }
+}
 #MAIN CODE
 
 $RawBoard = New-RawBoard -Board $SudokuBoard
-$BoardObj = New-BoardObjects -fnRawBoard $RawBoard -fnBlockList $BlockList
-$BoardObj
+$BoardObj = Get-BoardObjects -fnRawBoard $RawBoard -fnBlockList $BlockList
+#$BoardObj
+$MissingObj = Get-MissingObjects -fnBoardObj $BoardObj
+$MissingObj
