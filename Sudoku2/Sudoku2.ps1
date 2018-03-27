@@ -62,12 +62,13 @@ function Get-MissingObjects {
                     Sort-Object
       $Missing    = $CompleteSet | Where-Object {$AllNumbers -notcontains $_}  
       $MissingObjProp = [ordered]@{
-        Position = $PosNum
-        Row      = $Row
-        Col      = $Col
-        Block    = $Blk
-        Values   = $AllNumbers
-        Missing  = $Missing
+        Position     = $PosNum
+        Row          = $Row
+        Col          = $Col
+        Block        = $Blk
+        Values       = $AllNumbers
+        Missing      = $Missing
+        MissingCount = $Missing.Count
       }
       New-Object -TypeName psobject -Property $MissingObjProp
     }
