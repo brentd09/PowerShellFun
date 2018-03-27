@@ -44,20 +44,23 @@ function Get-BoardObjects {
 
 function Get-MissingObjects {
   Param (
-    [string]$fnBoardObj
+    $fnBoardObj
   )
-  $CompleteSet = 1..9
+  $CompleteSet = @('1','2','3','4','5','6','7','8','9')
   foreach ($PosNum in (0..80)) {
     if ($fnBoardObj[$PosNum].Value -eq '-'){ 
       $Row = $fnBoardObj[$PosNum].Row
       $Col = $fnBoardObj[$PosNum].Col
       $Blk = $fnBoardObj[$PosNum].Block
       
-      $RowNumbers = $fnBoardObj | Where-Object {$_.Row -eq $Row} 
-      $ColNumbers = $fnBoardObj | Where-Object {$_.Col -eq $Col}
-      $BlkNumbers = $fnBoardObj | Where-Object {$_.Block -eq $Blk}    
-      $AllNumbers = ($RowNumbers+$ColNumbers+$BlkNumbers) 
-      $Missing    = $CompleteSet | Where-Object {$AllNumbers -notcontains $_}
+      $RowNumbers = ($fnBoardObj | Where-Object {$_.Row -eq $Row} ).Value
+      $ColNumbers = ($fnBoardObj | Where-Object {$_.Col -eq $Col} ).Value
+      $BlkNumbers = ($fnBoardObj | Where-Object {$_.Block -eq $Blk}  ).Value   
+      $AllNumbers = ($RowNumbers+$ColNumbers+$BlkNumbers) | 
+                    Where-Object {$_ -match '\d'} | 
+                    Select-Object -Unique |
+                    Sort-Object
+      $Missing    = $CompleteSet | Where-Object {$AllNumbers -notcontains $_}  
       $MissingObjProp = [ordered]@{
         Position = $PosNum
         Row      = $Row
@@ -74,6 +77,6 @@ function Get-MissingObjects {
 
 $RawBoard = New-RawBoard -Board $SudokuBoard
 $BoardObj = Get-BoardObjects -fnRawBoard $RawBoard -fnBlockList $BlockList
-#$BoardObj
+$BoardObj
 $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj
 $MissingObj
