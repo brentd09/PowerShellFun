@@ -1,8 +1,7 @@
 [Cmdletbinding()]
 Param (
-  [Parameter(Mandatory=$true)]
   [ValidateLength(81,81)]
-  [string]$SudokuBoard
+  [string]$SudokuBoard = '-6-3--8-4537-9-----4---63-7-9--51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 )
 $BlockList = @(
   @( 0, 1, 2, 9,10,11,18,19,20),@( 3, 4, 5,12,13,14,21,22,23),@( 6, 7, 8,15,16,17,24,25,26),
