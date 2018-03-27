@@ -15,8 +15,8 @@ function New-RawBoard {
   )
   if ($Board.length -eq 81) {
     return $Board
-  }
-}
+  } # if board.length
+} # fn new-rawboard
 
 function Get-BoardObjects {
   Param (
@@ -28,8 +28,8 @@ function Get-BoardObjects {
       if ($PosNum -in $fnBlockList[$BlockPos]) {
         $BlockNum = $BlockPos
         Break
-      }
-    }
+      } # if posnum
+    }  # foreach blockpos
       
     $PosObjProp = [ordered]@{
       Position = $PosNum
@@ -37,10 +37,10 @@ function Get-BoardObjects {
       Col      = $PosNum % 9
       Block    = $BlockNum
       Value    = $fnRawBoard[$PosNum]
-    }
+    } # HashTable posobjprops
     New-Object -TypeName psobject -Property $PosObjProp
-  }
-}
+  } # foreach posnum
+} # fn get-boardobjects
 
 function Get-MissingObjects {
   Param (
@@ -69,10 +69,21 @@ function Get-MissingObjects {
         Values       = $AllNumbers
         Missing      = $Missing
         MissingCount = $Missing.Count
-      }
+      } # hashtable missingobjprops
       New-Object -TypeName psobject -Property $MissingObjProp
-    }
-  }
+    } # if pos -eq - (blank position)
+  } # foreach posnum
+} # fn getmissingobjects
+
+function Show-Board {
+  param (
+    $fnBoardObj
+  )
+  foreach ($ShowRow in (0..8)) {
+    foreach ($ShowCol in (0..8)) {
+      
+    } # foreach showcol
+  } #foreach showrow
 }
 #MAIN CODE
 
