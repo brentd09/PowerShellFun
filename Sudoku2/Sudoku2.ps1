@@ -98,14 +98,35 @@ function Show-Board {
       if ($ShowCol -eq 2 -or $ShowCol -eq 5 -or $ShowCol -eq 8) {Write-Host -NoNewline -ForegroundColor $LineColor "| "}
     } # foreach showcol
     Write-Host # This is to seperate the rows
-    if ($ShowRow -eq 2 -or $ShowRow -eq 5) {Write-Host -ForegroundColor $LineColor "$Margin -----------------------"}
+    if ($ShowRow -eq 2 -or $ShowRow -eq 5) {Write-Host -ForegroundColor $LineColor "$Margin|-----------------------|"}
 
   } #foreach showrow
   Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
 }
-#MAIN CODE
+
+function Update-SingleMissing {
+  Param (
+    $fnBoard,
+    $Missing
+  )
+  $Singles = $Missing | Where-Object {$_.MissingCount -eq 1}
+  foreach ($Single in $Singles) {
+    if ($fnBoard[$Single.position].Value -eq '-') {$fnBoard[$Single.position].Value = $Single.Missing}
+  }
+  return $fnBoard
+} 
+
+#######     MAIN CODE
 
 $RawBoard = New-RawBoard -Board $SudokuBoard
 $BoardObj = Get-BoardObjects -fnRawBoard $RawBoard -fnBlockList $BlockList
-$MissingObj = Get-MissingObjects -fnBoardObj $BoardObj
+do {
+  $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj
+  Show-Board -fnBoardObj $BoardObj
+  if ($MissingObj.MissingCount -contains 1) {
+    $UpdatedBoard = Update-SingleMissing -fnBoard $BoardObj.psobject.Copy() -Missing $MissingObj
+    $BoardObj = $UpdatedBoard.psobject.Copy()
+  }
+  Read-Host 'end'
+} while ($BoardObj.Value -contains '-')
 Show-Board -fnBoardObj $BoardObj
