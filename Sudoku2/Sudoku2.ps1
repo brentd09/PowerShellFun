@@ -1,7 +1,7 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '-6-3--8-4537-9-----4---63-7-9--51238---------71362--4-3-64---1-----6-5231-2--9-8-'
+  [string]$SudokuBoard = '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 )
 $BlockList = @(
   @( 0, 1, 2, 9,10,11,18,19,20),@( 3, 4, 5,12,13,14,21,22,23),@( 6, 7, 8,15,16,17,24,25,26),
@@ -14,6 +14,7 @@ function New-RawBoard {
     $Board
   )
   if ($Board.length -eq 81) {
+    $Board = $Board -replace "\D",'-'
     return $Board
   } # if board.length
 } # fn new-rawboard
@@ -79,17 +80,28 @@ function Show-Board {
   param (
     $fnBoardObj
   )
+  Clear-Host
+  Write-Host
+  $Margin = '   '
+  $LineColor = "Cyan"
+  $NumberColor = "Yellow"
+  $BlankColor = "Red"
+  Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
   foreach ($ShowRow in (0..8)) {
+    Write-Host -NoNewline $Margin
     foreach ($ShowCol in (0..8)) {
+      if ($ShowCol -eq 0) {Write-Host -NoNewline -ForegroundColor $LineColor "| "}      
       $BoardPosObj = $fnBoardObj | Where-Object {$_.Row -eq $ShowRow -and $_.Col -eq $ShowCol}
-      Write-Host -NoNewline $BoardPosObj.Value
-      if ($ShowCol -lt 8) {Write-Host -NoNewline " "}
-      if ($ShowCol -eq 2 -or $ShowCol -eq 5) {Write-Host -NoNewline -ForegroundColor Yellow "| "}
+      if ($BoardPosObj.Value -match '\d') {Write-Host -NoNewline -ForegroundColor $NumberColor $BoardPosObj.Value}
+      if ($BoardPosObj.Value -eq '-') {Write-Host -NoNewline -ForegroundColor $BlankColor $BoardPosObj.Value}
+      Write-Host -NoNewline " "
+      if ($ShowCol -eq 2 -or $ShowCol -eq 5 -or $ShowCol -eq 8) {Write-Host -NoNewline -ForegroundColor $LineColor "| "}
     } # foreach showcol
     Write-Host # This is to seperate the rows
-    if ($ShowRow -eq 2 -or $ShowRow -eq 5) {Write-Host -ForegroundColor Yellow "----------------------"}
+    if ($ShowRow -eq 2 -or $ShowRow -eq 5) {Write-Host -ForegroundColor $LineColor "$Margin -----------------------"}
 
   } #foreach showrow
+  Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
 }
 #MAIN CODE
 
