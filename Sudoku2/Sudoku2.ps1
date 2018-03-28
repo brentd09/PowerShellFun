@@ -36,11 +36,13 @@ function Get-BoardObjects {
     }  # foreach blockpos
       
     $PosObjProp = [ordered]@{
-      Position = $PosNum
-      Row      = ([math]::Truncate($PosNum/9))
-      Col      = $PosNum % 9
-      Block    = $BlockNum
-      Value    = $fnRawBoard[$PosNum]
+      Position   = $PosNum
+      Row        = ([math]::Truncate($PosNum/9))
+      Col        = $PosNum % 9
+      Block      = $BlockNum
+      Value      = $fnRawBoard[$PosNum]
+      AllPosInBlock = 
+      PosInBlock = 
     } # HashTable posobjprops
     New-Object -TypeName psobject -Property $PosObjProp
   } # foreach posnum
@@ -109,15 +111,30 @@ function Show-Board {
 
 function Update-SingleMissing {
   Param (
-    $fnBoard,
-    $Missing
+    $fnBoardObj,
+    $MissingObj
   )
-  $Singles = $Missing | Where-Object {$_.MissingCount -eq 1}
+  $Singles = $MissingObj | Where-Object {$_.MissingCount -eq 1}
   foreach ($Single in $Singles) {
-    if ($fnBoard[$Single.position].Value -eq '-') {$fnBoard[$Single.position].Value = $Single.Missing}
+    if ($fnBoardObj[$SingleObj.position].Value -eq '-') {$fnBoardObj[$Single.position].Value = $Single.Missing}
   }
-  return $fnBoard
+  return $fnBoardObj
 } # Updatesinglemissing
+
+function Update-BlockRevSingle {
+  Param (
+    $fnBoardObj,
+    $MissingObj
+  )
+  foreach ($Block in (0..8)) {
+    $MissingInBlock =($MissingObj | Where-Object {$_.block -eq $block}).Missing
+    $GroupMissing = $MissingInBlock | Group-Object
+    $Singles = $GroupMissing | Where-Object {$_.count -eq 1}
+    foreach ($PosInBlock in (0..8)) {
+      $fnBoardObj | Where-Object {$_.Block -eq $block -and }
+    }
+  }
+}
 
 #######     MAIN CODE
 
