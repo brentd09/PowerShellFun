@@ -1,8 +1,11 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
+  [string]$SudokuBoard = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
 )
+# Easy       '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
+# Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
+# Difficult  
 $BlockList = @(
   @( 0, 1, 2, 9,10,11,18,19,20),@( 3, 4, 5,12,13,14,21,22,23),@( 6, 7, 8,15,16,17,24,25,26),
   @(27,28,29,36,37,38,45,46,47),@(30,31,32,39,40,41,48,49,50),@(33,34,35,42,43,44,51,52,53),
@@ -102,7 +105,7 @@ function Show-Board {
 
   } #foreach showrow
   Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
-}
+} # fn Showboard
 
 function Update-SingleMissing {
   Param (
@@ -114,7 +117,7 @@ function Update-SingleMissing {
     if ($fnBoard[$Single.position].Value -eq '-') {$fnBoard[$Single.position].Value = $Single.Missing}
   }
   return $fnBoard
-} 
+} # Updatesinglemissing
 
 #######     MAIN CODE
 
