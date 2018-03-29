@@ -5,26 +5,27 @@ Param (
 )
 # Easy       '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 # Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
-# Difficult  
+# Difficult  '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
+# Extreme    '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
 $BlockList = @(
   @( 0, 1, 2, 9,10,11,18,19,20),@( 3, 4, 5,12,13,14,21,22,23),@( 6, 7, 8,15,16,17,24,25,26),
   @(27,28,29,36,37,38,45,46,47),@(30,31,32,39,40,41,48,49,50),@(33,34,35,42,43,44,51,52,53),
   @(54,55,56,63,64,65,72,73,74),@(57,58,59,66,67,68,75,76,77),@(60,61,62,69,70,71,78,79,80)
 )
-
 function New-RawBoard {
   Param (
     $Board
   )
   if ($Board.length -eq 81) {
     $Board = $Board -replace "\D",'-'
-    return $Board
+    $BoardArray = $Board -as [char[]]
+    return $BoardArray  
   } # if board.length
+  else {break}
 } # fn new-rawboard
-
-function Get-BoardObjects {
+function Get-BoardObject {
   Param (
-    [string]$fnRawBoard,
+    $fnRawBoard,
     $fnBlockList
   )
   foreach ($PosNum in (0..80)) {
@@ -41,13 +42,12 @@ function Get-BoardObjects {
       Col        = $PosNum % 9
       Block      = $BlockNum
       Value      = $fnRawBoard[$PosNum]
-      AllPosInBlock = 
-      PosInBlock = 
+      AllPosInBlock = $fnBlockList[$BlockNum]
+      PosInBlock = $fnBlockList[$BlockNum].indexOf($PosNum)
     } # HashTable posobjprops
     New-Object -TypeName psobject -Property $PosObjProp
   } # foreach posnum
-} # fn get-boardobjects
-
+} # fn Get-BoardObject
 function Get-MissingObjects {
   Param (
     $fnBoardObj
@@ -80,12 +80,12 @@ function Get-MissingObjects {
     } # if pos -eq - (blank position)
   } # foreach posnum
 } # fn getmissingobjects
-
 function Show-Board {
   param (
     $fnBoardObj
   )
-  Clear-Host
+  $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
+  $host.UI.RawUI.CursorPosition = $Coords
   Write-Host
   $Margin = '   '
   $LineColor = "Cyan"
@@ -108,45 +108,56 @@ function Show-Board {
   } #foreach showrow
   Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
 } # fn Showboard
-
 function Update-SingleMissing {
   Param (
     $fnBoardObj,
+    $fnRawBoard,
     $MissingObj
   )
   $Singles = $MissingObj | Where-Object {$_.MissingCount -eq 1}
   foreach ($Single in $Singles) {
-    if ($fnBoardObj[$SingleObj.position].Value -eq '-') {$fnBoardObj[$Single.position].Value = $Single.Missing}
+    if ($fnBoardObj[$Single.position].Value -eq '-') {$fnRawBoard[$Single.position] = $Single.Missing}
   }
-  return $fnBoardObj
+  return $fnRawBoard
 } # Updatesinglemissing
-
 function Update-BlockRevSingle {
   Param (
     $fnBoardObj,
-    $MissingObj
+    $fnMissingObj,
+    $fnRawBoard,
+    $fnBlockList
   )
   foreach ($Block in (0..8)) {
-    $MissingInBlock =($MissingObj | Where-Object {$_.block -eq $block}).Missing
+    $AllMissingInBlock  = $fnMissingObj | Where-Object {$_.Block -eq $Block}
+    $MissingInBlock = $AllMissingInBlock.Missing
     $GroupMissing = $MissingInBlock | Group-Object
     $Singles = $GroupMissing | Where-Object {$_.count -eq 1}
-    foreach ($PosInBlock in (0..8)) {
-      $fnBoardObj | Where-Object {$_.Block -eq $block -and }
+    foreach ($Single in $Singles) {
+      foreach ($MissingInPos in $AllMissingInBlock) {
+        if ($MissingInPos.Missing -contains $Single.Name) {
+          $fnRawBoard[$MissingInPos.Position] = ($Single.Name) -as [char]
+        }
+      }
     }
   }
+  return $fnRawBoard
 }
-
 #######     MAIN CODE
-
+Clear-Host
+$FirstTime = $true
 $RawBoard = New-RawBoard -Board $SudokuBoard
-$BoardObj = Get-BoardObjects -fnRawBoard $RawBoard -fnBlockList $BlockList
 do {
-  $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj
-  Show-Board -fnBoardObj $BoardObj
+  $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
+  $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj.psobject.Copy()
+  if ($FirstTime) {Show-Board -fnBoardObj $BoardObj;$FirstTime=$false}
   if ($MissingObj.MissingCount -contains 1) {
-    $UpdatedBoard = Update-SingleMissing -fnBoard $BoardObj.psobject.Copy() -Missing $MissingObj
-    $BoardObj = $UpdatedBoard.psobject.Copy()
+    $RawBoard = Update-SingleMissing -fnBoard $BoardObj.psobject.Copy() -fnRawBoard $RawBoard -Missing $MissingObj
+    $BoardObj = $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
   }
-  Read-Host 'end'
+  else {
+    $RawBoard = Update-BlockRevSingle -fnBoardObj $BoardObj.psobject.Copy() -fnRawBoard $RawBoard -fnMissingObj $MissingObj -fnBlockList $BlockList
+    $BoardObj = $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
+  }
+  if ($FirstTime -eq $false) {Show-Board -fnBoardObj $BoardObj}  
+  start-sleep -Milliseconds 300
 } while ($BoardObj.Value -contains '-')
-Show-Board -fnBoardObj $BoardObj
