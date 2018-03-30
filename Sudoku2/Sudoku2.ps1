@@ -164,11 +164,25 @@ function Guess-Value {
   return $fnRawBoard
 }
 
+function New-AntiBoard {
+  Param()
+  foreach ($PosNum in (0..80)) {
+    $AntiObjProp = [ordered]@{
+      Position   = $PosNum
+      Row        = ([math]::Truncate($PosNum/9))
+      Col        = $PosNum % 9
+      AntiValue  = @()
+    } # HashTable posobjprops
+    New-Object -TypeName psobject -Property $PosObjProp
+  }
+}
+
 
 #######     MAIN CODE     ####### 
 Clear-Host
 $FirstTime = $true
 $RawBoard = New-RawBoard -Board $SudokuBoard
+$AntiBoardObj = New-AntiBoard 
 do {
   $BeginNumBlank = ($RawBoard | where {$_ -eq '-'} ).count
   $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
@@ -183,7 +197,7 @@ do {
     $RawBoard = Update-BlockRevSingle -fnBoardObj $BoardObj.psobject.Copy() -fnRawBoard $RawBoard -fnMissingObj $MissingObj -fnBlockList $BlockList
     $BoardObj = $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
   }
-  $EndNumBlanks = ($RawBoard | where {$_ -eq '-'} ).count
+  $EndNumBlanks = ($RawBoard | Where-Object {$_ -eq '-'} ).count
 #  if ($BeginNumBlank -eq $EndNumBlanks) {
 #    $BackupRaw = $RawBoard.psobject.Copy()
 #    $RawBoard = Guess-Value -fnBoardObj $BoardObj.psobject.Copy() -fnMissingObj $MissingObj -fnRawBoard $RawBoard.psobject.Copy()
