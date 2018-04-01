@@ -1,12 +1,13 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
+  [string]$SudokuBoard = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
 )
 # Easy       '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 # Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
 # Difficult  '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
 # Extreme    '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
+# Extreme    '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
 $BlockList = @(
   @( 0, 1, 2, 9,10,11,18,19,20),@( 3, 4, 5,12,13,14,21,22,23),@( 6, 7, 8,15,16,17,24,25,26),
   @(27,28,29,36,37,38,45,46,47),@(30,31,32,39,40,41,48,49,50),@(33,34,35,42,43,44,51,52,53),
@@ -159,7 +160,7 @@ function Guess-Value {
   )
   $MissingPairs = $fnMissingObj | Where-Object {$_.MissingCount -eq 2}
   $GuessObj = $MissingPairs | Get-Random
-  $GuessValue = $MissingPairs.Missing | Get-Random
+  $GuessValue = $MissingPairs.Missing | Get-Random -ErrorAction stop
   $fnRawBoard[$GuessObj.Position] = $GuessValue -as [char]
   return $fnRawBoard
 }
@@ -183,6 +184,7 @@ Clear-Host
 $FirstTime = $true
 $RawBoard = New-RawBoard -Board $SudokuBoard
 $AntiBoardObj = New-AntiBoard 
+$Guessing = $false
 do {
   $BeginNumBlank = ($RawBoard | where {$_ -eq '-'} ).count
   $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
@@ -198,10 +200,28 @@ do {
     $BoardObj = $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
   }
   $EndNumBlanks = ($RawBoard | Where-Object {$_ -eq '-'} ).count
-#  if ($BeginNumBlank -eq $EndNumBlanks) {
-#    $BackupRaw = $RawBoard.psobject.Copy()
-#    $RawBoard = Guess-Value -fnBoardObj $BoardObj.psobject.Copy() -fnMissingObj $MissingObj -fnRawBoard $RawBoard.psobject.Copy()
-#  }
+  if ($BeginNumBlank -eq $EndNumBlanks -and $Guessing -eq $false) {
+    $BackupRaw = $RawBoard.psobject.Copy()
+    try {
+    $RawBoard = Guess-Value -fnBoardObj $BoardObj.psobject.Copy() -fnMissingObj $MissingObj -fnRawBoard $RawBoard.psobject.Copy() 
+    }
+    Catch {
+      $RawBoard = $BackupRaw.psobject.Copy()
+      $Guessing = $false  
+    }
+  }
+  foreach ($Block in (0..8)) {
+    $BlockObjValues = ($BoardObj | Where-Object {$_.Block -eq $Block -and $_.value -match '\d'}).Value
+    $GroupBOV = $BlockObjValues | Group-Object
+    foreach ($Group in $GroupBOV) {
+      if ($Group.Count -gt 1 -and $Guessing -eq $true) {
+        $RawBoard = $BackupRaw.psobject.Copy()
+        $Guessing = $false
+      }
+    } 
+  }
+
+  
   if ($FirstTime -eq $false) {Show-Board -fnBoardObj $BoardObj}  
   start-sleep -Milliseconds 300
 } while ($BoardObj.Value -contains '-')
