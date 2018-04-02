@@ -143,24 +143,19 @@ function Update-BlockRevSingle {
   }
   return $fnRawBoard
 }
-function Get-NakedPair {
-  Param (
-    $fnMissingObj
-  )
-  $MissingPairs = $fnMissingObj | Where-Object ($_.MissingCount -eq 2) 
-  $MissingPairs | ft
 
-}
-
-function Guess-Value {
+function Test-GuessedValue {
   Param (
     $fnBoardObj,
     $fnMissingObj,
-    $fnRawBoard
+    $fnRawBoard,
+    $NumberOfGuess
   )
+  $MissObjIndex = [math]::Truncate($NumberOfGuess / 2)
+  $MissValueIndex = ($NumberOfGuess-1) % 2
   $MissingPairs = $fnMissingObj | Where-Object {$_.MissingCount -eq 2}
-  $GuessObj = $MissingPairs | Get-Random
-  $GuessValue = $MissingPairs.Missing | Get-Random -ErrorAction stop
+  $GuessObj = $MissingPairs[$MissObjIndex]
+  $GuessValue = $MissingPairs.Missing[$MissValueIndex]
   $fnRawBoard[$GuessObj.Position] = $GuessValue -as [char]
   return $fnRawBoard
 }
@@ -185,43 +180,39 @@ $FirstTime = $true
 $RawBoard = New-RawBoard -Board $SudokuBoard
 $AntiBoardObj = New-AntiBoard 
 $Guessing = $false
+$Attempt = 0
+$GuessNumber = 0
 do {
-  $BeginNumBlank = ($RawBoard | where {$_ -eq '-'} ).count
+  $Attempt++
+  $BeginNumBlank = ($RawBoard | Where-Object {$_ -eq '-'} ).count
   $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
   $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj.psobject.Copy()
   #$NakedSet = Get-NakedPair -fnMissingObj $MissingObj 
   if ($FirstTime) {Show-Board -fnBoardObj $BoardObj;$FirstTime=$false}
   if ($MissingObj.MissingCount -contains 1) {
     $RawBoard = Update-SingleMissing -fnBoard $BoardObj.psobject.Copy() -fnRawBoard $RawBoard -Missing $MissingObj
-    $BoardObj = $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
+    $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
+    $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj.psobject.Copy()
   }
   else {
     $RawBoard = Update-BlockRevSingle -fnBoardObj $BoardObj.psobject.Copy() -fnRawBoard $RawBoard -fnMissingObj $MissingObj -fnBlockList $BlockList
-    $BoardObj = $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
+    $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
+    $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj.psobject.Copy()
   }
   $EndNumBlanks = ($RawBoard | Where-Object {$_ -eq '-'} ).count
-  if ($BeginNumBlank -eq $EndNumBlanks -and $Guessing -eq $false) {
-    $BackupRaw = $RawBoard.psobject.Copy()
-    try {
-    $RawBoard = Guess-Value -fnBoardObj $BoardObj.psobject.Copy() -fnMissingObj $MissingObj -fnRawBoard $RawBoard.psobject.Copy() 
-    }
-    Catch {
-      $RawBoard = $BackupRaw.psobject.Copy()
-      $Guessing = $false  
-    }
-  }
-  foreach ($Block in (0..8)) {
-    $BlockObjValues = ($BoardObj | Where-Object {$_.Block -eq $Block -and $_.value -match '\d'}).Value
-    $GroupBOV = $BlockObjValues | Group-Object
-    foreach ($Group in $GroupBOV) {
-      if ($Group.Count -gt 1 -and $Guessing -eq $true) {
-        $RawBoard = $BackupRaw.psobject.Copy()
-        $Guessing = $false
-      }
-    } 
-  }
-
   
+  # Check to see if we need to start guessing
+  if ($BeginNumBlank -eq $EndNumBlanks -and $Guessing -eq $false) {
+    $GuessNumber++    
+    $BackupRaw = $RawBoard.psobject.Copy()
+    $RawBoard = Test-GuessedValue -fnBoardObj $BoardObj.psobject.Copy() -fnMissingObj $MissingObj -fnRawBoard $RawBoard.psobject.Copy() -NumberOfGuess $GuessNumber
+    $Guessing = $true 
+    $GuessOnAttempt = $Attempt
+  }
+  if ($Guessing -eq $true -and $BeginNumBlank -eq $EndNumBlanks -and $GuessOnAttempt -lt $Attempt ) {
+    $RawBoard = $BackupRaw.psobject.Copy()
+    $Guessing = $false  
+  }
   if ($FirstTime -eq $false) {Show-Board -fnBoardObj $BoardObj}  
   start-sleep -Milliseconds 300
 } while ($BoardObj.Value -contains '-')
