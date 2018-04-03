@@ -1,18 +1,20 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
+  [string]$SudokuBoard = '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
 )
 # Easy       '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 # Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
 # Difficult  '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
 # Extreme    '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
 # Extreme    '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
+# Extreme    '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
 $BlockList = @(
   @( 0, 1, 2, 9,10,11,18,19,20),@( 3, 4, 5,12,13,14,21,22,23),@( 6, 7, 8,15,16,17,24,25,26),
   @(27,28,29,36,37,38,45,46,47),@(30,31,32,39,40,41,48,49,50),@(33,34,35,42,43,44,51,52,53),
   @(54,55,56,63,64,65,72,73,74),@(57,58,59,66,67,68,75,76,77),@(60,61,62,69,70,71,78,79,80)
 )
+
 function New-RawBoard {
   Param (
     $Board
@@ -24,6 +26,7 @@ function New-RawBoard {
   } # if board.length
   else {break}
 } # fn new-rawboard
+
 function Get-BoardObject {
   Param (
     $fnRawBoard,
@@ -36,7 +39,6 @@ function Get-BoardObject {
         Break
       } # if posnum
     }  # foreach blockpos
-      
     $PosObjProp = [ordered]@{
       Position   = $PosNum
       Row        = ([math]::Truncate($PosNum/9))
@@ -49,6 +51,7 @@ function Get-BoardObject {
     New-Object -TypeName psobject -Property $PosObjProp
   } # foreach posnum
 } # fn Get-BoardObject
+
 function Get-MissingObjects {
   Param (
     $fnBoardObj
@@ -81,6 +84,7 @@ function Get-MissingObjects {
     } # if pos -eq - (blank position)
   } # foreach posnum
 } # fn getmissingobjects
+
 function Show-Board {
   param (
     $fnBoardObj
@@ -109,6 +113,7 @@ function Show-Board {
   } #foreach showrow
   Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
 } # fn Showboard
+
 function Update-SingleMissing {
   Param (
     $fnBoardObj,
@@ -121,6 +126,7 @@ function Update-SingleMissing {
   }
   return $fnRawBoard
 } # Updatesinglemissing
+
 function Update-BlockRevSingle {
   Param (
     $fnBoardObj,
@@ -155,7 +161,7 @@ function Test-GuessedValue {
   $MissValueIndex = ($NumberOfGuess-1) % 2
   $MissingPairs = $fnMissingObj | Where-Object {$_.MissingCount -eq 2}
   $GuessObj = $MissingPairs[$MissObjIndex]
-  $GuessValue = $MissingPairs.Missing[$MissValueIndex]
+  $GuessValue = $MissingPairs[$MissObjIndex].Missing[$MissValueIndex]
   $fnRawBoard[$GuessObj.Position] = $GuessValue -as [char]
   return $fnRawBoard
 }
@@ -184,7 +190,7 @@ $Attempt = 0
 $GuessNumber = 0
 do {
   $Attempt++
-  $BeginNumBlank = ($RawBoard | Where-Object {$_ -eq '-'} ).count
+  $BeginNumBlank = ($RawBoard -match '-').count
   $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
   $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj.psobject.Copy()
   #$NakedSet = Get-NakedPair -fnMissingObj $MissingObj 
@@ -199,7 +205,7 @@ do {
     $BoardObj = Get-BoardObject -fnRawBoard $RawBoard -fnBlockList $BlockList
     $MissingObj = Get-MissingObjects -fnBoardObj $BoardObj.psobject.Copy()
   }
-  $EndNumBlanks = ($RawBoard | Where-Object {$_ -eq '-'} ).count
+  $EndNumBlanks = ($RawBoard -match '-').count
   
   # Check to see if we need to start guessing
   if ($BeginNumBlank -eq $EndNumBlanks -and $Guessing -eq $false) {
