@@ -15,6 +15,29 @@ $BlockList = @(
   @(54,55,56,63,64,65,72,73,74),@(57,58,59,66,67,68,75,76,77),@(60,61,62,69,70,71,78,79,80)
 )
 
+function New-AntiBoard {
+  Param (
+    $fnBlockList
+  )
+  foreach ($PosNum in (0..80)) {
+    foreach ($BlockPos in (0..8)) {
+      if ($PosNum -in $fnBlockList[$BlockPos]) {
+        $BlockNum = $BlockPos
+        Break
+      } # if posnum
+    }  # foreach blockpos
+    $AntiProp = [ordered]@{
+      Position   = $PosNum
+      Row        = ([math]::Truncate($PosNum/9))
+      Col        = $PosNum % 9
+      Block      = $BlockNum
+      AntiValue  = @()
+    } # HashTable Antiprops
+    New-Object -TypeName psobject -Property $AntiProp
+  } # foreach posnum
+}  
+
+
 function New-RawBoard {
   Param (
     $Board
@@ -166,17 +189,20 @@ function Test-GuessedValue {
   return $fnRawBoard
 }
 
-function New-AntiBoard {
-  Param()
-  foreach ($PosNum in (0..80)) {
-    $AntiObjProp = [ordered]@{
-      Position   = $PosNum
-      Row        = ([math]::Truncate($PosNum/9))
-      Col        = $PosNum % 9
-      AntiValue  = @()
-    } # HashTable posobjprops
-    New-Object -TypeName psobject -Property $PosObjProp
+Get-NakedSet {
+  Param (
+    $fnBoardObj,
+    $fnMissingObj,
+    $fnAntiBoardObj
+  )
+  #CheckRows
+  foreach ($RowNum in (0..8)) {
+    $PairsMissing = ($fnMissingObj | Where-Object {$_.Row -eq $RowNum -and $_.MissingCount -eq 2}).Missing
+    $GroupPairs = $PairsMissing | Group-Object  
+    If ($GroupPairs.Count -contains 2) {} 
+    }
   }
+
 }
 
 
@@ -184,7 +210,7 @@ function New-AntiBoard {
 Clear-Host
 $FirstTime = $true
 $RawBoard = New-RawBoard -Board $SudokuBoard
-$AntiBoardObj = New-AntiBoard 
+$AntiBoardObj = New-AntiBoard -fnBlockList $BlockList.psobject.Copy()
 $Guessing = $false
 $Attempt = 0
 $GuessNumber = 0
