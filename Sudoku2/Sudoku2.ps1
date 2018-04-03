@@ -1,7 +1,7 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
+  [string]$SudokuBoard = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
 )
 # Easy       '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 # Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
@@ -14,28 +14,6 @@ $BlockList = @(
   @(27,28,29,36,37,38,45,46,47),@(30,31,32,39,40,41,48,49,50),@(33,34,35,42,43,44,51,52,53),
   @(54,55,56,63,64,65,72,73,74),@(57,58,59,66,67,68,75,76,77),@(60,61,62,69,70,71,78,79,80)
 )
-
-function New-AntiBoard {
-  Param (
-    $fnBlockList
-  )
-  foreach ($PosNum in (0..80)) {
-    foreach ($BlockPos in (0..8)) {
-      if ($PosNum -in $fnBlockList[$BlockPos]) {
-        $BlockNum = $BlockPos
-        Break
-      } # if posnum
-    }  # foreach blockpos
-    $AntiProp = [ordered]@{
-      Position   = $PosNum
-      Row        = ([math]::Truncate($PosNum/9))
-      Col        = $PosNum % 9
-      Block      = $BlockNum
-      AntiValue  = @()
-    } # HashTable Antiprops
-    New-Object -TypeName psobject -Property $AntiProp
-  } # foreach posnum
-}  
 
 
 function New-RawBoard {
@@ -178,39 +156,29 @@ function Test-GuessedValue {
     $fnBoardObj,
     $fnMissingObj,
     $fnRawBoard,
-    $NumberOfGuess
+    [int]$NumberOfGuess
   )
-  $MissObjIndex = [math]::Truncate($NumberOfGuess / 2)
-  $MissValueIndex = ($NumberOfGuess-1) % 2
+  $WhichOfFour = $NumberOfGuess % 4 
+  $FirstMissObjIndex = ([math]::Truncate($NumberOfGuess / 4 )) * 2
+  $SecondMissObjIndex = $FirstMissObjIndex + 1
+  $FirstMissValueIndex = if ($WhichOfFour -lt 2) {0 -as [int]} else {1 -as [int]}
+  $SecondMissValueIndex = $NumberOfGuess % 2
   $MissingPairs = $fnMissingObj | Where-Object {$_.MissingCount -eq 2}
-  $GuessObj = $MissingPairs[$MissObjIndex]
-  $GuessValue = $MissingPairs[$MissObjIndex].Missing[$MissValueIndex]
-  $fnRawBoard[$GuessObj.Position] = $GuessValue -as [char]
+  $FirstGuessObj = $MissingPairs[$FirstMissObjIndex]
+  $SecondGuessObj = $MissingPairs[$SecondMissObjIndex]
+  $FirstGuessValue = $MissingPairs[$FirstMissObjIndex].Missing[$FirstMissValueIndex]
+  $SecondGuessValue = $MissingPairs[$SecondMissObjIndex].Missing[$SecondMissValueIndex]
+  $fnRawBoard[$FirstGuessObj.Position] = $FirstGuessValue -as [char]
+  $fnRawBoard[$SecondGuessObj.Position] = $SecondGuessValue -as [char]
   return $fnRawBoard
 }
 
-Get-NakedSet {
-  Param (
-    $fnBoardObj,
-    $fnMissingObj,
-    $fnAntiBoardObj
-  )
-  #CheckRows
-  foreach ($RowNum in (0..8)) {
-    $PairsMissing = ($fnMissingObj | Where-Object {$_.Row -eq $RowNum -and $_.MissingCount -eq 2}).Missing
-    $GroupPairs = $PairsMissing | Group-Object  
-    If ($GroupPairs.Count -contains 2) {} 
-    }
-  }
-
-}
 
 
 #######     MAIN CODE     ####### 
 Clear-Host
 $FirstTime = $true
 $RawBoard = New-RawBoard -Board $SudokuBoard
-$AntiBoardObj = New-AntiBoard -fnBlockList $BlockList.psobject.Copy()
 $Guessing = $false
 $Attempt = 0
 $GuessNumber = 0
@@ -235,16 +203,16 @@ do {
   
   # Check to see if we need to start guessing
   if ($BeginNumBlank -eq $EndNumBlanks -and $Guessing -eq $false) {
-    $GuessNumber++    
     $BackupRaw = $RawBoard.psobject.Copy()
     $RawBoard = Test-GuessedValue -fnBoardObj $BoardObj.psobject.Copy() -fnMissingObj $MissingObj -fnRawBoard $RawBoard.psobject.Copy() -NumberOfGuess $GuessNumber
     $Guessing = $true 
     $GuessOnAttempt = $Attempt
+    $GuessNumber++ 
   }
   if ($Guessing -eq $true -and $BeginNumBlank -eq $EndNumBlanks -and $GuessOnAttempt -lt $Attempt ) {
     $RawBoard = $BackupRaw.psobject.Copy()
     $Guessing = $false  
   }
   if ($FirstTime -eq $false) {Show-Board -fnBoardObj $BoardObj}  
-  start-sleep -Milliseconds 300
+  start-sleep -Milliseconds 100
 } while ($BoardObj.Value -contains '-')
