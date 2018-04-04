@@ -170,9 +170,6 @@ function Show-Board {
   Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
 } # fn Showboard
 
-
-
-
 ## MAIN CODE ##
 
 $BlockListObj = New-BlockValidation
