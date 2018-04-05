@@ -220,7 +220,7 @@ do {
   $EndBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
   if ($StartBlankCount -eq $EndBlankCount) {
     $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates
-    $AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates
+    #$AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates
   }  
   $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   Show-Board -fnBoardObj $BoardObj
