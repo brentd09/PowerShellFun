@@ -1,7 +1,7 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
+  [string]$SudokuBoard = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
 )
 
 # Using the https://www.sudoku-solutions.com/ website you can try solving these to help with the 
@@ -154,7 +154,7 @@ function Show-Board {
   param (
     $fnBoardObj
   )
-  #Clear-Host
+  Clear-Host
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
   Write-Host
@@ -194,9 +194,13 @@ do {
   $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   $AllCandidates = Update-CandidateList -fnCandidate $AllCandidates
+  $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
+  Show-Board -fnBoardObj $BoardObj
   $EndBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
   if ($StartBlankCount -eq $EndBlankCount) {
     $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates
+    $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
+    Show-Board -fnBoardObj $BoardObj
     #$AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates
     $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
     $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
