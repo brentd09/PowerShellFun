@@ -115,31 +115,7 @@ function Update-CandidateList {
   return $fnCandidate
 }
 
-function Find-CandidateHiddenPairs {
-  Param (
-    $fnCandidateObj
-  )
-
-  foreach ($RowNum in (0..8)) {
-    $RowObjs = ($fnCandidateObj | Where-Object {$_.Row -eq $RowNum -and $_.Solved -eq $false}) 
-    $GroupRowObj = $RowObjs | Group-Object -Property Value
-    $GroupRowVals = ($GroupRowObj.Group.value | Group-Object | Where-Object {$_.count -eq 2}).Group | Select-Object -Unique
-    foreach ($RowObj in $RowObjs) {
-      if ($RowObj.Value -contains $GroupRowVals) { } # if 
-    } # foreach
-    $FoundRowObj = $RowObj | Where-Object {$_.Value -contains $GroupRowVals} | Select-Object -Unique
-    if ($FoundRowObj.Block.Count -eq 1) {
-      foreach ($FoundRow in $FoundRowObj) {
-        $fnCandidateObj[$FoundRow.Position].Value = $fnCandidateObj[$FoundRow.Position].Value | Where-Object {$_ -in $GroupRowVals}
-      } # foreach
-    } # if
-    Start-Sleep -Milliseconds 10
-  } # foreach
-  foreach ($ColNum in (0..8)) {
-
-  }
-  return $fnCandidateObj
-} 
+# Deleted hidden pairs function it was a disaster
 
 
 function Find-CandidateSingleHiddenBlock {
@@ -216,13 +192,16 @@ $BoardObj = New-BoardObject -fnRawBoard $RawBoardArray
 do {
   $StartBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
   $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
+  $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   $AllCandidates = Update-CandidateList -fnCandidate $AllCandidates
   $EndBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
   if ($StartBlankCount -eq $EndBlankCount) {
     $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates
     #$AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates
+    $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
+    $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
+    Show-Board -fnBoardObj $BoardObj
   }  
-  $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-  Show-Board -fnBoardObj $BoardObj
+
   Start-Sleep -Seconds 1
 } until ($BoardObj.Value -notcontains [char]'-')
