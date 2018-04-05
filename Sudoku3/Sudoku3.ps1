@@ -94,7 +94,6 @@ function Update-CandidateList {
   Param (
     $fnCandidate
   )
-  $AllSolved = $fnCandidate | Where-Object {$_.Solved -eq $true}
   foreach ($PosNum in (0..80)) {
     $Row   = $fnCandidate[$PosNum].Row
     $Col   = $fnCandidate[$PosNum].Col
