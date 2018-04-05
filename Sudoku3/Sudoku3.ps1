@@ -1,7 +1,7 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
+  [string]$SudokuBoard = '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
 )
 # Easy       '-6-3--8 4537-9-----4---63-7-9..51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 # Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
@@ -77,40 +77,60 @@ function New-BoardObject {
   } # foreach posnum
 } # fn Get-BoardObject
 
-function Update-CandidateCellSolved {
+function Find-CandidateSolvedCell {
   param (
     $fnBoardObj,
     $fnCandidateObj
   )
   $NotBlankList = $fnBoardObj | Where-Object {$_.Value -ne [char]'-'}
   foreach ($NotBlank in $NotBlankList) {
-    $fnCandidateObj[$NotBlank.Position].Value = $NotBlank.Value
+    $fnCandidateObj[$NotBlank.Position].Value = $NotBlank.Value 
     $fnCandidateObj[$NotBlank.Position].Solved = $true
-    $CandidateRow   = $fnCandidateObj | Where-Object {$_.Row -eq $NotBlank.Row -and $_.Solved -eq $false}
-    $CandidateCol   = $fnCandidateObj | Where-Object {$_.Col -eq $NotBlank.Col -and $_.Solved -eq $false}
-    $CandidateBlock = $fnCandidateObj | Where-Object {$_.Block -eq $NotBlank.Block -and $_.Solved -eq $false}
-    foreach ($CandidateCell in $CandidateRow) {$CandidateCell.Value = $CandidateCell.Value | Where-Object {$_ -notin $NotBlank.Value}}
-    foreach ($CandidateCell in $CandidateCol) {$CandidateCell.Value = $CandidateCell.Value | Where-Object {$_ -notin $NotBlank.Value}}
-    foreach ($CandidateCell in $CandidateBlock) {$CandidateCell.Value = $CandidateCell.Value | Where-Object {$_ -notin $NotBlank.Value}}        
   } # Foreach
   $fnCandidateObj
 } # Function
 
-function Update-CandidateCellHidden {
+function Update-CandidateList {
   Param (
-    $fnBoardObj,
+    $fnCandidate
+  )
+  $AllSolved = $fnCandidate | Where-Object {$_.Solved -eq $true}
+  foreach ($PosNum in (0..80)) {
+    $Row   = $fnCandidate[$PosNum].Row
+    $Col   = $fnCandidate[$PosNum].Col
+    $Block = $fnCandidate[$PosNum].Block
+    $Solved = $fnCandidate | Where-Object {$_.Solved -eq $true} 
+    $RelatedSolved =  $Solved | Where-Object {$_.Row -eq $Row -or $_.Col -eq $Col -or $_.Block -eq $Block }
+    $NewValues = $fnCandidate[$PosNum].Value | Where-Object {$_ -notin $RelatedSolved.Value}
+    if ($NewValues.count -gt 1) {
+      $fnCandidate[$PosNum].Value = $NewValues
+    }
+    elseif ($NewValues.count -eq 1) {
+      $fnCandidate[$PosNum].Value = $NewValues
+      $fnCandidate[$PosNum].Solved = $true
+    }
+  }
+  return $fnCandidate
+}
+
+function Find-CandidateSingleHiddenBlock {
+  Param (
     $fnCandidateObj
   )
-  $NotFoundCell = $fnCandidateObj | Where-Object {$_.Solved -eq $false}
-  foreach ($Cell in $NotFoundCell) {
-    $RowVals   = ($fnCandidateObj | Where-Object {$_.Row -eq  $Cell.Row }).Value
-    $ColVals   = ($fnCandidateObj | Where-Object {$_.Col -eq  $Cell.Col }).Value
-    $BlockVals = ($fnCandidateObj | Where-Object {$_.Block -eq  $Cell.Block }).Value
-    $AllValues = $RowVals + $ColVals + $BlockVals | Select-Object -Unique
-    $fnCandidateObj[$Cell.Position].Value = $fnCandidateObj[$Cell.Position].Value | Where-Object {$_ -notin $AllValues}
-  } # foreach
+  foreach ($BlockNum in (0..8)) {
+    $CandidateBlockObj = $fnCandidateObj | Where-Object {$_.Block -eq $BlockNum -and $_.Solved -eq $false}
+    $SingleCandidateValues = ($CandidateBlockObj.Value | Group-Object | Where-Object {$_.count -eq 1}).Group
+    foreach ($SingleCandidateValue in $SingleCandidateValues) {
+      $TargetCandidate = $CandidateBlockObj | Where-Object {$_.Value -contains $SingleCandidateValue -and $_.Solved -eq $false}
+      if ($TargetCandidate -ne $null ){
+        $fnCandidateObj[$TargetCandidate.Position].Value = $SingleCandidateValue -as [char]
+        $fnCandidateObj[$TargetCandidate.Position].Solved = $true
+      }
+        continue 
+    }
+  }
   return $fnCandidateObj
-} # function
+}
 
 function Update-Board {
   Param (
@@ -125,26 +145,11 @@ function Update-Board {
   return $fnBoardObj
 }
 
-function Get-HiddenSingleCell {
-  Param (
-    $fnBoardObj,
-    $fnCandidateObj
-  )
-  foreach ($BlockNum in (0..8)) {
-    $GroupBlockCandidates = ($fnCandidateObj | Where-Object {$_.block -eq $BlockNum -and $_.Solved -eq $false}).Value | Group-Object | Where-Object {$_.count -eq 1}
-    if ($GroupBlockCandidates -ne $null) {
-      $CandidateFound = $fnCandidateObj | Where-Object {$_.Value -contains $GroupBlockCandidates.Group[0] -and $_.Block -eq $BlockNum}
-      $fnCandidateObj[$CandidateFound.Position].Value = $GroupBlockCandidates.Group[0] -as [char]
-    }
-  }
-  return $fnCandidateObj
-}
-
 function Show-Board {
   param (
     $fnBoardObj
   )
-  Clear-Host
+  #Clear-Host
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
   Write-Host
@@ -170,16 +175,24 @@ function Show-Board {
   Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
 } # fn Showboard
 
+
+
+
 ## MAIN CODE ##
 
 $BlockListObj = New-BlockValidation
 $AllCandidates = New-CandidateList -fnBlockListObj $BlockListObj
 $RawBoardArray = New-RawBoard -Board $SudokuBoard
-$BoardObj = Get-BoardObject -fnRawBoard $RawBoardArray
+$BoardObj = New-BoardObject -fnRawBoard $RawBoardArray
 do {
-  $AllCandidates = Update-CandidateCellSolved -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-  #$AllCandidates = Update-CandidateCellHidden -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-  $AllCandidates = Get-HiddenSingleCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
+  $StartBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
+  $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
+  $AllCandidates = Update-CandidateList -fnCandidate $AllCandidates
+  $EndBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
+  if ($StartBlankCount -eq $EndBlankCount) {
+    $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates
+  }  
   $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   Show-Board -fnBoardObj $BoardObj
-} until ($BoardObj.Value -notcontains [char]'-') 
+  Start-Sleep -Seconds 1
+} until ($BoardObj.Value -notcontains [char]'-')
