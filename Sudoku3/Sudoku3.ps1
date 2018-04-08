@@ -57,7 +57,6 @@ function New-CandidateList {
       Col      = $PosNum % 9
       Block    = ($BlockListObj | Where-Object {$_.BlockLocation -contains $PosNum}).BlockNumber
       Value   = @('1','2','3','4','5','6','7','8','9') -as [char[]]
-      Solved   = $false
     }
     New-Object -TypeName psobject -Property $CandidateProp
   }
@@ -88,7 +87,6 @@ function Find-CandidateSolvedCell {
   $NotBlankList = $fnBoardObj | Where-Object {$_.Value -ne [char]'-'}
   foreach ($NotBlank in $NotBlankList) {
     $fnCandidateObj[$NotBlank.Position].Value = $NotBlank.Value 
-    $fnCandidateObj[$NotBlank.Position].Solved = $true
   } # Foreach
   $fnCandidateObj
 } # Function
@@ -101,37 +99,28 @@ function Update-CandidateList {
     $Row   = $fnCandidate[$PosNum].Row
     $Col   = $fnCandidate[$PosNum].Col
     $Block = $fnCandidate[$PosNum].Block
-    $Solved = $fnCandidate | Where-Object {$_.Solved -eq $true} 
+    $Solved = $fnCandidate | Where-Object {$_.Value.Count -eq 1} 
     $RelatedSolved =  $Solved | Where-Object {$_.Row -eq $Row -or $_.Col -eq $Col -or $_.Block -eq $Block }
     $NewValues = $fnCandidate[$PosNum].Value | Where-Object {$_ -notin $RelatedSolved.Value}
-    if ($NewValues.count -gt 1) {
-      $fnCandidate[$PosNum].Value = $NewValues
-    }
-    elseif ($NewValues.count -eq 1) {
-      $fnCandidate[$PosNum].Value = $NewValues
-      $fnCandidate[$PosNum].Solved = $true
-    }
+    $fnCandidate[$PosNum].Value = $NewValues
   }
   return $fnCandidate
 }
 
 # Deleted hidden pairs function it was a disaster
-function Find-CandidateHiddenPairs {
+function Find-CandidateSingleHiddenBlock {
   Param (
     $fnCandidateObj
   )
-  foreach ($RowNum in (2)) {
-    $RowCells = $fnCandidateObj | Where-Object {$_.Row -eq $RowNum}
-    $NumbersTwice = $RowCells.Value | Sort-Object | Group-Object | Where-Object {$_.count -eq 2}
-    foreach ($Number in $NumbersTwice) {
-      $CellsContainingPairNum = $RowCells | Where-Object {$_.Value -contains $Number.Name}
-      $PairValues = $CellsContainingPairNum[0].Value | Where-Object {$_ -in $CellsContainingPairNum[1].Value}
-      If ($PairValues.count -eq 2) {
-        0..1 | ForEach-Object {
-          $ModifyPos = $CellsContainingPairNum[$_].Position
-          $fnCandidateObj[$ModifyPos].Value = $PairValues 
-        }
+  foreach ($BlockNum in (0..8)) {
+    $CandidateBlockObj = $fnCandidateObj | Where-Object {$_.Block -eq $BlockNum -and $_.Value.Count -ne 1}
+    $SingleCandidateValues = ($CandidateBlockObj.Value | Group-Object | Where-Object {$_.count -eq 1}).Group
+    foreach ($SingleCandidateValue in $SingleCandidateValues) {
+      $TargetCandidate = $CandidateBlockObj | Where-Object {$_.Value -contains $SingleCandidateValue -and $_.Value.Count -ne 1}
+      if ($TargetCandidate -ne $null ){
+        $fnCandidateObj[$TargetCandidate.Position].Value = $SingleCandidateValue -as [char]
       }
+        continue 
     }
   }
   return $fnCandidateObj
@@ -142,13 +131,12 @@ function Find-CandidateSingleHiddenBlock {
     $fnCandidateObj
   )
   foreach ($BlockNum in (0..8)) {
-    $CandidateBlockObj = $fnCandidateObj | Where-Object {$_.Block -eq $BlockNum -and $_.Solved -eq $false}
+    $CandidateBlockObj = $fnCandidateObj | Where-Object {$_.Block -eq $BlockNum -and $_.Value.Count -ne 1}
     $SingleCandidateValues = ($CandidateBlockObj.Value | Group-Object | Where-Object {$_.count -eq 1}).Group
     foreach ($SingleCandidateValue in $SingleCandidateValues) {
-      $TargetCandidate = $CandidateBlockObj | Where-Object {$_.Value -contains $SingleCandidateValue -and $_.Solved -eq $false}
+      $TargetCandidate = $CandidateBlockObj | Where-Object {$_.Value -contains $SingleCandidateValue -and $_.Value.Count -ne 1}
       if ($TargetCandidate -ne $null ){
         $fnCandidateObj[$TargetCandidate.Position].Value = $SingleCandidateValue -as [char]
-        $fnCandidateObj[$TargetCandidate.Position].Solved = $true
       }
         continue 
     }
@@ -209,13 +197,13 @@ $AllCandidates = New-CandidateList -fnBlockListObj $BlockListObj
 $RawBoardArray = New-RawBoard -Board $SudokuBoard
 $BoardObj = New-BoardObject -fnRawBoard $RawBoardArray
 do {
-  $StartBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
+  $StartBlankCount = ($AllCandidates | Where-Object {$_.Value.Count -ne 1}).count
   $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   $AllCandidates = Update-CandidateList -fnCandidate $AllCandidates
   $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
   Show-Board -fnBoardObj $BoardObj
-  $EndBlankCount = ($AllCandidates | Where-Object {$_.Solved -eq $false}).count
+  $EndBlankCount = ($AllCandidates | Where-Object {$_.Value.Count -ne 1}).count
   if ($StartBlankCount -eq $EndBlankCount) {
     $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates
     $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
