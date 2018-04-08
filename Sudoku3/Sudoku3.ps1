@@ -1,7 +1,7 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
+  [string]$SudokuBoard = '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
 )
 
 # Using the https://www.sudoku-solutions.com/ website you can try solving these to help with the 
@@ -116,7 +116,26 @@ function Update-CandidateList {
 }
 
 # Deleted hidden pairs function it was a disaster
-
+function Find-CandidateHiddenPairs {
+  Param (
+    $fnCandidateObj
+  )
+  foreach ($RowNum in (2)) {
+    $RowCells = $fnCandidateObj | Where-Object {$_.Row -eq $RowNum}
+    $NumbersTwice = $RowCells.Value | Sort-Object | Group-Object | Where-Object {$_.count -eq 2}
+    foreach ($Number in $NumbersTwice) {
+      $CellsContainingPairNum = $RowCells | Where-Object {$_.Value -contains $Number.Name}
+      $PairValues = $CellsContainingPairNum[0].Value | Where-Object {$_ -in $CellsContainingPairNum[1].Value}
+      If ($PairValues.count -eq 2) {
+        0..1 | ForEach-Object {
+          $ModifyPos = $CellsContainingPairNum[$_].Position
+          $fnCandidateObj[$ModifyPos].Value = $PairValues 
+        }
+      }
+    }
+  }
+  return $fnCandidateObj
+}
 
 function Find-CandidateSingleHiddenBlock {
   Param (
@@ -201,7 +220,7 @@ do {
     $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates
     $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
     Show-Board -fnBoardObj $BoardObj
-    #$AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates
+    $AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates
     $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
     $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
     Show-Board -fnBoardObj $BoardObj
