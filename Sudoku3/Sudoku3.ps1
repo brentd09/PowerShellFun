@@ -88,7 +88,7 @@ function Find-CandidateSolvedCell {
   foreach ($NotBlank in $NotBlankList) {
     $fnCandidateObj[$NotBlank.Position].Value = $NotBlank.Value 
   } # Foreach
-  $fnCandidateObj
+  return $fnCandidateObj
 } # Function
 
 function Update-CandidateList {
@@ -100,9 +100,11 @@ function Update-CandidateList {
     $Col   = $fnCandidate[$PosNum].Col
     $Block = $fnCandidate[$PosNum].Block
     $Solved = $fnCandidate | Where-Object {$_.Value.Count -eq 1} 
-    $RelatedSolved =  $Solved | Where-Object {$_.Row -eq $Row -or $_.Col -eq $Col -or $_.Block -eq $Block }
-    $NewValues = $fnCandidate[$PosNum].Value | Where-Object {$_ -notin $RelatedSolved.Value}
-    $fnCandidate[$PosNum].Value = $NewValues
+    if ($fnCandidate[$PosNum].Value.Count -gt 1) { 
+      $RelatedSolved =  $Solved | Where-Object {$_.Row -eq $Row -or $_.Col -eq $Col -or $_.Block -eq $Block }
+      $NewValues = $fnCandidate[$PosNum].Value | Where-Object {$_ -notin ($RelatedSolved.Value | Select-Object -Unique)}
+      $fnCandidate[$PosNum].Value = $NewValues
+    } 
   }
   return $fnCandidate
 }
@@ -193,25 +195,25 @@ function Show-Board {
 ## MAIN CODE ##
 
 $BlockListObj = New-BlockValidation
-$AllCandidates = New-CandidateList -fnBlockListObj $BlockListObj
-$RawBoardArray = New-RawBoard -Board $SudokuBoard
-$BoardObj = New-BoardObject -fnRawBoard $RawBoardArray
+$AllCandidates = New-CandidateList -fnBlockListObj $BlockListObj.psobject.Copy()
+$RawBoardArray = New-RawBoard -Board $SudokuBoard.psobject.Copy()
+$BoardObj = New-BoardObject -fnRawBoard $RawBoardArray.psobject.Copy()
 do {
   $StartBlankCount = ($AllCandidates | Where-Object {$_.Value.Count -ne 1}).count
-  $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-  $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-  $AllCandidates = Update-CandidateList -fnCandidate $AllCandidates
-  $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-  Show-Board -fnBoardObj $BoardObj
+  $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj.psobject.Copy() -fnCandidateObj $AllCandidates.psobject.Copy()
+  $BoardObj = Update-Board -fnBoardObj $BoardObj.psobject.Copy() -fnCandidateObj $AllCandidates.psobject.Copy()
+  $AllCandidates = Update-CandidateList -fnCandidate $AllCandidates.psobject.Copy()
+  $BoardObj = Update-Board -fnBoardObj $BoardObj.psobject.Copy() -fnCandidateObj $AllCandidates.psobject.Copy()
+  Show-Board -fnBoardObj $BoardObj.psobject.Copy()
   $EndBlankCount = ($AllCandidates | Where-Object {$_.Value.Count -ne 1}).count
   if ($StartBlankCount -eq $EndBlankCount) {
-    $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates
-    $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-    Show-Board -fnBoardObj $BoardObj
-    $AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates
-    $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-    $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates
-    Show-Board -fnBoardObj $BoardObj
+    $AllCandidates = Find-CandidateSingleHiddenBlock -fnCandidateObj $AllCandidates.psobject.Copy()
+    $BoardObj = Update-Board -fnBoardObj $BoardObj -fnCandidateObj $AllCandidates.psobject.Copy()
+    Show-Board -fnBoardObj $BoardObj.psobject.Copy()
+    $AllCandidates = Find-CandidateHiddenPairs -fnCandidateObj $AllCandidates.psobject.Copy()
+    $AllCandidates = Find-CandidateSolvedCell -fnBoardObj $BoardObj.psobject.Copy() -fnCandidateObj $AllCandidates.psobject.Copy()
+    $BoardObj = Update-Board -fnBoardObj $BoardObj.psobject.Copy() -fnCandidateObj $AllCandidates.psobject.Copy()
+    Show-Board -fnBoardObj $BoardObj.psobject.Copy()
   }  
 
   Start-Sleep -Seconds 1
