@@ -79,6 +79,29 @@ function New-BoardObject {
   } # foreach posnum
 } # fn Get-BoardObject
 
+
+function Find-CandidateHiddenPairs {
+  Param (
+    $fnCandidateObj
+  )
+  foreach ($RowNum in (0..8)) {
+    $RowCells = $fnCandidateObj | Where-Object {$_.Row -eq $RowNum}
+    $RowValues = $RowCells.Value
+    $GrpRowValuePairs = ($RowValues | Sort-Object | Group-Object | Where-Object {$_.Count -eq 2}).Name
+    if ($GrpRowValuePairs.count -eq 2) {
+      $FirstVal  = $GrpRowValuePairs[0]
+      $SecondVal = $GrpRowValuePairs[1]
+      $FirstCells  = $RowCells | Where-Object {$_.Value -contains $FirstVal}
+      $SecondCells = $RowCells | Where-Object {$_.Value -contains $SecondVal}
+      If ($FirstCells[0].Position -eq $SecondCells[0].Position -and $FirstCells[1].Position -eq $SecondCells[1].Position) {
+        $fnCandidateObj[$FirstCells[0].Position].Value = $GrpRowValuePairs
+        $fnCandidateObj[$FirstCells[1].Poistion].Value = $GrpRowValuePairs
+      }
+    }
+  }
+  return $fnCandidateObj
+}
+
 function Find-CandidateSolvedCell {
   param (
     $fnBoardObj,
@@ -163,7 +186,7 @@ function Show-Board {
   param (
     $fnBoardObj
   )
-  Clear-Host
+  #Clear-Host
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
   Write-Host
