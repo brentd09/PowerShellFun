@@ -152,7 +152,8 @@ function Update-CandidateHiddenPair {
   )
   foreach ($RowNum in (0..8)) {
     $RowCells = $fnCandidate | Where-Object {$_.Row -eq $RowNum}
-    $RowPairs = ($RowCells.Value | Group-Object | Where-Object {$_.Count -eq 2}).Name
+    $PairVals = ($RowCells.Value | Group-Object | Where-Object {$_.Count -eq 2}).Name
+    #trying to find a way to match only when the pairs are in the same two cells
     Start-Sleep 1
   }
 }
@@ -184,7 +185,7 @@ $Candidates = Update-CandidateHiddenSingle -fnCandidate $Candidates
 $Candidates = Update-CandidateFromBoard -fnBoard $Board -fnCandidate $Candidates
 $Board = Update-Board -fnBoard $Board -fnCandidate $Candidates
 
-Update-CandidateHiddenPair -fnCandidate $Candidates
+#Not working yet ----  Update-CandidateHiddenPair -fnCandidate $Candidates
 Show-Board -fnBoardObj $Board
 Start-Sleep -Seconds 1
 } Until ($Board.Value -notcontains '-')
