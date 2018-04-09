@@ -1,7 +1,7 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
+  [string]$SudokuBoard = '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
 )
 
 # Using the https://www.sudoku-solutions.com/ website you can try solving these to help with the 
@@ -55,7 +55,7 @@ function New-CandidateList {
       Position = $PosNum
       Row      = [math]::Truncate($PosNum / 9)
       Col      = $PosNum % 9
-      Block    = ($BlockListObj | Where-Object {$_.BlockLocation -contains $PosNum}).BlockNumber
+      Block    = ($fnBlockListObj | Where-Object {$_.BlockLocation -contains $PosNum}).BlockNumber
       Value   = @('1','2','3','4','5','6','7','8','9') -as [char[]]
     }
     New-Object -TypeName psobject -Property $CandidateProp
@@ -146,6 +146,17 @@ function Update-CandidateHiddenSingle {
   return $fnCandidate
 }
 
+function Update-CandidateHiddenPair {
+  Param (
+    $fnCandidate
+  )
+  foreach ($RowNum in (0..8)) {
+    $RowCells = $fnCandidate | Where-Object {$_.Row -eq $RowNum}
+    $RowPairs = ($RowCells.Value | Group-Object | Where-Object {$_.Count -eq 2}).Name
+    Start-Sleep 1
+  }
+}
+
 function Update-Board {
   Param (
     $fnBoard,
@@ -172,6 +183,8 @@ do {
 $Candidates = Update-CandidateHiddenSingle -fnCandidate $Candidates
 $Candidates = Update-CandidateFromBoard -fnBoard $Board -fnCandidate $Candidates
 $Board = Update-Board -fnBoard $Board -fnCandidate $Candidates
+
+Update-CandidateHiddenPair -fnCandidate $Candidates
 Show-Board -fnBoardObj $Board
 Start-Sleep -Seconds 1
 } Until ($Board.Value -notcontains '-')
