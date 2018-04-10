@@ -106,7 +106,8 @@ function Draw-Frame {
     $fnWinner
   )
   $spc = '  '
-  Clear-Host
+  $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
+  $host.UI.RawUI.CursorPosition = $Coords
 
   Write-Host -ForegroundColor green "$spc-- Connect Four --`n"
   Write-Host -ForegroundColor green "$spc  1 2 3 4 5 6 7"
@@ -146,7 +147,7 @@ function Select-Col {
   If ($fnColor -like "Y*") {$Col = "Yellow";$ColLetter = "Y"}
   else {$Col = "Red";$ColLetter = "R"}
   do { 
-    Write-Host -ForegroundColor $Col  "   $Col Turn`n"
+    Write-Host -ForegroundColor $Col  "   $Col Turn       `n"
     write-host -NoNewline "  Type column number "
     $kbdRead = Read-Host 
     if ( $kbdRead -match "[1234567]") {
@@ -219,6 +220,7 @@ $GameFrame = @()
 for ($count = 0;$count -le 41;$count++) {
   $GameFrame += "-"
 }
+Clear-Host
 Draw-Frame -fnFrame $GameFrame.psobject.Copy()
 do {
   $GameFrame = Select-Col -fnFrame $GameFrame.psobject.Copy() -fnColor "R"
