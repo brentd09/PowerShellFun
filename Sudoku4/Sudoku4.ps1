@@ -1,7 +1,7 @@
 [Cmdletbinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$SudokuBoard = '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
+  [string]$SudokuBoard = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
 )
 
 # Using the https://www.sudoku-solutions.com/ website you can try solving these to help with the 
@@ -153,9 +153,52 @@ function Update-CandidateHiddenPair {
   foreach ($RowNum in (0..8)) {
     $RowCells = $fnCandidate | Where-Object {$_.Row -eq $RowNum}
     $PairVals = ($RowCells.Value | Group-Object | Where-Object {$_.Count -eq 2}).Name
-    #trying to find a way to match only when the pairs are in the same two cells
-    Start-Sleep 1
+    if ($PairVals -ne $null) {
+      $Cell1 = $RowCells | Where-Object {$_.Value -contains $PairVals[0]}
+      $Cell2 = $RowCells | Where-Object {$_.Value -contains $PairVals[1]}
+      $CompCell12 = $Cell1.Position | Where-Object {$_ -notin $Cell2.Position}
+      $CompCell21 = $Cell2.Position | Where-Object {$_ -notin $Cell1.Position}
+      if ($Cell1.count -eq 2 -and $Cell2.count -eq 2 -and ($fnCandidate[$Cell1[0].Position].Value.count -gt 2 -or $fnCandidate[$Cell1[1].Position].Value.count -gt 2)) {
+        if ($CompCell12 -eq $null -and $CompCell21 -eq $null -and $PairVals.count -eq 2) {
+          $fnCandidate[$Cell1[0].Position].Value = $PairVals
+          $fnCandidate[$Cell1[1].Position].Value = $PairVals
+        }
+      }
+    }
   }
+  foreach ($ColNum in (0..8)) {
+    $ColCells = $fnCandidate | Where-Object {$_.Col -eq $ColNum}
+    $PairVals = ($ColCells.Value | Group-Object | Where-Object {$_.Count -eq 2}).Name
+    if ($PairVals -ne $null) {
+      $Cell1 = $ColCells | Where-Object {$_.Value -contains $PairVals[0]}
+      $Cell2 = $ColCells | Where-Object {$_.Value -contains $PairVals[1]}
+      $CompCell12 = $Cell1.Position | Where-Object {$_ -notin $Cell2.Position}
+      $CompCell21 = $Cell2.Position | Where-Object {$_ -notin $Cell1.Position}
+      if ($Cell1.count -eq 2 -and $Cell2.count -eq 2 -and ($fnCandidate[$Cell1[0].Position].Value.count -gt 2 -or $fnCandidate[$Cell1[1].Position].Value.count -gt 2)) {
+        if ($CompCell12 -eq $null -and $CompCell21 -eq $null -and $PairVals.count -eq 2) {
+          $fnCandidate[$Cell1[0].Position].Value = $PairVals
+          $fnCandidate[$Cell1[1].Position].Value = $PairVals
+        }
+      }
+    }
+  }
+  foreach ($BlockNum in (0..8)) {
+    $BlockCells = $fnCandidate | Where-Object {$_.Block -eq $BlockNum}
+    $PairVals = ($BlockCells.Value | Group-Object | Where-Object {$_.Count -eq 2}).Name
+    if ($PairVals -ne $null) {
+      $Cell1 = $BlockCells | Where-Object {$_.Value -contains $PairVals[0]}
+      $Cell2 = $BlockCells | Where-Object {$_.Value -contains $PairVals[1]}
+      $CompCell12 = $Cell1.Position | Where-Object {$_ -notin $Cell2.Position}
+      $CompCell21 = $Cell2.Position | Where-Object {$_ -notin $Cell1.Position}
+      if ($Cell1.count -eq 2 -and $Cell2.count -eq 2 -and ($fnCandidate[$Cell1[0].Position].Value.count -gt 2 -or $fnCandidate[$Cell1[1].Position].Value.count -gt 2)) {
+        if ($CompCell12 -eq $null -and $CompCell21 -eq $null -and $PairVals.count -eq 2) {
+          $fnCandidate[$Cell1[0].Position].Value = $PairVals
+          $fnCandidate[$Cell1[1].Position].Value = $PairVals
+        }
+      }
+    }
+  }
+  return $fnCandidate
 }
 
 function Update-Board {
@@ -184,8 +227,11 @@ do {
 $Candidates = Update-CandidateHiddenSingle -fnCandidate $Candidates
 $Candidates = Update-CandidateFromBoard -fnBoard $Board -fnCandidate $Candidates
 $Board = Update-Board -fnBoard $Board -fnCandidate $Candidates
-
-#Not working yet ----  Update-CandidateHiddenPair -fnCandidate $Candidates
+Show-Board -fnBoardObj $Board 
+Start-Sleep -Seconds 1
+$Candidates = Update-CandidateHiddenPair -fnCandidate $Candidates
+$Candidates = Update-CandidateFromBoard -fnBoard $Board -fnCandidate $Candidates
+$Board = Update-Board -fnBoard $Board -fnCandidate $Candidates
 Show-Board -fnBoardObj $Board
 Start-Sleep -Seconds 1
 } Until ($Board.Value -notcontains '-')
