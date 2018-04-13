@@ -24,74 +24,86 @@
   56 57 58 59 60 61 62 63
 #>
 
-
-function InitialiseBoard {
-  Param ()
-
-  foreach ( $Pos in (0..63)) {}
-
-}
-
 function Draw-Board {
   Param (
-    $BoardObj
+    $Board
   )  
-  $numOfWhite = ($BoardObj | where {$_.color -eq "W"}).count
-  $numOfRed = ($BoardObj | where {$_.color -eq "R"}).count
-  $LeftSpc = '  '
   Clear-Host
-  Write-Host  -ForegroundColor Cyan "`n$LeftSpc  --  REVERSE  --        --SCORE--"
-  Write-Host -ForegroundColor White   "$LeftSpc                         White: $numOfWhite"
-  Write-Host -NoNewline -ForegroundColor Yellow "$LeftSpc  1 2 3 4 5 6 7 8"
-  Write-Host -ForegroundColor Red "        Red:   $numOfRed"
+  $numOfWhite = ($Board | Where-Object {$_.color -eq "White"}).count
+  $numOfRed = ($Board | Where-Object {$_.color -eq "Red"}).count
+  $LeftSpc = '   '
+  Write-Host  -ForegroundColor Cyan "`n$LeftSpc      --  REVERSE  --         --SCORE--"
+  Write-Host -ForegroundColor White   "$LeftSpc                              White: $numOfWhite"
+  Write-Host -NoNewline -ForegroundColor Yellow "$LeftSpc   1  2  3  4  5  6  7  8"
+  Write-Host -ForegroundColor Red "     Red:   $numOfRed"
   foreach ($start in (0,8,16,24,32,40,48,56)) {
     $num = ($start / 8) + 65
     $letter = [char]$num # Build the A B C... on the left of the board
-    Write-Host -ForegroundColor Yellow -NoNewline $LeftSpc$letter
+    Write-Host -ForegroundColor Yellow -NoNewline $LeftSpc$letter' '
     Write-Host -NoNewline " "
-    $start..($Start+7) | foreach {
-      if ($BoardObj[$_].color -eq "W") {$fgColor = "White"; $Piece = "O "}
-      if ($BoardObj[$_].color -eq "R") {$fgColor = "Red"; $Piece = "O "}
-      if ($BoardObj[$_].color -eq "-") {$fgColor = "darkgray"; $Piece = "- "}
-      Write-Host -NoNewline -ForegroundColor $FGColor $Piece 
+    foreach ($Pos in ($start..($Start+7))) {
+      Write-Host -NoNewline -ForegroundColor $Board[$Pos].Color $Board[$Pos].Value' ' 
     }
     write-host
   }
+  write-host
+  write-host
+}
+
+function New-Board {
+  Param (  )
+  foreach ($BoardPos in (0..63)) {
+    $Row = [System.Math]::Truncate($BoardPos / 8)
+    $Col = $BoardPos % 8
+    if ($BoardPos -eq 27 -or $BoardPos -eq 36 ) {$Color = 'White';$Value = 'O'}
+    elseif ($BoardPos -eq 28 -or $BoardPos -eq 35 ) {$Color = 'Red';$Value = 'O'}
+    else {$Color = 'Gray';$Value = '-'}
+    $BoardProp = [ordered]@{
+      Position = $BoardPos
+      Row      = $Row
+      Col      = $Col
+      FDiag    = $row + $col
+      RDiag    = 7 + $col - $row
+      Color    = $Color
+      Value    = $Value
+    }
+    New-Object -TypeName psobject -Property $BoardProp
+  }
+}  
+
+function Test-MoveLegal {
+  Param (
+    $Move,
+    $Board
+  )
 }
 
 
+function Read-Turn {
+  Param ( 
+    $Board,
+    $Color
+  )
+  do {
+    $LegalMove = $false
+    do {
+      $NextMove = (Read-Host -Prompt "Enter the Coordindates of your next move").ToUpper()
+      $NextMove = $NextMove -replace '[ ,./\-]','' 
+    } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
+    # 65 - 72 are A - H (Ascii)
+    $MoveProps = ${
+      $MoveCol   = $NextMove -replace '[A-Z]',''
+      $MoveRow   = [byte][char](($NextMove -replace '[0-9]','') -as [int])
+      $MovePos   = ($MoveRow * 8) + $MoveCol
+      $MoveColor = $fnColor
+    }
+    $MoveObj = New-Object -TypeName psobject -Property $MoveProps
+    $LegalMove = Test-MoveLegal -Move $MoveObj -Board $Board
+    if ($LegalMove -eq $false) {Write-Warning "The move is not possible";start-sleep -Seconds 2}
+  } until ($LegalMove) 
+}
+
+
+
 ######   MainCode
-$BackDiagList = @(
-  @(56),
-  @(48,57),
-  @(40,49,58),
-  @(32,41,50,59),
-  @(24,33,42,51,60),
-  @(16,25,34,43,52,61),
-  @(8,17,26,35,44,53,62),
-  @(0,9,18,27,36,45,54,63),
-  @(1,10,19,28,37,46,55),
-  @(2,11,20,29,38,47),
-  @(3,12,21,30,39),
-  @(4,13,22,31),
-  @(5,14,23),
-  @(6,15),
-  @(7)
-)
-$FwdDiagList = @(
-  @(0),
-  @(8,1),
-  @(16,9,2),
-  @(24,17,10,3),
-  @(32,25,18,11,4),
-  @(40,33,26,19,12,5),
-  @(48,41,34,27,20,13,6),
-  @(56,49,42,35,28,21,14,7),
-  @(57,50,43,36,29,22,15),
-  @(58,51,44,37,30,23),
-  @(59,52,45,38,31),
-  @(60,53,46,39),
-  @(61,54,47),
-  @(62,55),
-  @(63)
-)
+$BoardObj = New-Board
