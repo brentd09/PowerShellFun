@@ -91,16 +91,21 @@ function Read-Turn {
       $NextMove = $NextMove -replace '[ ,./\-]','' 
     } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
     # 65 - 72 are A - H (Ascii)
+    $MoveCol = ($NextMove -replace '[A-Z]','') -as [int]
+    $MoveRow = [byte][char](($NextMove -replace '[0-9]','') -as [int])
     $MoveProps = ${
-      $MoveCol   = $NextMove -replace '[A-Z]',''
-      $MoveRow   = [byte][char](($NextMove -replace '[0-9]','') -as [int])
-      $MovePos   = ($MoveRow * 8) + $MoveCol
-      $MoveColor = $fnColor
+      MoveCol   = $MoveCol
+      MoveRow   = $MoveRow
+      MovePos   = ($MoveRow * 8) + $MoveCol
+      FDiag    = $MoveRow + $MoveCol
+      RDiag    = 7 + $MoveCol - $MoveRow
+      MoveColor = $fnColor
     }
     $MoveObj = New-Object -TypeName psobject -Property $MoveProps
     $LegalMove = Test-MoveLegal -Move $MoveObj -Board $Board
     if ($LegalMove -eq $false) {Write-Warning "The move is not possible";start-sleep -Seconds 2}
-  } until ($LegalMove) 
+  } until ($LegalMove -eq $true) 
+  return $MoveObj
 }
 
 
