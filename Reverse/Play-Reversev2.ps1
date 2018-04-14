@@ -93,7 +93,7 @@ function Read-Turn {
     # 65 - 72 are A - H (Ascii)
     $MoveCol = ($NextMove -replace '[A-Z]','') -as [int]
     $MoveRow = [byte][char](($NextMove -replace '[0-9]','') -as [int])
-    $MoveProps = ${
+    $MoveProps = @{
       MoveCol   = $MoveCol
       MoveRow   = $MoveRow
       MovePos   = ($MoveRow * 8) + $MoveCol
