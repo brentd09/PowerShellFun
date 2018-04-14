@@ -87,18 +87,19 @@ function Read-Turn {
   do {
     $LegalMove = $false
     do {
-      $NextMove = (Read-Host -Prompt "Enter the Coordindates of your next move").ToUpper()
+      Write-Host -ForegroundColor $Color -NoNewline 'Enter the Coordindates of your next move: '
+      $NextMove = (Read-Host).ToUpper()
       $NextMove = $NextMove -replace '[ ,./\-]','' 
     } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
     # 65 - 72 are A - H (Ascii)
-    $MoveCol = ($NextMove -replace '[A-Z]','') -as [int]
-    $MoveRow = [byte][char](($NextMove -replace '[0-9]','') -as [int])
+    $MoveCol = (($NextMove -replace '[A-Z]','') -as [int]) -1
+    $MoveRow = (([byte][char]($NextMove -replace '[0-9]','')) -as [int]) -65
     $MoveProps = @{
       MoveCol   = $MoveCol
       MoveRow   = $MoveRow
       MovePos   = ($MoveRow * 8) + $MoveCol
-      FDiag    = $MoveRow + $MoveCol
-      RDiag    = 7 + $MoveCol - $MoveRow
+      MoveFDiag    = $MoveRow + $MoveCol
+      MoveRDiag    = 7 + $MoveCol - $MoveRow
       MoveColor = $fnColor
     }
     $MoveObj = New-Object -TypeName psobject -Property $MoveProps
@@ -113,3 +114,9 @@ function Read-Turn {
 ######   MainCode
 $BoardObj = New-Board
 Draw-Board -Board $BoardObj
+$Color = 'Red'
+do {
+  Read-Turn -Board $BoardObj -Color $Color
+  if ($Color -eq 'Red') {$Color = 'White'}
+  elseif ($Color -eq 'White') {$Color = 'Red'  }
+} Until ($GameState.finised -eq $true)
