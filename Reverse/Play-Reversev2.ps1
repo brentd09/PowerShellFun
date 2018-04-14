@@ -112,3 +112,4 @@ function Read-Turn {
 
 ######   MainCode
 $BoardObj = New-Board
+Draw-Board -Board $BoardObj
