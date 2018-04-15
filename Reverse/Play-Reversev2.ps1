@@ -61,7 +61,7 @@ function New-Board {
     $BoardProp = [ordered]@{
       Position = $BoardPos
       Row      = $Row
-      Col      = $Color
+      Col      = $Col
       FDiag    = $row + $col
       RDiag    = 7 + $col - $row
       Color    = $Color
