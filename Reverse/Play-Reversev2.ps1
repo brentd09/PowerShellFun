@@ -61,7 +61,7 @@ function New-Board {
     $BoardProp = [ordered]@{
       Position = $BoardPos
       Row      = $Row
-      Col      = $Col
+      Col      = $Color
       FDiag    = $row + $col
       RDiag    = 7 + $col - $row
       Color    = $Color
@@ -76,6 +76,7 @@ function Test-MoveLegal {
     $Move,
     $Board
   )
+  $true
 }
 
 
@@ -94,13 +95,13 @@ function Read-Turn {
     # 65 - 72 are A - H (Ascii)
     $MoveCol = (($NextMove -replace '[A-Z]','') -as [int]) -1
     $MoveRow = (([byte][char]($NextMove -replace '[0-9]','')) -as [int]) -65
-    $MoveProps = @{
-      MoveCol   = $MoveCol
-      MoveRow   = $MoveRow
-      MovePos   = ($MoveRow * 8) + $MoveCol
-      MoveFDiag    = $MoveRow + $MoveCol
-      MoveRDiag    = 7 + $MoveCol - $MoveRow
-      MoveColor = $fnColor
+    $MoveProps = [ordered]@{
+      Position   = ($MoveRow * 8) + $MoveCol
+      Col   = $MoveCol
+      Row   = $MoveRow
+      FDiag    = $MoveRow + $MoveCol
+      RDiag    = 7 + $MoveCol - $MoveRow
+      Color = $Color
     }
     $MoveObj = New-Object -TypeName psobject -Property $MoveProps
     $LegalMove = Test-MoveLegal -Move $MoveObj -Board $Board
@@ -113,10 +114,14 @@ function Read-Turn {
 
 ######   MainCode
 $BoardObj = New-Board
-Draw-Board -Board $BoardObj
+
 $Color = 'Red'
 do {
-  Read-Turn -Board $BoardObj -Color $Color
+  Draw-Board -Board $BoardObj
+  $TurnInfo = Read-Turn -Board $BoardObj -Color $Color
+  $TurnInfo
+  Read-Host
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
+  if ($TurnInfo.Position -eq 0) {break}  #REMOVE THIS
 } Until ($GameState.finised -eq $true)
