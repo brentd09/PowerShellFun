@@ -71,13 +71,49 @@ function New-Board {
   }
 }  
 
-function Test-MoveLegal {
+function Get-BoardChanges {
   Param (
-    $Move,
-    $Board
+    $Turn,
+    $Board,
+    $Color
   )
-  $true
-}
+  if ($Color -eq 'Red') {$OppColor = 'White'}
+  if ($Color -eq 'White') {$OppColor = 'Red'}
+  $LinesProp = [ordered]@{
+    N  = $Board | Where-Object {$_.Col -eq $Turn.Col -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+    NE = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+    E  = $Board | Where-Object {$_.Row -eq $Turn.Row -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    SE = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    S  = $Board | Where-Object {$_.Col -eq $Turn.Col -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    SW = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    W  = $Board | Where-Object {$_.Row -eq $Turn.Row -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+    NW = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+  }
+  $GameLines = New-Object -TypeName psobject -Property $LinesProp
+  $Changes = @()
+  $PossibleChanges = @()
+  $PossibleLine = $false
+  foreach ($lines in ($GameLines.N,$GameLines.NE,$GameLines.E,$GameLines.SE,$GameLines.S,$GameLines.SW,$GameLines.W,$GameLines.NW)){
+    foreach ($GameLine in $Lines) {
+      if ($GameLine.Value -eq '-') {
+        break
+      }
+      if ($GameLine.Color -eq $OppColor -and $GameLine.Value -ne '-' -and $PossibleLine -eq $false) {
+        $PossibleLine = $true
+        $PossibleChanges += $GameLine.Position
+      }
+      if ($PossibleLine -eq $true -and $GameLine.Value -ne '-' -and $GameLine.Color -eq $Color) {
+        $Changes = $Changes + $PossibleChanges
+        break
+      } #if
+    } #foreach
+  } #foreach
+  $ChangeProp = @{
+    ChangePositions = $Changes
+    Color = $Color
+  }
+  New-Object -TypeName psobject -Property $ChangeProp
+} #function
 
 
 function Read-Turn {
@@ -104,9 +140,15 @@ function Read-Turn {
       Color = $Color
     }
     $MoveObj = New-Object -TypeName psobject -Property $MoveProps
-    $LegalMove = Test-MoveLegal -Move $MoveObj -Board $Board
-    if ($LegalMove -eq $false) {Write-Warning "The move is not possible";start-sleep -Seconds 2}
-  } until ($LegalMove -eq $true) 
+    if ($Board[$MoveObj.Position] -eq '-') {
+      $BoardChanges = Get-BoardChanges -Turn $MoveObj -Board $Board
+    }
+    if ($LegalMove -eq $false -or $BoardChanges.ChangePositions -eq $null) {Write-Warning "The move is not possible";start-sleep -Seconds 2}
+  } until ($BoardChanges.ChangePositions -ne $null) 
+  foreach ($Change in $BoardChanges.ChangePositions) {
+    
+  }
+
   return $MoveObj
 }
 
