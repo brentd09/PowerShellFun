@@ -91,17 +91,18 @@ function Get-BoardChanges {
   }
   $AllGameLines = New-Object -TypeName psobject -Property $LinesProp
   $Changes = @()
-  $PossibleChanges = @()
-  $PossibleLine = $false
-  foreach ($GameLines in $AllGameLines.N,$AllGameLines.NE,$AllGameLines.E,$AllGameLines.SE,$AllGameLines.S,$AllGameLines.SW,$AllGameLines.W,$AllGameLines.NW) {
+  foreach ($GameLines in $AllGameLines.N, $AllGameLines.NE, $AllGameLines.E, $AllGameLines.SE,
+                         $AllGameLines.S, $AllGameLines.SW, $AllGameLines.W,$AllGameLines.NW) {
     if ($GameLines[0].Color -eq $OpColor) {
-      foreach ($GameLine in $GameLines){
-        #keep a record of all the positions that need to be changed and what color they should be
-    }
-    
+      $EndOfChange = $GameLines.Color.IndexOf($Color)
+      if ($EndOfChange -gt 0) {
+        $NonOpColor = $GameLines[0..($EndOfChange-1)].Color -ne $OpColor 
+        if ($NonOpColor -eq $false) {
+          $Changes = $changes + $GameLines[0..($EndOfChange-1)].Position + $Turn.Position
+        }
+      }
     }
   }
-  
   $ChangeProp = @{
     ChangePositions = $Changes
     Color = $Color
@@ -139,9 +140,9 @@ function Read-Turn {
     }
     if ($BoardChanges.ChangePositions -eq $null) {Write-Warning "The move is not possible";start-sleep -Seconds 2}
     else {
-      foreach ($BoardChange in $BoardChanges) {
-        $Board[$BoardChange.Position].Value = 'O'
-        $Board[$BoardChange.Position].Color = $BoardChange.Color
+      foreach ($ChangePosition in $BoardChanges.ChangePositions) {
+        $Board[$ChangePosition].Value = 'O'
+        $Board[$ChangePosition].Color = $BoardChanges.Color
       }
     }
   } until ($BoardChanges.ChangePositions -ne $null) 
@@ -157,8 +158,6 @@ $Color = 'Red'
 do {
   Draw-Board -Board $BoardObj
   $TurnInfo = Read-Turn -Board $BoardObj -Color $Color
-  $TurnInfo
-  Read-Host
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
   if ($TurnInfo.Position -eq 0) {break}  #REMOVE THIS
