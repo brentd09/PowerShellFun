@@ -29,13 +29,18 @@ function Draw-Board {
     $Board
   )  
   Clear-Host
-  $numOfWhite = ($Board | Where-Object {$_.color -eq "White"}).count
-  $numOfRed = ($Board | Where-Object {$_.color -eq "Red"}).count
+  $numOfWhite = @() ; $numOfRed = @()
+  $numOfWhite = ($Board | Where-Object {$_.color -eq "White"} | Measure-Object ).Count
+  $numOfRed = ($Board | Where-Object {$_.color -eq "Red"} | Measure-Object ).Count
   $LeftSpc = '   '
+  if ($numOfWhite -lt 10) {$WSpc = ' '}
+  else {$WSpc =''}
+  if ($numOfRed -lt 10) {$RSpc = ' '}
+  else {$RSpc =''}
   Write-Host  -ForegroundColor Cyan "`n$LeftSpc      --  REVERSE  --         --SCORE--"
-  Write-Host -ForegroundColor White   "$LeftSpc                              White: $numOfWhite"
+  Write-Host -ForegroundColor White   "$LeftSpc                              White: $Wspc $numOfWhite"
   Write-Host -NoNewline -ForegroundColor Yellow "$LeftSpc   1  2  3  4  5  6  7  8"
-  Write-Host -ForegroundColor Red "     Red:   $numOfRed"
+  Write-Host -ForegroundColor Red "     Red:  $RSpc  $numOfRed"
   foreach ($start in (0,8,16,24,32,40,48,56)) {
     $num = ($start / 8) + 65
     $letter = [char]$num # Build the A B C... on the left of the board
@@ -123,7 +128,7 @@ function Read-Turn {
     do {
       Write-Host -ForegroundColor $Color -NoNewline 'Enter the Coordindates of your next move: '
       $NextMove = (Read-Host).ToUpper()
-      $NextMove = $NextMove -replace '[ ,./\-]','' 
+      $NextMove = $NextMove -replace '[^a-h1-8]','' 
     } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
     # 65 - 72 are A - H (Ascii)
     $MoveCol = (($NextMove -replace '[A-Z]','') -as [int]) -1
@@ -159,7 +164,7 @@ $BoardObj = New-Board
 $Color = 'Red'
 do {
   Draw-Board -Board $BoardObj
-  $TurnInfo = Read-Turn -Board $BoardObj -Color $Color
+  Read-Turn -Board $BoardObj -Color $Color
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
-} Until ($GameState.finised -eq $true)
+} Until ($BoardObj.Value -notcontains '-' )
