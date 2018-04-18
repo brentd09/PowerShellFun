@@ -93,7 +93,7 @@ function Get-BoardChanges {
   $Changes = @()
   foreach ($GameLines in $AllGameLines.N, $AllGameLines.NE, $AllGameLines.E, $AllGameLines.SE,
                          $AllGameLines.S, $AllGameLines.SW, $AllGameLines.W,$AllGameLines.NW) {
-    if ($GameLines[0].Color -eq $OpColor) {
+    if ($GameLines -and $GameLines[0].Color -eq $OpColor) {
       $EndOfChange = $GameLines.Color.IndexOf($Color)
       if ($EndOfChange -gt 0) {
         $LastIndex = $EndOfChange - 1
@@ -162,5 +162,4 @@ do {
   $TurnInfo = Read-Turn -Board $BoardObj -Color $Color
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
-  if ($TurnInfo.Position -eq 0) {break}  #REMOVE THIS
 } Until ($GameState.finised -eq $true)
