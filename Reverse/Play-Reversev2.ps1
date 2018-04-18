@@ -153,7 +153,7 @@ function Read-Turn {
       }
     }
   } until ($BoardChanges.ChangePositions -ne $null) 
-  return $MoveObj
+#  return $MoveObj
 }
 
 
@@ -167,4 +167,5 @@ do {
   Read-Turn -Board $BoardObj -Color $Color
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
+  if ($BoardObj.Value -notcontains '-') {Draw-Board -Board $BoardObj}
 } Until ($BoardObj.Value -notcontains '-' )
