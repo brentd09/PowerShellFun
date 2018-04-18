@@ -96,10 +96,12 @@ function Get-BoardChanges {
     if ($GameLines[0].Color -eq $OpColor) {
       $EndOfChange = $GameLines.Color.IndexOf($Color)
       if ($EndOfChange -gt 0) {
-        $NonOpColor = $GameLines[0..($EndOfChange-1)].Color -ne $OpColor 
-        if ($NonOpColor -eq $false) {
-          $Changes = $changes + $GameLines[0..($EndOfChange-1)].Position + $Turn.Position
-        }
+        $LastIndex = $EndOfChange - 1
+        $ValidLine = $true
+        foreach ($Index in (0..$LastIndex)) {
+          if ($GameLines[$Index].Color -ne $OpColor) {$ValidLine = $false;break } 
+        }       
+        if ($ValidLine -eq $true) {$Changes = $Changes + $GameLines[0..$LastIndex].Position + $Turn.Position}
       }
     }
   }
