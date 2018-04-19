@@ -121,7 +121,6 @@ function Read-Turn {
     $Board,
     $Color
   )
-  $Skip = $false
   $BoardChanges = @()
   do {
     do {
