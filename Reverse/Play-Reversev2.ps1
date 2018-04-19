@@ -51,8 +51,6 @@ function Draw-Board {
     }
     write-host
   }
-  write-host
-  write-host
 }
 
 function New-Board {
@@ -123,11 +121,13 @@ function Read-Turn {
     $Board,
     $Color
   )
+  $Skip = $false
   $BoardChanges = @()
   do {
     do {
       Write-Host -ForegroundColor $Color -NoNewline 'Enter the Coordindates of your next move: '
       $NextMove = (Read-Host).ToUpper()
+      if ($NextMove -eq 'SKIP') {return}
       $NextMove = $NextMove -replace '[^a-h1-8]','' 
     } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
     # 65 - 72 are A - H (Ascii)
@@ -169,3 +169,10 @@ do {
   elseif ($Color -eq 'White') {$Color = 'Red'  }
   if ($BoardObj.Value -notcontains '-') {Draw-Board -Board $BoardObj}
 } Until ($BoardObj.Value -notcontains '-' )
+$NumWhite = ($BoardObj | Where-Object {$_.color -eq "White"}).Count
+$NumRed   = ($BoardObj | Where-Object {$_.color -eq "Red"}).Count
+if ($NumWhite -gt $NumRed) {Write-Host -ForegroundColor White "       WHITE WINS"}
+if ($NumRed -gt $NumWhite) {Write-Host -ForegroundColor Red   "        RED WINS"}
+if ($NumRed -eq $NumWhite) {Write-Host -ForegroundColor Green "       DRAWN GAME"}
+Write-Host;Write-Host
+ 
