@@ -53,6 +53,27 @@ function Draw-Board {
   }
 }
 
+function Get-CompassLines {
+  Param (
+    $Turn,
+    $Board,
+    $Color
+  )
+  if ($Color -eq 'Red') {$OpColor = 'White'}
+  if ($Color -eq 'White') {$OpColor = 'Red'}
+  $LinesProp = [ordered]@{
+    N  = $Board | Where-Object {$_.Col -eq $Turn.Col -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+    NE = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+    E  = $Board | Where-Object {$_.Row -eq $Turn.Row -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    SE = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    S  = $Board | Where-Object {$_.Col -eq $Turn.Col -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    SW = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    W  = $Board | Where-Object {$_.Row -eq $Turn.Row -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+    NW = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
+  }
+  New-Object -TypeName psobject -Property $LinesProp 
+}
+
 function New-Board {
   Param (  )
   foreach ($BoardPos in (0..63)) {
@@ -82,17 +103,8 @@ function Get-BoardChanges {
   )
   if ($Color -eq 'Red') {$OpColor = 'White'}
   if ($Color -eq 'White') {$OpColor = 'Red'}
-  $LinesProp = [ordered]@{
-    N  = $Board | Where-Object {$_.Col -eq $Turn.Col -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
-    NE = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
-    E  = $Board | Where-Object {$_.Row -eq $Turn.Row -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
-    SE = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
-    S  = $Board | Where-Object {$_.Col -eq $Turn.Col -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
-    SW = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
-    W  = $Board | Where-Object {$_.Row -eq $Turn.Row -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
-    NW = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
-  }
-  $AllGameLines = New-Object -TypeName psobject -Property $LinesProp
+  $AllGameLines = Get-CompassLines -Turn $Turn -Board $Board -Color $Color
+  $ValidLine = $false
   $Changes = @()
   foreach ($GameLines in $AllGameLines.N, $AllGameLines.NE, $AllGameLines.E, $AllGameLines.SE,
                          $AllGameLines.S, $AllGameLines.SW, $AllGameLines.W,$AllGameLines.NW) {
@@ -111,63 +123,119 @@ function Get-BoardChanges {
   $ChangeProp = @{
     ChangePositions = $Changes
     Color = $Color
+    ValidMove = $ValidLine
   }
   New-Object -TypeName psobject -Property $ChangeProp
 } #function
 
+function New-PositionObj {
+  Param (
+    $Color,
+    $Position
+  )
+  $MoveCol = $Position % 8
+  $MoveRow = [System.Math]::Truncate($Position / 8)
+  $MoveProps = [ordered]@{
+    Position   = $Position
+    Col   = $MoveCol
+    Row   = $MoveRow
+    FDiag    = $MoveRow + $MoveCol
+    RDiag    = 7 + $MoveCol - $MoveRow
+    Color = $Color
+  }
+  New-Object -TypeName psobject -Property $MoveProps
+} 
+
+function Test-BoardPositions {
+  Param (
+    $Board
+  )
+  foreach ($Pos in (0..63)) {
+    if ($Board[$Pos].Value -eq '-') {
+      $TestTurn = New-PositionObj -Color 'Red' -Position $Pos
+      $ValidTurnRed = (Get-BoardChanges -Turn $TestTurn -Board $Board -Color 'Red').ValidMove
+      $TestTurn = New-PositionObj -Color 'White' -Position $Pos
+      $ValidTurnWhite = (Get-BoardChanges -Turn $TestTurn -Board $Board -Color 'White').ValidMove
+      $ValidProps = [ordered]@{
+        Position = $Pos
+        Red = $ValidTurnRed
+        White = $ValidTurnWhite
+      }
+      New-Object -TypeName psobject -Property $ValidProps
+    }
+  }
+}
 
 function Read-Turn {
   Param ( 
     $Board,
     $Color
   )
-  $BoardChanges = @()
   do {
-    do {
-      Write-Host -ForegroundColor $Color -NoNewline 'Enter the Coordindates of your next move: '
-      $NextMove = (Read-Host).ToUpper()
-      if ($NextMove -eq 'SKIP') {return}
-      $NextMove = $NextMove -replace '[^a-h1-8]','' 
-    } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
-    # 65 - 72 are A - H (Ascii)
-    $MoveCol = (($NextMove -replace '[A-Z]','') -as [int]) -1
-    $MoveRow = (([byte][char]($NextMove -replace '[0-9]','')) -as [int]) -65
-    $MoveProps = [ordered]@{
-      Position   = ($MoveRow * 8) + $MoveCol
-      Col   = $MoveCol
-      Row   = $MoveRow
-      FDiag    = $MoveRow + $MoveCol
-      RDiag    = 7 + $MoveCol - $MoveRow
-      Color = $Color
-    }
-    $MoveObj = New-Object -TypeName psobject -Property $MoveProps
+    Write-Host -ForegroundColor $Color -NoNewline 'Enter the Coordindates of your next move: '
+    $NextMove = (Read-Host).ToUpper()
+    $NextMove = $NextMove -replace '[^a-h1-8]','' 
+  } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
+  # 65 - 72 are A - H (Ascii)
+  $MoveCol = (($NextMove -replace '[A-Z]','') -as [int]) -1
+  $MoveRow = (([byte][char]($NextMove -replace '[0-9]','')) -as [int]) -65
+  $MoveProps = [ordered]@{
+    Position   = ($MoveRow * 8) + $MoveCol
+    Col   = $MoveCol
+    Row   = $MoveRow
+    FDiag    = $MoveRow + $MoveCol
+    RDiag    = 7 + $MoveCol - $MoveRow
+    Color = $Color
+  }
+  New-Object -TypeName psobject -Property $MoveProps
+}
+
+function Set-Board {
+  Param (
+    $MoveObj,
+    $Board,
+    $Color
+  )
+  do {
     if ($Board[$MoveObj.Position].Value -eq '-') {
       $BoardChanges = Get-BoardChanges -Turn $MoveObj -Board $Board -Color $Color
     }
-    if ($BoardChanges.ChangePositions -eq $null) {Write-Warning "The move is not possible";start-sleep -Seconds 2}
-    else {
+    if ($BoardChanges.ChangePositions -ne $null) {
       foreach ($ChangePosition in $BoardChanges.ChangePositions) {
         $Board[$ChangePosition].Value = 'O'
         $Board[$ChangePosition].Color = $BoardChanges.Color
       }
     }
   } until ($BoardChanges.ChangePositions -ne $null) 
-#  return $MoveObj
 }
-
 
 
 ######   MainCode
 $BoardObj = New-Board
-
 $Color = 'Red'
 do {
   Draw-Board -Board $BoardObj
-  Read-Turn -Board $BoardObj -Color $Color
+  "Thinking ..."
+  do {
+    $PossibleTurns = Test-BoardPositions -Board $BoardObj
+    if ($Color -eq 'Red' -and $PossibleTurns.Red -notcontains $true) {
+      Write-Warning "Skipping Red turn"
+      $Color = 'White'
+      continue
+  }    
+  if ($Color -eq 'White' -and $PossibleTurns.White -notcontains $true) {
+    Write-Warning "Skipping White turn"
+    $Color = 'Red'
+    continue
+}
+    $GameTurn = Read-Turn -Board $BoardObj -Color $Color
+    if ($GameTurn.Position -notin $PossibleTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 2}
+  } until ($GameTurn.Position -in $PossibleTurns.Position)
+  Set-Board -MoveObj $GameTurn -Board $BoardObj -Color $Color
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
   if ($BoardObj.Value -notcontains '-') {Draw-Board -Board $BoardObj}
-} Until ($BoardObj.Value -notcontains '-' )
+} Until ($PossibleTurns.red -notcontains $true -and $PossibleTurns.White -notcontains $true)
 $NumWhite = ($BoardObj | Where-Object {$_.color -eq "White"}).Count
 $NumRed   = ($BoardObj | Where-Object {$_.color -eq "Red"}).Count
 if ($NumWhite -gt $NumRed) {Write-Host -ForegroundColor White "       WHITE WINS"}
