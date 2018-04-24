@@ -122,6 +122,10 @@ function Get-BoardChanges {
   }
   $ChangeProp = @{
     ChangePositions = $Changes
+    Row = $Turn.Row
+    Col = $Turn.Col
+    RDiag = $Turn.RDiag
+    FDiag = $Turn.FDiag
     Color = $Color
     ValidMove = $ValidLine
   }
@@ -148,18 +152,21 @@ function New-PositionObj {
 
 function Test-BoardPositions {
   Param (
-    $Board
+    $Board,
+    $Color
   )
   foreach ($Pos in (0..63)) {
     if ($Board[$Pos].Value -eq '-') {
-      $TestTurn = New-PositionObj -Color 'Red' -Position $Pos
-      $ValidTurnRed = (Get-BoardChanges -Turn $TestTurn -Board $Board -Color 'Red').ValidMove
-      $TestTurn = New-PositionObj -Color 'White' -Position $Pos
-      $ValidTurnWhite = (Get-BoardChanges -Turn $TestTurn -Board $Board -Color 'White').ValidMove
+      $TestTurn = New-PositionObj -Color $Color -Position $Pos
+      $ValidTurn = Get-BoardChanges -Turn $TestTurn -Board $Board -Color $Color
       $ValidProps = [ordered]@{
         Position = $Pos
-        Red = $ValidTurnRed
-        White = $ValidTurnWhite
+        Col = $ValidTurn.Col
+        Row = $ValidTurn.Row
+        RDiag = $ValidTurn.RDiag
+        FDiag = $ValidTurn.FDiag
+        Color = $Color
+        Valid = $ValidTurn.ValidMove
       }
       New-Object -TypeName psobject -Property $ValidProps
     }
@@ -213,31 +220,30 @@ function Set-Board {
 ######   MainCode
 $BoardObj = New-Board
 $Color = 'Red'
+$Skip = 0
 do {
+  if ($color -eq 'Red') {$OppositeCol = 'White'}
+  if ($color -eq 'White') {$OppositeCol = 'Red'}
   Draw-Board -Board $BoardObj
   "Thinking ..."
   do {
-    $PossibleRedTurns = Test-BoardPositions -Board $BoardObj | Where-Object {$_.Red -eq $true}
-    $PossibleWhiteTurns = Test-BoardPositions -Board $BoardObj | Where-Object {$_.White -eq $true} 
-    if ($Color -eq 'Red' -and $PossibleRedTurns -eq $null) {
-      Write-Warning "Skipping Red turn"
-      $Color = 'White'
-      continue
-    }    
-    if ($Color -eq 'White' -and $PossibleWhiteTurns -eq $null) {
-      Write-Warning "Skipping White turn"
-      $Color = 'Red'
+    $PossibleTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
+    if ($PossibleTurns.Valid -notcontains $true) {
+      Write-Warning "Skipping $Color turn"
+      $Color = $OppositeCol
+      $Skip++
+      If ($Skip -gt 1 ) {Break}
       continue
     }
+    $Skip = 0    
     $GameTurn = Read-Turn -Board $BoardObj -Color $Color
-    if ($Color -eq 'Red'   -and $GameTurn.Position -notin $PossibleRedTurns.Position)   {Write-Warning "This move is invalid";Start-Sleep 2}
-    if ($Color -eq 'White' -and $GameTurn.Position -notin $PossibleWhiteTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 2}
-  } until (($Color -eq 'Red' -and $GameTurn.Position -in $PossibleRedTurns.Position) -or ($Color -eq 'White' -and $GameTurn.Position -in $PossibleWhiteTurns.Position) )
+    if ($GameTurn.Position -notin $PossibleTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 2}
+  } until ($GameTurn.Position -in $PossibleTurns.Position)
   Set-Board -MoveObj $GameTurn -Board $BoardObj -Color $Color
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
   if ($BoardObj.Value -notcontains '-') {Draw-Board -Board $BoardObj}
-} Until ($PossibleRedTurns -eq $null -and $PossibleWhiteTurns -eq $null)
+} Until ($Skip -gt 1)
 $NumWhite = ($BoardObj | Where-Object {$_.color -eq "White"}).Count
 $NumRed   = ($BoardObj | Where-Object {$_.color -eq "Red"}).Count
 if ($NumWhite -gt $NumRed) {Write-Host -ForegroundColor White "       WHITE WINS"}
