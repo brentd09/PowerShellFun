@@ -217,25 +217,27 @@ do {
   Draw-Board -Board $BoardObj
   "Thinking ..."
   do {
-    $PossibleTurns = Test-BoardPositions -Board $BoardObj
-    if ($Color -eq 'Red' -and $PossibleTurns.Red -notcontains $true) {
+    $PossibleRedTurns = Test-BoardPositions -Board $BoardObj | Where-Object {$_.Red -eq $true}
+    $PossibleWhiteTurns = Test-BoardPositions -Board $BoardObj | Where-Object {$_.White -eq $true} 
+    if ($Color -eq 'Red' -and $PossibleRedTurns -eq $null) {
       Write-Warning "Skipping Red turn"
       $Color = 'White'
       continue
-  }    
-  if ($Color -eq 'White' -and $PossibleTurns.White -notcontains $true) {
-    Write-Warning "Skipping White turn"
-    $Color = 'Red'
-    continue
-}
+    }    
+    if ($Color -eq 'White' -and $PossibleWhiteTurns -eq $null) {
+      Write-Warning "Skipping White turn"
+      $Color = 'Red'
+      continue
+    }
     $GameTurn = Read-Turn -Board $BoardObj -Color $Color
-    if ($GameTurn.Position -notin $PossibleTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 2}
-  } until ($GameTurn.Position -in $PossibleTurns.Position)
+    if ($Color -eq 'Red'   -and $GameTurn.Position -notin $PossibleRedTurns.Position)   {Write-Warning "This move is invalid";Start-Sleep 2}
+    if ($Color -eq 'White' -and $GameTurn.Position -notin $PossibleWhiteTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 2}
+  } until (($Color -eq 'Red' -and $GameTurn.Position -in $PossibleRedTurns.Position) -or ($Color -eq 'White' -and $GameTurn.Position -in $PossibleWhiteTurns.Position) )
   Set-Board -MoveObj $GameTurn -Board $BoardObj -Color $Color
   if ($Color -eq 'Red') {$Color = 'White'}
   elseif ($Color -eq 'White') {$Color = 'Red'  }
   if ($BoardObj.Value -notcontains '-') {Draw-Board -Board $BoardObj}
-} Until ($PossibleTurns.red -notcontains $true -and $PossibleTurns.White -notcontains $true)
+} Until ($PossibleRedTurns -eq $null -and $PossibleWhiteTurns -eq $null)
 $NumWhite = ($BoardObj | Where-Object {$_.color -eq "White"}).Count
 $NumRed   = ($BoardObj | Where-Object {$_.color -eq "Red"}).Count
 if ($NumWhite -gt $NumRed) {Write-Host -ForegroundColor White "       WHITE WINS"}
