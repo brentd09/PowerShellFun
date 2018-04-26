@@ -247,6 +247,7 @@ $Color = 'Red'
     if (($PossibleTurns | Measure-Object).Count -eq 0) {
       Write-Warning "Skipping $Color turn"
       $Color = $OppositeCol
+      $PossibleTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
       $PossibleOppTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
       if (($PossibleOppTurns | Measure-Object).Count -eq 0) {
         $MovesAvailable = $false
