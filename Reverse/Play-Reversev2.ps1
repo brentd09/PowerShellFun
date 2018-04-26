@@ -236,7 +236,7 @@ $Color = 'Red'
   if ($color -eq 'Red') {$OppositeCol = 'White'}
   if ($color -eq 'White') {$OppositeCol = 'Red'}
   Show-Board -Board $BoardObj
-  "Thinking ..."
+  Write-Host  "Thinking ..."
   $MovesAvailable = $true
   do {
     if ($BoardObj.Value -notcontains '-') {
