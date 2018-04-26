@@ -232,7 +232,7 @@ function Set-Board {
 ######   MainCode
 $BoardObj = New-Board
 $Color = 'Red'
-do {
+:MainLoop do {
   if ($color -eq 'Red') {$OppositeCol = 'White'}
   if ($color -eq 'White') {$OppositeCol = 'Red'}
   Show-Board -Board $BoardObj
@@ -241,7 +241,7 @@ do {
   do {
     if ($BoardObj.Value -notcontains '-') {
       $MovesAvailable = $false
-      break
+      break MainLoop
     }
     $PossibleTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
     if (($PossibleTurns | Measure-Object).Count -eq 0) {
@@ -250,7 +250,7 @@ do {
       $PossibleOppTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
       if (($PossibleOppTurns | Measure-Object).Count -eq 0) {
         $MovesAvailable = $false
-        Break
+        Break MainLoop
       }
     } 
     $GameTurn = Read-Turn -Board $BoardObj -Color $Color
