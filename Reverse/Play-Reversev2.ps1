@@ -245,17 +245,20 @@ $Color = 'Red'
     }
     $PossibleTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
     if (($PossibleTurns | Measure-Object).Count -eq 0) {
-      Write-Warning "Skipping $Color turn"
-      $Color = $OppositeCol
-      $PossibleTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
-      $PossibleOppTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
+      $PossibleOppTurns = Test-BoardPositions -Board $BoardObj -Color $OppositeCol | Where-Object {$_.Valid -eq $true}
       if (($PossibleOppTurns | Measure-Object).Count -eq 0) {
         $MovesAvailable = $false
         Break MainLoop
       }
+      else {
+        Write-Warning "Skipping $Color turn"
+        $Color = $OppositeCol
+        $PossibleTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
+        $MovesAvailable = $true
+      }
     } 
     $GameTurn = Read-Turn -Board $BoardObj -Color $Color
-    if ($GameTurn.Position -notin $PossibleTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 2}
+    if ($GameTurn.Position -notin $PossibleTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 1}
   } until ($GameTurn.Position -in $PossibleTurns.Position)
   Set-Board -MoveObj $GameTurn -Board $BoardObj -Color $Color
   if ($Color -eq 'Red') {$Color = 'White'}
@@ -264,6 +267,7 @@ $Color = 'Red'
 } Until ($MovesAvailable -eq $false)
 $NumWhite = ($BoardObj | Where-Object {$_.color -eq "White"}).Count
 $NumRed   = ($BoardObj | Where-Object {$_.color -eq "Red"}).Count
+Write-Host
 if ($NumWhite -gt $NumRed) {Write-Host -ForegroundColor White "       WHITE WINS"}
 if ($NumRed -gt $NumWhite) {Write-Host -ForegroundColor Red   "        RED WINS"}
 if ($NumRed -eq $NumWhite) {Write-Host -ForegroundColor Green "       DRAWN GAME"}
