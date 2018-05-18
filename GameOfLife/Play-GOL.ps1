@@ -1,16 +1,25 @@
+<#
+  .SYNOPSIS
+  This is another Game of life (Conway)
+  .DESCRIPTION
+    By adding live cells to the grid the rules dictate whether those cells live, die, or 
+    reproduce.
+    Rules
+    -----
+    Any living cell with fewer that two neighbours  - DIES
+    Any living cell with two or three neighbours    - LIVES 
+    Any living cell with more than three neighbours - DIES
+    Any   dead cell with exactly tree neighbours    - LIVES
+  .EXAMPLE
+    Play-GOL -GridSize 10
+    This creates a grid sized 10 x 10 to start the Game of Life
+  .NOTES
+    Created by Brent Denny on 18 May 2018
+#>
 [CmdletBinding()]
 Param (
-  [int]$GridSize = 10
+  [int]$GridSize = 20
 )
-<# 
-  New version of game of life
-  Rules
-  -----
-  Any living cell with fewer that two neighbours  - DIES
-  Any living cell with two or three neighbours    - LIVES 
-  Any living cell with more than three neighbours - DIES
-  Any   dead cell with exactly tree neighbours    - LIVES
-#>  
 
 function New-GridObject {
   Param(
@@ -34,6 +43,10 @@ function Show-Grid {
     $Grid
   )
   $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 }
+  $LiteralSize = (($GridSize - 1) * 3 ) + 1
+  $HeaderSpaces = ($LiteralSize / 2) - (20 / 2)
+  Write-Host -NoNewline (" " * $HeaderSpaces)
+  Write-Host -ForegroundColor Yellow "--THE GAME OF LIFE--`n"
   $LastGridCol = $GridSize - 1
   Foreach ($Pos in (0..$LastGridPos)) {
     if ($Grid[$Pos].Value -eq '+') {$FColor = "DarkGray"}
@@ -122,7 +135,7 @@ function Next-LifeCycle {
 [string[]]$GridArray = @()
 $LastGridPos = ($GridSize * $GridSize) - 1
 $GridObj = New-GridObject -GridSize $GridSize -LastGridPos $LastGridPos
-foreach ($startPos in (21,61,82,83,84,85,65,45,24)) {$GridObj[$startPos].Value = '@'}
+foreach ($startPos in (11,31,42,43,44,45,35,25,14)) {$GridObj[$startPos].Value = '@'}
 Clear-Host
 Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj
 do {
@@ -131,3 +144,5 @@ do {
   Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj
   $CurrentLive =  ($GridObj | Where-Object {$_.value -eq '@'}).Pos -join ''
 } Until ($PrevLive -eq $CurrentLive)
+Write-Host
+Write-Host -ForegroundColor Cyan "Stopped as the grid is not changing"
