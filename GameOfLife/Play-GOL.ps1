@@ -18,7 +18,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [int]$GridSize = 20
+  [int]$GridSize = 10
 )
 
 function New-GridObject {
