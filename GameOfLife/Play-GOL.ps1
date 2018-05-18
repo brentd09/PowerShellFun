@@ -1,3 +1,7 @@
+[CmdletBinding()]
+Param (
+  [int]$GridSize = 10
+)
 <# 
   New version of game of life
   Rules
@@ -29,7 +33,7 @@ function Show-Grid {
     [int]$LastGridPos,
     $Grid
   )
-  Clear-Host
+  $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 }
   $LastGridCol = $GridSize - 1
   Foreach ($Pos in (0..$LastGridPos)) {
     if ($Grid[$Pos].Value -eq '+') {$FColor = "DarkGray"}
@@ -68,8 +72,8 @@ function Next-LifeCycle {
     if ($ColAfter -gt $LastColOrRow) {$Skip += @(2,4,7)}
     if ($RowAfter -gt $LastColOrRow) {$Skip += @(5,6,7)}
     $Skip = $Skip | Sort-Object | Select-Object -Unique
-    if ($Skip.count -gt 1) {$NeighbourPos = (Compare-Object (0..7) $Skip).InputObject}
-    else {$NeighbourPos = $Skip}
+    if ($Skip) {$NeighbourPos = (Compare-Object (0..7) $Skip).InputObject}
+    else {$NeighbourPos = 0..7}
     foreach ($Pos in $NeighbourPos) {
       $RealNeighbours += $NeighbourArray[$Pos]
     }
@@ -116,12 +120,14 @@ function Next-LifeCycle {
 
 # MAIN CODE
 [string[]]$GridArray = @()
-$GridSize = 10
 $LastGridPos = ($GridSize * $GridSize) - 1
 $GridObj = New-GridObject -GridSize $GridSize -LastGridPos $LastGridPos
-foreach ($startPos in (1,10,11,18,19,29,35,36,44,46,54,55,56,95,99)) {$GridObj[$startPos].Value = '@'}
+foreach ($startPos in (21,61,82,83,84,85,65,45,24)) {$GridObj[$startPos].Value = '@'}
+Clear-Host
 Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj
 do {
-  $GridObj = (Next-LifeCycle -Grid $GridObj -GridSize $GridSize).psobject.copy()
+  $PrevLive = ($GridObj | Where-Object {$_.value -eq '@'}).Pos -join ''
+  $GridObj = Next-LifeCycle -Grid $GridObj -GridSize $GridSize
   Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj
-} While ($true)
+  $CurrentLive =  ($GridObj | Where-Object {$_.value -eq '@'}).Pos -join ''
+} Until ($PrevLive -eq $CurrentLive)
