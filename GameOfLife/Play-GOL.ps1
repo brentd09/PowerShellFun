@@ -18,7 +18,8 @@
 #>
 [CmdletBinding()]
 Param (
-  [int]$GridSize = 10
+  [int]$GridSize = 10,
+  [switch]$RandomLifeEvents 
 )
 
 function New-GridObject {
@@ -72,6 +73,7 @@ function Next-LifeCycle {
     $Skip = @()
     $NeighbourArray = @()
     $RealNeighbours = @()
+    $RandomEvent = Get-Random -Minimum 0 -Maximum 10000
     $ColBefore = $GridPos.Col - 1
     $RowBefore = $GridPos.Row - 1
     $ColAfter  = $GridPos.Col + 1
@@ -92,7 +94,7 @@ function Next-LifeCycle {
     }
     $DirectLiveNeighbourCount =($Grid[$RealNeighbours] | Where-Object value -eq '@' | Measure-Object ).count
     if ($GridPos.value -ne '@') {
-      if ($DirectLiveNeighbourCount -eq 3) {
+      if (($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 100) ) {
         $NextGridProp = @{
           Value = '@'
           Pos = $GridPos.Pos
@@ -110,7 +112,7 @@ function Next-LifeCycle {
       }
     }
     else {
-      if ($DirectLiveNeighbourCount -lt 2 -or $DirectLiveNeighbourCount -gt 3) {
+      if (($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 100)) {
         $NextGridProp = @{
           Value = '+'
           Pos = $GridPos.Pos
@@ -118,13 +120,22 @@ function Next-LifeCycle {
           Col = $GridPos.Col
         }
       }
-      elseif ($DirectLiveNeighbourCount -eq 2 -or $DirectLiveNeighbourCount -eq 3) {
+      elseif ($DirectLiveNeighbourCount -in @(2,3)) {
         $NextGridProp = @{
           Value = '@'
           Pos = $GridPos.Pos
           Row = $GridPos.Row
           Col = $GridPos.Col
         }
+      }
+      else {
+        $NextGridProp = @{
+          Value = '@'
+          Pos = $GridPos.Pos
+          Row = $GridPos.Row
+          Col = $GridPos.Col
+        }
+
       }
     }
     New-Object -TypeName psobject -Property $NextGridProp
@@ -143,6 +154,13 @@ do {
   $GridObj = Next-LifeCycle -Grid $GridObj -GridSize $GridSize
   Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj
   $CurrentLive =  ($GridObj | Where-Object {$_.value -eq '@'}).Pos -join ''
-} Until ($PrevLive -eq $CurrentLive)
+  if ($PrevLive -eq $CurrentLive) {
+    $SameGrid++
+  }
+  else {
+    $SameGrid = 0
+  }
+} Until (($RandomLifeEvents -eq $false -and $SameGrid -eq 1) -or ($RandomLifeEvents -eq $true -and $SameGrid -eq 3))
 Write-Host
-Write-Host -ForegroundColor Cyan "Stopped as the grid is not changing"
+if ($GridObj.Value -contains '@') {Write-Host -ForegroundColor Cyan "Stopped as the organisms in the grid are stable"}
+if ($GridObj.Value -notcontains '@') {Write-Host -ForegroundColor Red "Stopped as the organisms in the grid all died"}
