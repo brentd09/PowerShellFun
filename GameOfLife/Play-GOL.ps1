@@ -41,7 +41,9 @@ function Show-Grid {
   Param (
     [int]$GridSize,
     [int]$LastGridPos,
-    $Grid
+    $Grid,
+    $Alive,
+    $MaxAlive
   )
   $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 }
   $LiteralSize = (($GridSize - 1) * 3 ) + 1
@@ -60,6 +62,8 @@ function Show-Grid {
       Write-Host -NoNewline '  '
     }
   }
+  Write-Host "Maximum Alive: $MaxAlive   "
+  Write-Host "Current Alive: $Alive   "
 }
 
 function Next-LifeCycle {
@@ -94,7 +98,7 @@ function Next-LifeCycle {
     }
     $DirectLiveNeighbourCount =($Grid[$RealNeighbours] | Where-Object value -eq '@' | Measure-Object ).count
     if ($GridPos.value -ne '@') {
-      if (($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 100) ) {
+      if (($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 200) ) {
         $NextGridProp = @{
           Value = '@'
           Pos = $GridPos.Pos
@@ -112,7 +116,7 @@ function Next-LifeCycle {
       }
     }
     else {
-      if (($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 100)) {
+      if (($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 200)) {
         $NextGridProp = @{
           Value = '+'
           Pos = $GridPos.Pos
@@ -146,15 +150,21 @@ function Next-LifeCycle {
 [string[]]$GridArray = @()
 $LastGridPos = ($GridSize * $GridSize) - 1
 $GridObj = New-GridObject -GridSize $GridSize -LastGridPos $LastGridPos
-foreach ($startPos in (11,31,42,43,44,45,35,25,14)) {$GridObj[$startPos].Value = '@'}
+$StartArray = @(11,31,42,43,44,45,35,25,14,47,53,52,51,66,67,88,87,88)
+foreach ($startPos in $StartArray) {$GridObj[$startPos].Value = '@'}
+$StartCount = ($StartArray | Measure-Object).Count
 Clear-Host
-Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj
+Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj -Alive $StartCount -MaxAlive $StartCount
+$MaxAlive = $StartCount
 do {
   $PrevLive = ($GridObj | Where-Object {$_.value -eq '@'}).Pos -join ''
   $GridObj = Next-LifeCycle -Grid $GridObj -GridSize $GridSize
-  Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj
-  $CurrentLive =  ($GridObj | Where-Object {$_.value -eq '@'}).Pos -join ''
-  if ($PrevLive -eq $CurrentLive) {
+  $CurrentLive =  $GridObj | Where-Object {$_.value -eq '@'}
+  $CurrentLiveCount = ($CurrentLive | Measure-Object).Count
+  $CurrentLivePosString = $CurrentLive.Pos -join ''
+  if ($CurrentLiveCount -gt $MaxAlive) {$MaxAlive = $CurrentLiveCount}
+  Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj -Alive $CurrentLiveCount -MaxAlive $MaxAlive
+  if ($PrevLive -eq $CurrentLivePosString) {
     $SameGrid++
   }
   else {
