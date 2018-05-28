@@ -78,6 +78,8 @@ function Next-LifeCycle {
     $NeighbourArray = @()
     $RealNeighbours = @()
     $RandomEvent = Get-Random -Minimum 0 -Maximum 10000
+    $DeathFactor = 200
+    $LifeFactor = 800
     $ColBefore = $GridPos.Col - 1
     $RowBefore = $GridPos.Row - 1
     $ColAfter  = $GridPos.Col + 1
@@ -98,7 +100,7 @@ function Next-LifeCycle {
     }
     $DirectLiveNeighbourCount =($Grid[$RealNeighbours] | Where-Object value -eq '@' | Measure-Object ).count
     if ($GridPos.value -ne '@') {
-      if (($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 200) ) {
+      if (($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -eq 3 -and $RandomLifeEvents -eq $true -and $RandomEvent -gt $LifeFactor) ) {
         $NextGridProp = @{
           Value = '@'
           Pos = $GridPos.Pos
@@ -116,7 +118,7 @@ function Next-LifeCycle {
       }
     }
     else {
-      if (($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $true -and $RandomEvent -gt 200)) {
+      if (($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $false) -or ($DirectLiveNeighbourCount -notin @(2,3) -and $RandomLifeEvents -eq $true -and $RandomEvent -gt $DeathFactor)) {
         $NextGridProp = @{
           Value = '+'
           Pos = $GridPos.Pos
