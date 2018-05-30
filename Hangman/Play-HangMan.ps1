@@ -12,6 +12,8 @@ $HangPic += $bmsupp+"  |"+$bod3base; $HangPic += $bmsupp+" /|"+$bod3base; $HangP
 $HangPic += $bmsupp+" /|\"+$bodleg+"/"+$2nt+"`n"+$base; $HangPic += $bmsupp+" /|\"+$bodleg+"/ \"+$2nt+"`n"+$base
 
 $GameWord ='' ; $MaskedWord = '' ; $ChoiceString = '' ; $WrongGuess = 0
+Clear-Host
+"Please wait while I create my dictionary and choose a word for you to guess..."
 $webDictSite = Invoke-WebRequest -Uri http://www-01.sil.org/linguistics/wordlists/english/wordlist/wordsEn.txt 
 $Words = $webDictSite.Content -split "`n" | Where-Object {$_.length -ge 5 -and $_.length -le 10} 
 $RandNum = Get-Random -Minimum 0 -Maximum ([Int]$Words.count); $GameWord = $Words[$RandNum] -replace "\s+",''
