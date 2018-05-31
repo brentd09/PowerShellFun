@@ -14,7 +14,7 @@
 Param (
 
 )
-function Draw-Block {
+function Show-Block {
   Param (
     $BlockObject
   )
@@ -31,7 +31,7 @@ function Draw-Block {
     if ($count -eq 4) {Write-Host; $count = 0}
   }
 }
-function Create-BlockMeta {
+function New-BlockMeta {
   Param (
     $BlockArray
   )
@@ -51,9 +51,9 @@ function Create-BlockMeta {
 # -- MAIN CODE --
 $SolvedBlock = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#") -join ''
 $Block = @("A","B","C","D","E","F","G","H","I","J","#","K","M","N","O","L")
-$BlockObj = Create-BlockMeta -BlockArray $Block
+$BlockObj = New-BlockMeta -BlockArray $Block
 do {
-  Draw-Block -BlockObject $BlockObj
+  Show-Block -BlockObject $BlockObj
   Write-Host 
   $HashObj = $BlockObj | Where-Object {$_.Val -eq '#'}
   $Moveable = $BlockObj | Where-Object {
@@ -67,5 +67,5 @@ do {
   $BlockObj[$Chosen.Position].Val = '#'
   $CurrentVals = $BlockObj.Val -join ''
 } while ($SolvedBlock -ne $CurrentVals)
-Draw-Block -BlockObject $BlockObj
+Show-Block -BlockObject $BlockObj
 Write-Host -ForegroundColor Yellow "`nYOU DID IT!!"
