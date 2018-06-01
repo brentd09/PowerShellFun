@@ -2,7 +2,10 @@
 .Synopsis
   Sliding Blocks
 .DESCRIPTION
-  this is the sliding block game with numbers to sort them
+  This is the sliding block game with letters that need to be sorted.
+  You can only swap a letter that is directly next to the blank tile 
+  depicted by a # symbol (not diagonally), you make the swap by typing 
+  the letter of the tile you wish to swap.
 .EXAMPLE
   Play-SlidingBlock
 .NOTES
@@ -60,7 +63,9 @@ do {
     ($_.row -eq $HashObj.Row -and ([math]::Abs($_.Col - $HashObj.Col)) -eq 1 ) -or ($_.Col -eq $HashObj.Col -and ([math]::Abs($_.Row - $HashObj.Row)) -eq 1 )
   }
   do {
-    $Move = Read-Host -Prompt "Which letter to move"
+    Write-Host -NoNewline -ForegroundColor Green "Which letter to move: "
+    $Move = ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")).Character -as [string]
+    Write-Host
   } Until ($Move -in $Moveable.Val)
   $Chosen = $BlockObj | Where-Object {$_.Val -eq $Move}
   $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
