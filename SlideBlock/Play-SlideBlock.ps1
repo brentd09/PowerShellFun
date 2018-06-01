@@ -54,17 +54,20 @@ function New-BlockMeta {
 # -- MAIN CODE --
 $SolvedBlock = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#") -join ''
 $Block = @("A","B","C","D","E","F","G","H","I","J","#","K","M","N","O","L")
+$Block = $Block | Sort-Object {Get-Random}
 $BlockObj = New-BlockMeta -BlockArray $Block
 do {
   Show-Block -BlockObject $BlockObj
   Write-Host 
   $HashObj = $BlockObj | Where-Object {$_.Val -eq '#'}
+
   $Moveable = $BlockObj | Where-Object {
     ($_.row -eq $HashObj.Row -and ([math]::Abs($_.Col - $HashObj.Col)) -eq 1 ) -or ($_.Col -eq $HashObj.Col -and ([math]::Abs($_.Row - $HashObj.Row)) -eq 1 )
   }
   do {
     Write-Host -NoNewline -ForegroundColor Green "Which letter to move: "
-    $Move = ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")).Character -as [string]
+    if ($Host.Name -eq 'ConsoleHost') {$Move = ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")).Character -as [string]}
+    else {$Move = (Read-Host).Substring(0,1)}
     Write-Host
   } Until ($Move -in $Moveable.Val)
   $Chosen = $BlockObj | Where-Object {$_.Val -eq $Move}
