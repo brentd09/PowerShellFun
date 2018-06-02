@@ -55,7 +55,8 @@ function New-RandomBlock {
   Param (
     $BlockObject
   )
-  1..600 | ForEach-Object {
+  $NumOfRounds = 200
+  ForEach ($count in (1..$NumOfRounds)) {
     $HashPos = $BlockObject | Where-Object {$_.Val -eq '#'}
     $Moveable = $BlockObject | Where-Object {
       ($_.row -eq $HashPos.Row -and ([math]::Abs($_.Col - $HashPos.Col)) -eq 1 ) -or ($_.Col -eq $HashPos.Col -and ([math]::Abs($_.Row - $HashPos.Row)) -eq 1 )
@@ -63,7 +64,9 @@ function New-RandomBlock {
     $Random = $Moveable | Get-Random
     $BlockObject[$HashPos.Position].Val = $BlockObject[$Random.Position].Val
     $BlockObject[$Random.Position].Val = '#'
+    Write-Progress -Activity "Randomly shuffling the letters" -PercentComplete ($count / $NumOfRounds * 100 )
   }
+  Write-Progress -Activity "Randomly shuffling the letters" -Completed
   $BlockObject
 }
 
