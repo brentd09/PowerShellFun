@@ -33,6 +33,7 @@ function Show-Block {
     Write-Host -NoNewline "  "
     if ($count -eq 4) {Write-Host; $count = 0}
   }
+  Write-Host
 }
 function New-BlockMeta {
   Param (
@@ -50,17 +51,30 @@ function New-BlockMeta {
     $count++
   }
 }
+function New-RandomBlock {
+  Param (
+    $BlockObject
+  )
+  1..600 | ForEach-Object {
+    $HashPos = $BlockObject | Where-Object {$_.Val -eq '#'}
+    $Moveable = $BlockObject | Where-Object {
+      ($_.row -eq $HashPos.Row -and ([math]::Abs($_.Col - $HashPos.Col)) -eq 1 ) -or ($_.Col -eq $HashPos.Col -and ([math]::Abs($_.Row - $HashPos.Row)) -eq 1 )
+    }
+    $Random = $Moveable | Get-Random
+    $BlockObject[$HashPos.Position].Val = $BlockObject[$Random.Position].Val
+    $BlockObject[$Random.Position].Val = '#'
+  }
+  $BlockObject
+}
 
 # -- MAIN CODE --
-$SolvedBlock = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#") -join ''
-$Block = @("A","B","C","D","E","F","G","H","I","J","#","K","M","N","O","L")
-$Block = $Block | Sort-Object {Get-Random}
+$SolvedString = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#") -join ''
+$Block = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#")
 $BlockObj = New-BlockMeta -BlockArray $Block
+$BlockObj = New-RandomBlock -BlockObject $BlockObj.psobject.copy()
 do {
   Show-Block -BlockObject $BlockObj
-  Write-Host 
   $HashObj = $BlockObj | Where-Object {$_.Val -eq '#'}
-
   $Moveable = $BlockObj | Where-Object {
     ($_.row -eq $HashObj.Row -and ([math]::Abs($_.Col - $HashObj.Col)) -eq 1 ) -or ($_.Col -eq $HashObj.Col -and ([math]::Abs($_.Row - $HashObj.Row)) -eq 1 )
   }
@@ -74,6 +88,6 @@ do {
   $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
   $BlockObj[$Chosen.Position].Val = '#'
   $CurrentVals = $BlockObj.Val -join ''
-} while ($SolvedBlock -ne $CurrentVals)
+} while ($SolvedString -ne $CurrentVals)
 Show-Block -BlockObject $BlockObj
-Write-Host -ForegroundColor Yellow "`nYOU DID IT!!"
+Write-Host -ForegroundColor Yellow "YOU DID IT!!"
