@@ -95,4 +95,4 @@ do {
   $CurrentVals = $BlockObj.Val -join ''
 } while ($SolvedString -ne $CurrentVals)
 Show-Block -BlockObject $BlockObj
-Write-Host -ForegroundColor Yellow "YOU DID IT in $NumOfMoves !!"
+Write-Host -ForegroundColor Yellow "YOU DID IT in $NumOfMoves moves!!"
