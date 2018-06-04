@@ -71,6 +71,7 @@ function New-RandomBlock {
 }
 
 # -- MAIN CODE --
+$NumOfMoves = 0
 $SolvedString = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#") -join ''
 $Block = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#")
 $BlockObj = New-BlockMeta -BlockArray $Block
@@ -87,10 +88,11 @@ do {
     else {$Move = (Read-Host).Substring(0,1)}
     Write-Host
   } Until ($Move -in $Moveable.Val)
+  $NumOfMoves++
   $Chosen = $BlockObj | Where-Object {$_.Val -eq $Move}
   $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
   $BlockObj[$Chosen.Position].Val = '#'
   $CurrentVals = $BlockObj.Val -join ''
 } while ($SolvedString -ne $CurrentVals)
 Show-Block -BlockObject $BlockObj
-Write-Host -ForegroundColor Yellow "YOU DID IT!!"
+Write-Host -ForegroundColor Yellow "YOU DID IT in $NumOfMoves !!"
