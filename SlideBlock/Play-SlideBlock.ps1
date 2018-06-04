@@ -96,5 +96,5 @@ do {
 } while ($SolvedString -ne $CurrentVals)
 Show-Block -BlockObject $BlockObj
 Write-Host -ForegroundColor Yellow -NoNewline "YOU DID IT in "
-Write-Host -ForegroundColor Blue -NoNewline "$NumOfMoves "
+Write-Host -ForegroundColor Green -NoNewline "$NumOfMoves "
 Write-Host -ForegroundColor Yellow "moves!!"
