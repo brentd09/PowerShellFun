@@ -81,7 +81,7 @@ do {
   $HashObj = $BlockObj | Where-Object {$_.Val -eq '#'}
   $Moveable = $BlockObj | Where-Object {
 #    ($_.row -eq $HashObj.Row -and ([math]::Abs($_.Col - $HashObj.Col)) -eq 1 ) -or ($_.Col -eq $HashObj.Col -and ([math]::Abs($_.Row - $HashObj.Row)) -eq 1 )
-    ($_.row -eq $HashObj.Row  -or $_.Col -eq $HashObj.Col) -and $_.Val -ne '#'
+    ($_.row -eq $HashObj.Row -or $_.Col -eq $HashObj.Col) -and $_.Val -ne '#'
 }
   do {
     Write-Host -NoNewline -ForegroundColor Green "Which letter to move: "
@@ -90,7 +90,7 @@ do {
     Write-Host
   } Until ($Move -in $Moveable.Val)
   $Chosen = $BlockObj | Where-Object {$_.Val -eq $Move}
-  $NumberTilesMove = [math]::Abs($Chosen.Col - $HashObj.Col)
+  $NumberTilesMove = [math]::Abs($Chosen.Col - $HashObj.Col) + [math]::Abs($Chosen.Row - $HashObj.Row)
 switch ($NumberTilesMove) {
   1 {
     $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
