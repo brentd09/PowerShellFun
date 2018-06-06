@@ -95,6 +95,7 @@ switch ($NumberTilesMove) {
   1 {
     $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
     $BlockObj[$Chosen.Position].Val = '#'
+    $NumOfMoves++
   }
   {($_ -eq 2) -or ($_ -eq 3)} {
     #something
