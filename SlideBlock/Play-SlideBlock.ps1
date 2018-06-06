@@ -80,7 +80,7 @@ do {
   Show-Block -BlockObject $BlockObj
   $HashObj = $BlockObj | Where-Object {$_.Val -eq '#'}
   $Moveable = $BlockObj | Where-Object {
-    ($_.row -eq $HashObj.Row -and ([math]::Abs($_.Col - $HashObj.Col)) -eq 1 ) -or ($_.Col -eq $HashObj.Col -and ([math]::Abs($_.Row - $HashObj.Row)) -eq 1 )
+    $_.row -eq $HashObj.Row  -or $_.Col -eq $HashObj.Col 
   }
   do {
     Write-Host -NoNewline -ForegroundColor Green "Which letter to move: "
@@ -88,10 +88,24 @@ do {
     else {$Move = (Read-Host).Substring(0,1)}
     Write-Host
   } Until ($Move -in $Moveable.Val)
-  $NumOfMoves++
   $Chosen = $BlockObj | Where-Object {$_.Val -eq $Move}
-  $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
-  $BlockObj[$Chosen.Position].Val = '#'
+  $NumberTilesMove = [math]::Abs($Chosen.Col - $HashObj.Col)
+switch ($NumberTilesMove) {
+  1 {
+    $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
+    $BlockObj[$Chosen.Position].Val = '#'
+  }
+  2 {
+
+  }
+  3 {
+    
+  }
+  Default {}
+}
+
+  if ($NumberTilesMove -eq 1 ) {  
+  }
   $CurrentVals = $BlockObj.Val -join ''
 } while ($SolvedString -ne $CurrentVals)
 Show-Block -BlockObject $BlockObj
