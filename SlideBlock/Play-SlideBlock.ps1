@@ -96,6 +96,10 @@ switch ($NumberTilesMove) {
     $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
     $BlockObj[$Chosen.Position].Val = '#'
   }
+  {($_ -eq 2) -or ($_ -eq 3)} {
+    #something
+    Read-Host -Prompt "more than 1"
+  }
 }
 
   if ($NumberTilesMove -eq 1 ) {  
