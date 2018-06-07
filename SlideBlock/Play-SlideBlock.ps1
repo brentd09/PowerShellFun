@@ -92,14 +92,26 @@ do {
   $Chosen = $BlockObj | Where-Object {$_.Val -eq $Move}
   $NumberTilesMove = [math]::Abs($Chosen.Col - $HashObj.Col) + [math]::Abs($Chosen.Row - $HashObj.Row)
 switch ($NumberTilesMove) {
-  1 {
+  {$_ -eq 1} {
     $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
     $BlockObj[$Chosen.Position].Val = '#'
     $NumOfMoves++
   }
-  {($_ -eq 2) -or ($_ -eq 3)} {
-    #something
-    Read-Host -Prompt "more than 1"
+  {$_ -eq 2 -or $_ -eq 3} {
+    $TransitionValue = ''
+    if ($Chosen.Row -eq $HashObj.Row) {
+      #Fix Col
+      foreach ($FixCol in ($Chosen.Col..$HashObj.Col)) {
+        #swap values
+      }
+    }
+    elseif ($Chosen.Col -eq $HashObj.Col) {
+      #Fix Row
+      foreach ($FixRow in ($Chosen.Row..$HashObj.Row)) {
+        #swap values
+      }
+
+    }
   }
 }
 
