@@ -83,7 +83,7 @@ do {
 #    ($_.row -eq $HashObj.Row -and ([math]::Abs($_.Col - $HashObj.Col)) -eq 1 ) -or ($_.Col -eq $HashObj.Col -and ([math]::Abs($_.Row - $HashObj.Row)) -eq 1 )
     ($_.row -eq $HashObj.Row -or $_.Col -eq $HashObj.Col) -and $_.Val -ne '#'
 }
-  do {
+  do { 
     Write-Host -NoNewline -ForegroundColor Green "Which letter to move: "
     if ($Host.Name -eq 'ConsoleHost') {$Move = ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")).Character -as [string]}
     else {$Move = (Read-Host).Substring(0,1)}
