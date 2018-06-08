@@ -98,19 +98,11 @@ switch ($NumberTilesMove) {
     $NumOfMoves++
   }
   {$_ -eq 2 -or $_ -eq 3} {
-    $TransitionValue = ''
     if ($Chosen.Row -eq $HashObj.Row) {
       #Fix Col
-      foreach ($FixCol in ($Chosen.Col..$HashObj.Col)) {
-        #swap values
-      }
     }
     elseif ($Chosen.Col -eq $HashObj.Col) {
       #Fix Row
-      foreach ($FixRow in ($Chosen.Row..$HashObj.Row)) {
-        #swap values
-      }
-
     }
   }
 }
