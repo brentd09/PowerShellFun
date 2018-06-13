@@ -89,25 +89,31 @@ do {
     else {$Move = (Read-Host).Substring(0,1)}
     Write-Host
   } Until ($Move -in $Moveable.Val)
-  $Chosen = $BlockObj | Where-Object {$_.Val -eq $Move}
-  $NumberTilesMove = [math]::Abs($Chosen.Col - $HashObj.Col) + [math]::Abs($Chosen.Row - $HashObj.Row)
-switch ($NumberTilesMove) {
-  {$_ -eq 1} {
-    $BlockObj[$HashObj.Position].Val = $BlockObj[$Chosen.Position].Val
-    $BlockObj[$Chosen.Position].Val = '#'
-    $NumOfMoves++
-  }
-  {$_ -eq 2 -or $_ -eq 3} {
-    if ($Chosen.Row -eq $HashObj.Row) {
-      #Fix Col
+  $ChosenObj = $BlockObj | Where-Object {$_.Val -eq $Move}
+  $NumberTilesMove = [math]::Abs($ChosenObj.Col - $HashObj.Col) + [math]::Abs($ChosenObj.Row - $HashObj.Row)
+  switch ($NumberTilesMove) {
+    {$_ -eq 1} {
+      $BlockObj[$HashObj.Position].Val = $BlockObj[$ChosenObj.Position].Val
+      $BlockObj[$ChosenObj.Position].Val = '#'
+      $NumOfMoves++
     }
-    elseif ($Chosen.Col -eq $HashObj.Col) {
-      #Fix Row
+    {$_ -eq 2 -or $_ -eq 3} {
+      if ($ChosenObj.Row -eq $HashObj.Row) {
+        #Fix Row by chnaging col values
+        $ChangeArray = ($HashObj.Position)..($ChosenObj.Position)
+        foreach ($Pos in $ChangeArray) {
+          #if ($ChangeArray[-1].Position -eq $Pos) {$BlockObj[$Pos].Val = '#'}
+          if ($ChangeArray[0].Position  -eq $Pos) {$PrevPos = $Pos}
+          else {
+            $BlockObj[$PrevPos].Val = $BlockObj[$Pos].Val
+            $PrevPos = $Pos
+          }
+        }
+      }
+      elseif ($ChosenObj.Col -eq $HashObj.Col) {
+        #Fix Col by changing row values
+      }
     }
-  }
-}
-
-  if ($NumberTilesMove -eq 1 ) {  
   }
   $CurrentVals = $BlockObj.Val -join ''
 } while ($SolvedString -ne $CurrentVals)
