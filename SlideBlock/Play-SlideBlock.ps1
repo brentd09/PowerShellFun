@@ -99,16 +99,7 @@ do {
     }
     {$_ -eq 2 -or $_ -eq 3} {
       if ($ChosenObj.Row -eq $HashObj.Row) {
-        #Fix Row by chnaging col values
-        $ChangeArray = ($HashObj.Position)..($ChosenObj.Position)
-        foreach ($Pos in $ChangeArray) {
-          #if ($ChangeArray[-1].Position -eq $Pos) {$BlockObj[$Pos].Val = '#'}
-          if ($ChangeArray[0].Position  -eq $Pos) {$PrevPos = $Pos}
-          else {
-            $BlockObj[$PrevPos].Val = $BlockObj[$Pos].Val
-            $PrevPos = $Pos
-          }
-        }
+       start-sleep -Milliseconds 100
       }
       elseif ($ChosenObj.Col -eq $HashObj.Col) {
         #Fix Col by changing row values
