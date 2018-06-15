@@ -98,11 +98,43 @@ do {
       $NumOfMoves++
     }
     {$_ -eq 2 -or $_ -eq 3} {
+      $ChangeCols=@();$ChangeRows=@()
       if ($ChosenObj.Row -eq $HashObj.Row) {
-       start-sleep -Milliseconds 100
+        $ChangeCols = ($HashObj.Col)..($ChosenObj.Col)
+        foreach ($ChangeCol in $ChangeCols) {
+          if ($ChangeCol -eq $ChangeCols[0]) {$PrevCol = $ChangeCol}
+          else {
+            $PrevObj = $BlockObj | Where-Object {$_.Col -eq $PrevCol -and $_.Row -eq $ChosenObj.Row}
+            $ThisObj = $BlockObj | Where-Object {$_.Col -eq $ChangeCol -and $_.Row -eq $ChosenObj.Row}
+            if ($ChangeCol -eq $ChangeCols[-1]) {
+              $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
+              $BlockObj[$ThisObj.Position].Val = '#'
+            }
+            else {
+              $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
+              $PrevCol = $ChangeCol
+            }
+          }
+        }
       }
       elseif ($ChosenObj.Col -eq $HashObj.Col) {
-        #Fix Col by changing row values
+        $ChangeRows = ($HashObj.Row)..($ChosenObj.Row)
+        foreach ($ChangeRow in $ChangeRows) {
+          if ($ChangeRow -eq $ChangeRows[0]) {$PrevRow = $ChangeRow}
+          else {
+            $PrevObj = $BlockObj | Where-Object {$_.Row -eq $PrevRow -and $_.Col -eq $ChosenObj.Col}
+            $ThisObj = $BlockObj | Where-Object {$_.Row -eq $ChangeRow -and $_.Col -eq $ChosenObj.Col}
+            if ($ChangeRow -eq $ChangeRows[-1]) {
+              $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
+              $BlockObj[$ThisObj.Position].Val = '#'
+            }
+            else {
+              $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
+              $PrevRow = $ChangeRow
+            }
+          }
+        }
+
       }
     }
   }
