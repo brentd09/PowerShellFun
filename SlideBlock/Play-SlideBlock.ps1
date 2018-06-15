@@ -3,34 +3,37 @@
   Sliding Blocks
 .DESCRIPTION
   This is the sliding block game with letters that need to be sorted.
-  You can only swap a letter that is directly next to the blank tile 
-  depicted by a # symbol (not diagonally), you make the swap by typing 
-  the letter of the tile you wish to swap.
+  You can only swap letters that are directly next to the blank tile 
+  vertically or horizontally you can choose from one to three squares
+  away from the blank tile depicted by a SPACE (not diagonally), 
+  you make the swap by typing the letter of the tile you wish to swap
+  the blank spot to.
 .EXAMPLE
   Play-SlidingBlock
 .NOTES
   General notes
   Created By  : Brent Denny
-  Date Created: 30-May-2018
+  Date Created:  30-May-2018
+  Date Finished: 15-Jun-2018
 #>
 [CmdletBinding()]
-Param (
-
-)
+Param ()
 function Show-Block {
   Param (
     $BlockObject
   )
   Clear-Host
-  Write-Host -ForegroundColor Yellow "`nSLIDING BLOCKS`n"
+  $Spc = '  '
+  Write-Host -ForegroundColor Yellow "`n${Spc}SLIDING BLOCKS"
+  Write-Host -ForegroundColor Yellow "${Spc}--------------"
   $count = 0
   foreach ($BlockElement in $BlockObject) {
     $count++
     if ($BlockElement.Val -match '[a-o]') {$color = 'Green'}
     else {$color = 'Gray'}
-    Write-Host -NoNewline $Spc
+    If ($count -eq 1) {Write-Host -NoNewline "  $Spc"}
     Write-Host -NoNewline -ForegroundColor $color $BlockElement.Val 
-    Write-Host -NoNewline "  "
+    Write-Host -NoNewline '  '
     if ($count -eq 4) {Write-Host; $count = 0}
   }
   Write-Host
@@ -57,49 +60,49 @@ function New-RandomBlock {
   )
   $NumOfRounds = 200
   ForEach ($count in (1..$NumOfRounds)) {
-    $HashPos = $BlockObject | Where-Object {$_.Val -eq '#'}
+    $HashPos = $BlockObject | Where-Object {$_.Val -eq ' '}
     $Moveable = $BlockObject | Where-Object {
       ($_.row -eq $HashPos.Row -and ([math]::Abs($_.Col - $HashPos.Col)) -eq 1 ) -or ($_.Col -eq $HashPos.Col -and ([math]::Abs($_.Row - $HashPos.Row)) -eq 1 )
     }
     $Random = $Moveable | Get-Random
     $BlockObject[$HashPos.Position].Val = $BlockObject[$Random.Position].Val
-    $BlockObject[$Random.Position].Val = '#'
-    Write-Progress -Activity "Randomly shuffling the letters" -PercentComplete ($count / $NumOfRounds * 100 )
+    $BlockObject[$Random.Position].Val = ' '
+    Write-Progress -Activity 'Randomly shuffling the letters' -PercentComplete ($count / $NumOfRounds * 100 )
   }
-  Write-Progress -Activity "Randomly shuffling the letters" -Completed
+  Write-Progress -Activity 'Randomly shuffling the letters' -Completed
   $BlockObject
 }
 
 # -- MAIN CODE --
+Clear-Host
 $NumOfMoves = 0
-$SolvedString = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#") -join ''
-$Block = @("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","#")
+$SolvedString = @('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',' ') -join '' # solution is checked as a string at end of main code
+$Block = @('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',' ')
 $BlockObj = New-BlockMeta -BlockArray $Block
 $BlockObj = New-RandomBlock -BlockObject $BlockObj.psobject.copy()
 do {
   Show-Block -BlockObject $BlockObj
-  $HashObj = $BlockObj | Where-Object {$_.Val -eq '#'}
-  $Moveable = $BlockObj | Where-Object {
-#    ($_.row -eq $HashObj.Row -and ([math]::Abs($_.Col - $HashObj.Col)) -eq 1 ) -or ($_.Col -eq $HashObj.Col -and ([math]::Abs($_.Row - $HashObj.Row)) -eq 1 )
-    ($_.row -eq $HashObj.Row -or $_.Col -eq $HashObj.Col) -and $_.Val -ne '#'
-}
+  $HashObj = $BlockObj | Where-Object {$_.Val -eq ' '}
+  $Moveable = $BlockObj | Where-Object {($_.row -eq $HashObj.Row -or $_.Col -eq $HashObj.Col) -and $_.Val -ne ' '}
   do { 
-    Write-Host -NoNewline -ForegroundColor Green "Which letter to move: "
-    if ($Host.Name -eq 'ConsoleHost') {$Move = ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")).Character -as [string]}
+    Write-Host -NoNewline -ForegroundColor Green 'Which letter to move: '
+    # If PowerShell Console host use a single key press, if other hosts like ISE VSCode use the Read-Host cmdlet
+    if ($Host.Name -eq 'ConsoleHost') {$Move = ($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')).Character -as [string]}
     else {$Move = (Read-Host).Substring(0,1)}
     Write-Host
   } Until ($Move -in $Moveable.Val)
   $ChosenObj = $BlockObj | Where-Object {$_.Val -eq $Move}
+  #Count number of tiles from chosen tile to hash tile
   $NumberTilesMove = [math]::Abs($ChosenObj.Col - $HashObj.Col) + [math]::Abs($ChosenObj.Row - $HashObj.Row)
   switch ($NumberTilesMove) {
-    {$_ -eq 1} {
+    {$_ -eq 1} { # Single tile move
       $BlockObj[$HashObj.Position].Val = $BlockObj[$ChosenObj.Position].Val
-      $BlockObj[$ChosenObj.Position].Val = '#'
+      $BlockObj[$ChosenObj.Position].Val = ' '
       $NumOfMoves++
     }
-    {$_ -eq 2 -or $_ -eq 3} {
+    {$_ -eq 2 -or $_ -eq 3} { # Multiple tile slide
       $ChangeCols=@();$ChangeRows=@()
-      if ($ChosenObj.Row -eq $HashObj.Row) {
+      if ($ChosenObj.Row -eq $HashObj.Row) { # Slide tiles along the Row
         $ChangeCols = ($HashObj.Col)..($ChosenObj.Col)
         $Moves = ($ChangeCols | Measure-Object).Count - 1
         foreach ($ChangeCol in $ChangeCols) {
@@ -109,16 +112,16 @@ do {
             $ThisObj = $BlockObj | Where-Object {$_.Col -eq $ChangeCol -and $_.Row -eq $ChosenObj.Row}
             if ($ChangeCol -eq $ChangeCols[-1]) {
               $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
-              $BlockObj[$ThisObj.Position].Val = '#'
+              $BlockObj[$ThisObj.Position].Val = ' '
             }
-            else {
+            else { # Make the swap 
               $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
               $PrevCol = $ChangeCol
             }
           }
         }
       }
-      elseif ($ChosenObj.Col -eq $HashObj.Col) {
+      elseif ($ChosenObj.Col -eq $HashObj.Col) { # Slide tiles along the Column
         $ChangeRows = ($HashObj.Row)..($ChosenObj.Row)
         $Moves = ($ChangeRows | Measure-Object).Count - 1
         foreach ($ChangeRow in $ChangeRows) {
@@ -128,9 +131,9 @@ do {
             $ThisObj = $BlockObj | Where-Object {$_.Row -eq $ChangeRow -and $_.Col -eq $ChosenObj.Col}
             if ($ChangeRow -eq $ChangeRows[-1]) {
               $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
-              $BlockObj[$ThisObj.Position].Val = '#'
+              $BlockObj[$ThisObj.Position].Val = ' '
             }
-            else {
+            else { # Make the swap 
               $BlockObj[$PrevObj.Position].Val = $BlockObj[$ThisObj.Position].Val
               $PrevRow = $ChangeRow
             }
@@ -143,6 +146,6 @@ do {
   $CurrentVals = $BlockObj.Val -join ''
 } while ($SolvedString -ne $CurrentVals)
 Show-Block -BlockObject $BlockObj
-Write-Host -ForegroundColor Yellow -NoNewline "YOU DID IT in "
+Write-Host -ForegroundColor Yellow -NoNewline 'YOU DID IT in '
 Write-Host -ForegroundColor Green -NoNewline "$NumOfMoves "
-Write-Host -ForegroundColor Yellow "moves!!"
+Write-Host -ForegroundColor Yellow 'moves!!'
