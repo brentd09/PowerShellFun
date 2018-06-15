@@ -101,6 +101,7 @@ do {
       $ChangeCols=@();$ChangeRows=@()
       if ($ChosenObj.Row -eq $HashObj.Row) {
         $ChangeCols = ($HashObj.Col)..($ChosenObj.Col)
+        $Moves = ($ChangeCols | Measure-Object).Count - 1
         foreach ($ChangeCol in $ChangeCols) {
           if ($ChangeCol -eq $ChangeCols[0]) {$PrevCol = $ChangeCol}
           else {
@@ -119,6 +120,7 @@ do {
       }
       elseif ($ChosenObj.Col -eq $HashObj.Col) {
         $ChangeRows = ($HashObj.Row)..($ChosenObj.Row)
+        $Moves = ($ChangeRows | Measure-Object).Count - 1
         foreach ($ChangeRow in $ChangeRows) {
           if ($ChangeRow -eq $ChangeRows[0]) {$PrevRow = $ChangeRow}
           else {
@@ -134,8 +136,8 @@ do {
             }
           }
         }
-
       }
+      $NumOfMoves = $NumOfMoves + $Moves
     }
   }
   $CurrentVals = $BlockObj.Val -join ''
