@@ -1,17 +1,18 @@
 <#
 .SYNOPSIS
-  Short description
+  Find a word for crossword puzzles
 .DESCRIPTION
-  Long description
+  This finds words for crossword puzzles based on basic string wildcards
+  ? stands for 1 missing character and * stands for 0 or more missing 
+  characters. For example if you type in a??r?e you are looking for a 
+  word that is 6 char long and the first char is 'a', the fourth is 'r'
+  and the last is 'e'
 .EXAMPLE
-  PS C:\> <example usage>
-  Explanation of what the example does
-.INPUTS
-  Inputs (if any)
-.OUTPUTS
-  Output (if any)
+  Get-CrosswordWord
 .NOTES
   General notes
+  Created By: Brent Denny
+  Created on: 18 Jun 2018
 #>
 [CmdletBinding()]
 Param ()
