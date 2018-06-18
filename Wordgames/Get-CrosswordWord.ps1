@@ -32,7 +32,10 @@ function ConvertTo-WordObject {
 
 
 $WebContent = Invoke-WebRequest -UseBasicParsing -Uri http://www-personal.umich.edu/~jlawler/wordlist 
-[string[]]$WordList = $WebContent.Content -split "`r`n" | Where-Object {$_ -match '^[a-z]+$'}
+$WordList = $WebContent.Content -split "`r`n" | Where-Object {$_ -match '^[a-z]+$'} | ConvertFrom-Csv -Header 'Words'
 #$WordObjects = ConvertTo-WordObject -Words $WordList
+do {
 $WordMatch = Read-Host -Prompt 'Enter the bits of the word that you know seperated by ?'
-$wordlist | where {$_ -like $WordMatch}
+if ($WordMatch -eq 'quit') {continue}
+$wordlist | Where-Object {$_.Words -like $WordMatch} | format-wide -AutoSize
+} until ($WordMatch -eq "quit")
