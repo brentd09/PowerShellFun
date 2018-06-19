@@ -16,27 +16,18 @@
 #>
 [CmdletBinding()]
 Param ()
-function ConvertTo-WordObject {
-  Param (
-    [string[]]$Words
-  )
-  foreach ($Word in $Words) {
-    $ObjParameters =  [ordered]@{
-      LetterArray = $Word.ToCharArray()
-      WordLength = $Word.Length
-      Sorted = (($Word.ToCharArray() | Sort-Object ) -join '' ).tostring()
-      Word = $Word
-    }
-    New-Object -TypeName psobject -Property $ObjParameters
-  }
-}
 
 
 $WebContent = Invoke-WebRequest -UseBasicParsing -Uri http://www-personal.umich.edu/~jlawler/wordlist 
 $WordList = $WebContent.Content -split "`r`n" | Where-Object {$_ -match '^[a-z]+$'} | ConvertFrom-Csv -Header 'Words'
-#$WordObjects = ConvertTo-WordObject -Words $WordList
 do {
-$WordMatch = Read-Host -Prompt 'Enter the bits of the word that you know seperated by ?'
-if ($WordMatch -eq 'quit') {continue}
-$wordlist | Where-Object {$_.Words -like $WordMatch} | format-wide -AutoSize
+$WordMatch = Read-Host -Prompt 'Enter letters, whole word for anagram, word with ?/* for crossword'
+if ($WordMatch -eq '!') {continue}
+if ($WordMatch -match '[^a-z]') {
+  $WordMatch = $WordMatch -replace '[-,.;:/]','?'
+  $WordList | Where-Object {$_.Words -like $WordMatch} | format-wide -AutoSize
+}
+else {
+
+}
 } until ($WordMatch -eq "quit")
