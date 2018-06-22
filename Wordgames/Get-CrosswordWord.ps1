@@ -28,6 +28,11 @@ if ($WordMatch -match '[^a-z]') {
   $WordList | Where-Object {$_.Words -like $WordMatch} | format-wide -AutoSize
 }
 else {
-
+  $LetterArray = [string[]]$WordMatch.ToCharArray()
+  $WordList.Words | Where-Object {
+    ([string[]]$_.ToCharArray() | Where-Object {$LetterArray -notin $_}) -eq $null -and
+    ( ([string[]]$_.ToCharArray() | Where-Object {$_ -notin $LetterArray}) -ne $null ) -or 
+    ( ([string[]]$_.ToCharArray() | Where-Object {$_ -notin $LetterArray}) -eq $null )
+  } 
 }
 } until ($WordMatch -eq "quit")
