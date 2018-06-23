@@ -21,18 +21,18 @@ Param ()
 $WebContent = Invoke-WebRequest -UseBasicParsing -Uri http://www-personal.umich.edu/~jlawler/wordlist 
 $WordList = $WebContent.Content -split "`r`n" | Where-Object {$_ -match '^[a-z]+$'} | ConvertFrom-Csv -Header 'Words'
 do {
-$WordMatch = Read-Host -Prompt 'Enter letters, whole word for anagram, word with ?/* for crossword'
-if ($WordMatch -eq '!') {continue}
-if ($WordMatch -match '[^a-z]') {
-  $WordMatch = $WordMatch -replace '[-,.;:/]','?'
-  $WordList | Where-Object {$_.Words -like $WordMatch} | format-wide -AutoSize
-}
-else {
-  $LetterArray = [string[]]$WordMatch.ToCharArray()
-  $WordList.Words | Where-Object {
-    ([string[]]$_.ToCharArray() | Where-Object {$LetterArray -notin $_}) -eq $null -and
-    ( ([string[]]$_.ToCharArray() | Where-Object {$_ -notin $LetterArray}) -ne $null ) -or 
-    ( ([string[]]$_.ToCharArray() | Where-Object {$_ -notin $LetterArray}) -eq $null )
-  } 
-}
-} until ($WordMatch -eq "quit")
+  $UserWordMatch = Read-Host -Prompt 'Enter letters, whole word for anagram, word with ?/* for crossword'
+  if ($UserWordMatch -eq '!') {continue}
+  if ($UserWordMatch -match '[^a-z]') {
+    $UserWordMatch = $UserWordMatch -replace '[-,.;:/]','?'
+    $WordList | Where-Object {$_.Words -like $UserWordMatch} | format-wide -AutoSize
+  }
+  else {
+    $UserLetterArray = [string[]]$UserWordMatch.ToCharArray()
+    foreach ($Word in $WordList.Words) {
+      $WordArray = [string[]]$Word.ToCharArray()
+      if (($WordArray | Where-Object {$_ -notin $UserLetterArray}) -eq $null -and
+         ($WordArray.count -le $UserLetterArray.count )) {$Word}
+    }
+  }
+} until ($UserWordMatch -eq "!")
