@@ -15,24 +15,33 @@
   Created on: 18 Jun 2018
 #>
 [CmdletBinding()]
-Param ()
+Param (
+  [Parameter(Mandatory=$true)]
+  [string]$WordPattern
+)
 
 
 $WebContent = Invoke-WebRequest -UseBasicParsing -Uri http://www-personal.umich.edu/~jlawler/wordlist 
-$WordList = $WebContent.Content -split "`r`n" | Where-Object {$_ -match '^[a-z]+$'} | ConvertFrom-Csv -Header 'Words'
-do {
-  $UserWordMatch = Read-Host -Prompt 'Enter letters, whole word for anagram, word with ?/* for crossword'
-  if ($UserWordMatch -eq '!') {continue}
-  if ($UserWordMatch -match '[^a-z]') {
-    $UserWordMatch = $UserWordMatch -replace '[-,.;:/]','?'
-    $WordList | Where-Object {$_.Words -like $UserWordMatch} | format-wide -AutoSize
-  }
-  else {
-    $UserLetterArray = [string[]]$UserWordMatch.ToCharArray()
-    foreach ($Word in $WordList.Words) {
-      $WordArray = [string[]]$Word.ToCharArray()
-      if (($WordArray | Where-Object {$_ -notin $UserLetterArray}) -eq $null -and
-         ($WordArray.count -le $UserLetterArray.count )) {$Word}
+$WordList = $WebContent.Content -split "`r`n" | Where-Object {$_ -match '^[a-z]+$'} | ConvertFrom-Csv -Header Word
+if ($WordPattern -eq '!') {continue}
+if ($WordPattern -match '[^a-z]') {
+  $WordPattern = $WordPattern -replace '[-,.;:/]','?'
+  $WordList | Where-Object {$_.Word -like $WordPattern}
+}
+else {
+  $UserLetterArray = [string[]]$WordPattern.ToCharArray()
+  $UserWordGroup = $UserLetterArray | Group-Object
+  foreach ($SingleWord in $WordList) {
+    $WordArray = [string[]]$SingleWord.Word.ToCharArray()
+    $WordGroup = $WordArray | Group-Object 
+    $WordMatch = $true
+    if (($WordArray | Where-Object {$_ -notin $UserLetterArray}) -eq $null -and ($WordArray.count -le $UserLetterArray.count )) {
+      $MultiLetters = $WordGroup | Where-Object {$_.Count -gt 1}
+      foreach ($WordLetter in $MultiLetters) {
+        $UserWordGroupMatch = $UserWordGroup | Where-Object {$_.name -eq $WordLetter.Name}
+        if ($UserWordGroupMatch.Count -lt $WordLetter.Count) {$WordMatch = $false}
+      } 
+      if ($WordMatch -eq $true) {$SingleWord}
     }
   }
-} until ($UserWordMatch -eq "!")
+}
