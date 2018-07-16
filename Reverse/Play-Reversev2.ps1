@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-  This is the OTHELLO game 
+  This is the OTHELLO game
 .DESCRIPTION
   The moves are made only if you can swap some of the opponents
-  pieces to your color, to do this you place your color on a space 
+  pieces to your color, to do this you place your color on a space
   that is unoccupied but is next to your opponents color but only
-  if your color is also other side of the opponents color pieces 
+  if your color is also other side of the opponents color pieces
 .NOTES
 
   Created By: Brent Denny
@@ -14,10 +14,10 @@
   Board Numbers
   -------------
 
-  00 01 02 03 04 05 06 07  starts with 27 = W 28 = B 
+  00 01 02 03 04 05 06 07  starts with 27 = W 28 = B
   08 09 10 11 12 13 14 15              35 = B 36 = W
   16 17 18 19 20 21 22 23  All others = -
-  24 25 26 27 28 29 30 31 
+  24 25 26 27 28 29 30 31
   32 33 34 35 36 37 38 39
   40 41 42 43 44 45 46 47
   48 49 50 51 52 53 54 55
@@ -27,7 +27,7 @@
 function Show-Board {
   Param (
     $Board
-  )  
+  )
   Clear-Host
   $numOfWhite = @() ; $numOfRed = @()
   $numOfWhite = ($Board | Where-Object {$_.color -eq "White"} | Measure-Object ).Count
@@ -47,7 +47,7 @@ function Show-Board {
     Write-Host -ForegroundColor Yellow -NoNewline $LeftSpc$letter' '
     Write-Host -NoNewline " "
     foreach ($Pos in ($start..($Start+7))) {
-      Write-Host -NoNewline -ForegroundColor $Board[$Pos].Color $Board[$Pos].Value' ' 
+      Write-Host -NoNewline -ForegroundColor $Board[$Pos].Color $Board[$Pos].Value' '
     }
     write-host
   }
@@ -61,14 +61,14 @@ function Get-CompassLines {
   $LinesProp = [ordered]@{
     N  = $Board | Where-Object {$_.Col -eq $Turn.Col     -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
     NE = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
-    E  = $Board | Where-Object {$_.Row -eq $Turn.Row     -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
-    SE = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
-    S  = $Board | Where-Object {$_.Col -eq $Turn.Col     -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
-    SW = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position 
+    E  = $Board | Where-Object {$_.Row -eq $Turn.Row     -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position
+    SE = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position
+    S  = $Board | Where-Object {$_.Col -eq $Turn.Col     -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position
+    SW = $Board | Where-Object {$_.FDiag -eq $Turn.FDiag -and $_.Position -gt $Turn.Position} | Sort-Object -Property Position
     W  = $Board | Where-Object {$_.Row -eq $Turn.Row     -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
     NW = $Board | Where-Object {$_.RDiag -eq $Turn.RDiag -and $_.Position -lt $Turn.Position} | Sort-Object -Property Position -Descending
   }
-  New-Object -TypeName psobject -Property $LinesProp 
+  New-Object -TypeName psobject -Property $LinesProp
 }
 
 function New-Board {
@@ -90,7 +90,7 @@ function New-Board {
     }
     New-Object -TypeName psobject -Property $BoardProp
   }
-}  
+}
 
 function Get-BoardChanges {
   Param (
@@ -105,7 +105,7 @@ function Get-BoardChanges {
   $Changes = @()
   $ChangePositions = @()
   foreach ($GameLines in ($AllGameLines.N, $AllGameLines.NE, $AllGameLines.E, $AllGameLines.SE,
-                         $AllGameLines.S, $AllGameLines.SW, $AllGameLines.W,$AllGameLines.NW)) {                      
+                         $AllGameLines.S, $AllGameLines.SW, $AllGameLines.W,$AllGameLines.NW)) {
     if (($GameLines | Measure-Object).count -gt 0) {
       if ($GameLines -and $GameLines[0].Color -eq $OpColor -and $GameLines[0].Value -eq 'O') {
         $LastIndexInLine = ($GameLines | Measure-Object).Count - 1
@@ -114,7 +114,7 @@ function Get-BoardChanges {
           if ($GameLines[$Index].Color -eq $Color -and $GameLines[$Index].Value -eq 'O' -and $StillPossibleValid -eq $true) {
             $ValidLine = $true
             $Changes = 0..$Index
-            $ChangePositions += $Turn.Position 
+            $ChangePositions += $Turn.Position
             $ChangePositions += $GameLines[$Changes].Position
             break
           }
@@ -160,7 +160,7 @@ function New-PositionObj {
     Color = $Color
   }
   New-Object -TypeName psobject -Property $MoveProps
-} 
+}
 
 function Test-BoardPositions {
   Param (
@@ -186,15 +186,15 @@ function Test-BoardPositions {
 }
 
 function Read-Turn {
-  Param ( 
+  Param (
     $Board,
     $Color
   )
   do {
     Write-Host -ForegroundColor $Color -NoNewline 'Enter the Coordindates of your next move: '
     $NextMove = (Read-Host).ToUpper()
-    $NextMove = $NextMove -replace '[^a-h1-8]','' 
-  } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$') 
+    $NextMove = $NextMove -replace '[^a-h1-8]',''
+  } until ($NextMove -cmatch '^[A-H][1-8]$' -or $NextMove -cmatch '^[1-8][A-H]$')
   # 65 - 72 are A - H (Ascii)
   $MoveCol = (($NextMove -replace '[A-Z]','') -as [int]) -1
   $MoveRow = (([byte][char]($NextMove -replace '[0-9]','')) -as [int]) -65
@@ -225,7 +225,7 @@ function Set-Board {
         $Board[$ChangePosition].Color = $BoardChanges.Color
       }
     }
-  } until ($BoardChanges.ChangePositions -ne $null) 
+  } until ($BoardChanges.ChangePositions -ne $null)
 }
 
 
@@ -256,7 +256,7 @@ $Color = 'Red'
         $PossibleTurns = Test-BoardPositions -Board $BoardObj -Color $Color | Where-Object {$_.Valid -eq $true}
         $MovesAvailable = $true
       }
-    } 
+    }
     $GameTurn = Read-Turn -Board $BoardObj -Color $Color
     if ($GameTurn.Position -notin $PossibleTurns.Position) {Write-Warning "This move is invalid";Start-Sleep 1}
   } until ($GameTurn.Position -in $PossibleTurns.Position)
@@ -272,4 +272,3 @@ if ($NumWhite -gt $NumRed) {Write-Host -ForegroundColor White "       WHITE WINS
 if ($NumRed -gt $NumWhite) {Write-Host -ForegroundColor Red   "        RED WINS"}
 if ($NumRed -eq $NumWhite) {Write-Host -ForegroundColor Green "       DRAWN GAME"}
 Write-Host;Write-Host
- 
