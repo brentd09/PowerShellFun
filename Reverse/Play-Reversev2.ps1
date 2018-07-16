@@ -113,7 +113,7 @@ function Get-BoardChanges {
         foreach ($Index in (1..$LastIndexInLine)) {
           if ($GameLines[$Index].Color -eq $Color -and $GameLines[$Index].Value -eq 'O' -and $StillPossibleValid -eq $true) {
             $ValidLine = $true
-            $Changes = 0..$Index
+            [int[]]$Changes = 0..$Index
             $ChangePositions += $Turn.Position
             $ChangePositions += $GameLines[$Changes].Position
             break
@@ -122,7 +122,7 @@ function Get-BoardChanges {
             $StillPossibleValid = $true
           }
           else {
-            $Changes = $null
+            [int[]]$Changes = $null
             $ValidLine -eq $false
             break
           }
