@@ -45,6 +45,50 @@ function Create-BoardObj {
     $count++
   }
 }
+function Show-Board {
+  param (
+    $BoardObj
+  )
+  #Clear-Host
+  $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
+  $host.UI.RawUI.CursorPosition = $Coords
+  Write-Host
+  $Margin = '   '
+  $LineColor = "Cyan"
+  $NumberColor = "Yellow"
+  $BlankColor = "Red"
+  Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
+  foreach ($ShowRow in (0..8)) {
+    Write-Host -NoNewline $Margin
+    foreach ($ShowCol in (0..8)) {
+      if ($ShowCol -eq 0) {Write-Host -NoNewline -ForegroundColor $LineColor "| "}
+      $BoardPosObj = $BoardObj | Where-Object {$_.BoardRow -eq $ShowRow -and $_.BoardCol -eq $ShowCol}
+      if ($BoardPosObj.SudokuNumber -match '\d') {Write-Host -NoNewline -ForegroundColor $NumberColor $BoardPosObj.SudokuNumber}
+      if ($BoardPosObj.SudokuNumber -eq '-') {Write-Host -NoNewline -ForegroundColor $BlankColor $BoardPosObj.SudokuNumber}
+      Write-Host -NoNewline " "
+      if ($ShowCol -eq 2 -or $ShowCol -eq 5 -or $ShowCol -eq 8) {Write-Host -NoNewline -ForegroundColor $LineColor "| "}
+    } # foreach showcol
+    Write-Host # This is to seperate the rows
+    if ($ShowRow -eq 2 -or $ShowRow -eq 5) {Write-Host -ForegroundColor $LineColor "$Margin|-----------------------|"}
 
+  } #foreach showrow
+  Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
+} # fn Showboard
+
+function Complete-SoleCandidate {
+  Param(
+    $BoardObj
+  )
+  $AllNumbers = @('1','2','3','4','5','6','7','8','9')
+  foreach ($Pos in (0..80)){
+    if ($BoardObj[$Pos].SudokuNumber -eq '-') {
+      $AllRelated = $BoardObj | Where-Object {$_.BoardCol -eq $BoardObj[$Pos].BoardCol -or $_.BoardRow -eq $BoardObj[$Pos].BoardRow -or $_.BoardSqr -eq $BoardObj[$Pos].BoardSqr}
+      $AllRelated = $AllRelated | Where-Object {$_.SudokuNumber -ne '-'} | Select-Object -Unique
+      $WhatsMissing = (Compare-Object -ReferenceObject $AllRelated -DifferenceObject $AllNumbers).InputObject
+      if (($WhatsMissing | Measure-Object).Count -eq 1) {}#found unique solution
+    }
+  }
+}
 
 $BoardObj = Create-BoardObj -RawBrd $RawBoard
+Show-Board -fnBoardObj $BoardObj
