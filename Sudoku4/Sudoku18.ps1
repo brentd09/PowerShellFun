@@ -5,6 +5,7 @@ Class SudokuBoardPos {
   [int]$BoardRow
   [int]$BoardCol
   [int]$BoardSqr
+  [string[]]$WhatIsPossible
 
   SudokuBoardPos ([String]$SudokuNumber,[int]$BoardPosition) {
     $this.SudokuNumber = $SudokuNumber
@@ -93,7 +94,11 @@ function Complete-SoleCandidate {
       $WhatsMissing = (Compare-Object -ReferenceObject $AllRelatedNums -DifferenceObject $AllNumbers).InputObject
       if (($WhatsMissing | Measure-Object).Count -eq 1) {
         $BoardObj[$Pos].SudokuNumber = $WhatsMissing
+        $BoardObj[$Pos].WhatIsPossible = ''
       }#found unique solution
+      else {
+        $BoardObj[$Pos].WhatIsPossible = $WhatsMissing
+      }
     }
   }
   return $BoardObj
@@ -102,21 +107,30 @@ function Complete-UniqueCandidate {
   Param (
     $BoardObj
   )
-  foreach ($Pos in (0..80)){
-    
+  foreach ($Sqr in (0..8)){
+    $PosNumInSqr = ($BoardObj | Where-Object {$_.BoardSqr -eq $Sqr -and $_.SudokuNumber -eq '-'}).WhatIsPossible
+    $UniqueNums = $PosNumInSqr | Where-Object {$_.Count -eq 1}
+    foreach ($UniqueNum in $UniqueNums) {
+      $WhichPos = ($BoardObj | Where-Object {$_.WhatIsPossible -contains $UniqueNum -and $_.BoardSqr -eq $sqr}).BoardPosition
+      $BoardObj[$WhichPos].SudokuNumber = $UniqueNum.Group
+      $BoardObj[$WhichPos].WhatIsPossible = ''
+    }
   }
 }
 
 
 ########### MAIN CODE ############
 Clear-Host
+$RawBoard = $RawBoard -replace "[^1-9]",'-'
 $BoardObj = Create-BoardObj -RawBrd $RawBoard
 Show-Board -BoardObj $BoardObj
 do {
   $InitBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
   $BoardObj = Complete-SoleCandidate -BoardObj $BoardObj
   $FinalBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
-  if ($FinalBlankCount -eq $InitBlankCount) {"more adv soln required" ; Read-Host}
+  if ($FinalBlankCount -eq $InitBlankCount) {
+    Complete-UniqueCandidate -BoardObj $BoardObj
+  }
   Show-Board -BoardObj $BoardObj
 
   Start-Sleep -Milliseconds 500
