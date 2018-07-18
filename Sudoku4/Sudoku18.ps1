@@ -134,7 +134,9 @@ function Complete-UniqueCandidate {
   }
 }
 function Complete-NakedSetCandidate {
-  
+  Param(
+    $BoardObj
+  )
 }
 ########### MAIN CODE ############
 
@@ -155,6 +157,10 @@ do {
   $FinalBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
   if ($FinalBlankCount -eq $InitBlankCount) {
     Complete-UniqueCandidate -BoardObj $BoardObj
+    $FinalBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
+    if ($FinalBlankCount -eq $InitBlankCount) {
+      Complete-NakedSetCandidate -BoardObj $BoardObj
+    }
   }
   Show-Board -BoardObj $BoardObj
   if ($BoardObj.SudokuNumber -contains '-'){
