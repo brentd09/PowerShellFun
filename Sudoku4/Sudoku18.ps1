@@ -33,6 +33,7 @@ Class SudokuBoardPos {
   [int]$BoardSqr
   [string[]]$WhatIsPossible
   [string[]]$RuledOut
+  [string[]]$WhatRemains
   # Class Constructor
   SudokuBoardPos ([String]$SudokuNumber,[int]$BoardPosition) {
     $this.SudokuNumber = $SudokuNumber
@@ -48,6 +49,7 @@ Class SudokuBoardPos {
     elseif ($BoardPosition -in @(54,55,56,63,64,65,72,73,74)) {$this.BoardSqr = 6}
     elseif ($BoardPosition -in @(57,58,59,66,67,68,75,76,77)) {$this.BoardSqr = 7}
     elseif ($BoardPosition -in @(60,61,62,69,70,71,78,79,80)) {$this.BoardSqr = 8}
+    $this.WhatRemains = $this.WhatIsPossible | Where-Object {$_ -notin $this.RuledOut}
   }
 }
 
