@@ -22,7 +22,7 @@
 #>
 [CmdletBinding()]
 Param(
-  $Puzzle = '-6-3--8-4537-9-----4---63-7-9--51238---------71362--4-3-64---1-----6-5231-2--9-8-'
+  $Puzzle = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
 )
 # Class - Create BoardPosition Obj
 Class SudokuBoardPos {
@@ -110,7 +110,7 @@ function Complete-SoleCandidate {
       $WhatsMissing = (Compare-Object -ReferenceObject $AllRelatedNums -DifferenceObject $AllNumbers).InputObject
       if (($WhatsMissing | Measure-Object).Count -eq 1) {
         $BoardObj[$Pos].SudokuNumber = $WhatsMissing
-        $BoardObj[$Pos].WhatIsPossible = ''
+        $BoardObj[$Pos].WhatIsPossible = $null
       }#found unique solution
       else {
         $BoardObj[$Pos].WhatIsPossible = $WhatsMissing
@@ -129,7 +129,7 @@ function Complete-UniqueCandidate {
     foreach ($UniqueNum in $UniqueNums) {
       $WhichPos = ($BoardObj | Where-Object {$_.WhatIsPossible -contains $UniqueNum.Group -and $_.BoardSqr -eq $sqr}).BoardPosition
       $BoardObj[$WhichPos].SudokuNumber = $UniqueNum.Group
-      $BoardObj[$WhichPos].WhatIsPossible = ''
+      $BoardObj[$WhichPos].WhatIsPossible = $null
     }
   }
 }
@@ -137,6 +137,8 @@ function Complete-NakedSetCandidate {
   Param(
     $BoardObj
   )
+  $TwoPossible = $BoardObj | Where-Object {$_.WhatIsPossible.Count -eq 2}
+  Start-Sleep 1
 }
 ########### MAIN CODE ############
 
