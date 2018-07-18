@@ -33,9 +33,9 @@ Class SudokuBoardPos {
 # Extreme    '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
 # Extreme    '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
 
-$RawBoard = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
+$RawBoard = '-6-3--8-4537-9-----4---63-7-9--51238---------71362--4-3-64---1-----6-5231-2--9-8-'
 
-function Create-BoardObj {
+function New-BoardObj {
   Param(
     [string]$RawBrd
   )
@@ -109,9 +109,9 @@ function Complete-UniqueCandidate {
   )
   foreach ($Sqr in (0..8)){
     $PosNumInSqr = ($BoardObj | Where-Object {$_.BoardSqr -eq $Sqr -and $_.SudokuNumber -eq '-'}).WhatIsPossible
-    $UniqueNums = $PosNumInSqr | Where-Object {$_.Count -eq 1}
+    $UniqueNums = $PosNumInSqr | Sort-Object | Group-Object | Where-Object {$_.Count -eq 1}
     foreach ($UniqueNum in $UniqueNums) {
-      $WhichPos = ($BoardObj | Where-Object {$_.WhatIsPossible -contains $UniqueNum -and $_.BoardSqr -eq $sqr}).BoardPosition
+      $WhichPos = ($BoardObj | Where-Object {$_.WhatIsPossible -contains $UniqueNum.Group -and $_.BoardSqr -eq $sqr}).BoardPosition
       $BoardObj[$WhichPos].SudokuNumber = $UniqueNum.Group
       $BoardObj[$WhichPos].WhatIsPossible = ''
     }
@@ -122,7 +122,7 @@ function Complete-UniqueCandidate {
 ########### MAIN CODE ############
 Clear-Host
 $RawBoard = $RawBoard -replace "[^1-9]",'-'
-$BoardObj = Create-BoardObj -RawBrd $RawBoard
+$BoardObj = New-BoardObj -RawBrd $RawBoard
 Show-Board -BoardObj $BoardObj
 do {
   $InitBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
@@ -132,6 +132,7 @@ do {
     Complete-UniqueCandidate -BoardObj $BoardObj
   }
   Show-Board -BoardObj $BoardObj
-
-  Start-Sleep -Milliseconds 500
+  if ($BoardObj.SudokuNumber -contains '-'){
+    Start-Sleep -Milliseconds 500
+  }
 } while ($BoardObj.SudokuNumber -contains '-')
