@@ -49,10 +49,10 @@ Class SudokuBoardPos {
     elseif ($BoardPosition -in @(54,55,56,63,64,65,72,73,74)) {$this.BoardSqr = 6}
     elseif ($BoardPosition -in @(57,58,59,66,67,68,75,76,77)) {$this.BoardSqr = 7}
     elseif ($BoardPosition -in @(60,61,62,69,70,71,78,79,80)) {$this.BoardSqr = 8}
-    $this.WhatRemains = $this.WhatIsPossible | Where-Object {$_ -notin $this.RuledOut}
+    $this.WhatRemains = $null
   }
 }
-
+# Logic to remove one array from another # $Obj.WhatIsPossible | Where-Object {$_ -notin $Obj.RuledOut}
 # Functions
 function New-BoardObj {
   Param(
@@ -113,9 +113,11 @@ function Complete-SoleCandidate {
       if (($WhatsMissing | Measure-Object).Count -eq 1) {
         $BoardObj[$Pos].SudokuNumber = $WhatsMissing
         $BoardObj[$Pos].WhatIsPossible = $null
+        $BoardObj[$Pos].WhatRemains = $null
       }#found unique solution
       else {
         $BoardObj[$Pos].WhatIsPossible = $WhatsMissing
+        $BoardObj[$Pos].WhatRemains = $BoardObj[$Pos].WhatIsPossible | Where-Object {$_ -notin $BoardObj[$Pos].RuledOut}
       }
     }
   }
@@ -126,12 +128,13 @@ function Complete-UniqueCandidate {
     $BoardObj
   )
   foreach ($Sqr in (0..8)){
-    $PosNumInSqr = ($BoardObj | Where-Object {$_.BoardSqr -eq $Sqr -and $_.SudokuNumber -eq '-'}).WhatIsPossible
+    $PosNumInSqr = ($BoardObj | Where-Object {$_.BoardSqr -eq $Sqr -and $_.SudokuNumber -eq '-'}).WhatRemains
     $UniqueNums = $PosNumInSqr | Sort-Object | Group-Object | Where-Object {$_.Count -eq 1}
     foreach ($UniqueNum in $UniqueNums) {
       $WhichPos = ($BoardObj | Where-Object {$_.WhatIsPossible -contains $UniqueNum.Group -and $_.BoardSqr -eq $sqr}).BoardPosition
       $BoardObj[$WhichPos].SudokuNumber = $UniqueNum.Group
       $BoardObj[$WhichPos].WhatIsPossible = $null
+      $BoardObj[$WhichPos].WhatRemains = $null
     }
   }
 }
@@ -140,7 +143,8 @@ function Complete-NakedSetCandidate {
     $BoardObj
   )
   $TwoPossible = $BoardObj | Where-Object {$_.WhatIsPossible.Count -eq 2}
-  Start-Sleep 1
+  #Find the two pos in row or col
+  #set the ruled out on every member of that row or col that is still empty
 }
 ########### MAIN CODE ############
 
