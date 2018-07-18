@@ -63,7 +63,7 @@ function New-BoardObj {
     $count++
   }
 }
-function Show-Board {
+function Show-SudokuBoard {
   param (
     $BoardObj
   )
@@ -150,7 +150,7 @@ function Complete-NakedSetCandidate {
 Clear-Host
 $RawBoard = $Puzzle -replace "[^1-9]",'-'
 $BoardObj = New-BoardObj -RawBrd $RawBoard
-Show-Board -BoardObj $BoardObj
+Show-SudokuBoard -BoardObj $BoardObj
 do {
   $InitBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
   $BoardObj = Complete-SoleCandidate -BoardObj $BoardObj
@@ -162,7 +162,7 @@ do {
       Complete-NakedSetCandidate -BoardObj $BoardObj
     }
   }
-  Show-Board -BoardObj $BoardObj
+  Show-SudokuBoard -BoardObj $BoardObj
   if ($BoardObj.SudokuNumber -contains '-'){
     Start-Sleep -Milliseconds 500
   }
