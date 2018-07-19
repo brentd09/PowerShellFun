@@ -22,7 +22,7 @@
 #>
 [CmdletBinding()]
 Param(
-  $Puzzle = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
+  $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
 )
 # Class - Create BoardPosition Obj
 Class SudokuBoardPos {
@@ -143,6 +143,7 @@ function Complete-NakedSetCandidate {
     $BoardObj
   )
   $TwoPossible = $BoardObj | Where-Object {$_.WhatIsPossible.Count -eq 2}
+  start-sleep 1
   #Find the two pos in row or col
   #set the ruled out on every member of that row or col that is still empty
 }
