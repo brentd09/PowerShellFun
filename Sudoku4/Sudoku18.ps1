@@ -138,6 +138,13 @@ function Complete-UniqueCandidate {
     }
   }
 }
+function Complete-HiddenPair {
+  param (
+    $BoardObj
+  )
+  # this seeks for a pair of numbers that appear in a sqr, col, row and all other values in that list
+  # can be removed from this pair as they have to be one of the two values
+}
 function Complete-NakedSetCandidate {
   Param(
     $BoardObj
