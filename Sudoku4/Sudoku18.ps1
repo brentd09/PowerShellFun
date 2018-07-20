@@ -142,6 +142,17 @@ function Complete-HiddenPair {
   param (
     $BoardObj
   )
+  <#
+    This will determine if a value only appears twice in a sqr.
+    we then need to determine if there are more than one of these
+    and then figured out if they are the same positions. If they
+    are then the Ruled out can be all but theses values in these
+    positions.
+    $boardobj | where {$_.boardsqr -eq 0} |
+      Select-Object -ExpandProperty whatremains |
+      Group-Object -NoElement |
+      where count -eq 2
+  #>
   # this seeks for a pair of numbers that appear in a sqr, col, row and all other values in that list
   # can be removed from this pair as they have to be one of the two values
 }
