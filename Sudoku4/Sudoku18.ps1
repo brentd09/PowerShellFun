@@ -4,7 +4,7 @@
 .DESCRIPTION
   The script takes in a puzzle in the form of a flat 81 char string of
   numbers and -'s for blanks. It will then attempt to solve the puzzle
-  using SoleCandidate, UniqueCandidate, NakedSet techniques.
+  using SoleCandidate, UniqueCandidate, Hidden Pair, NakedSet techniques.
   Examples of puzzles:
     Easy       '-6-3--8-4537-9-----4---63-7-9--51238---------71362--4-3-64---1-----6-5231-2--9-8-'
     Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
@@ -175,15 +175,9 @@ function Complete-NakedSetCandidate {
   #Find the two pos in row or col
   #set the ruled out on every member of that row or col that is still empty
 }
+
+
 ########### MAIN CODE ############
-
-# Easy       '-6-3--8-4537-9-----4---63-7-9--51238---------71362--4-3-64---1-----6-5231-2--9-8-'
-# Medium     '-1--584-9--------1953---2--2---1--8-6--425--3-3--7---4--5---3973--------1-463--5-'
-# Difficult  '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
-# Extreme    '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
-# Extreme    '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
-# Extreme    '--5--7--4-6--5--9-4--9--2--2--5--1---7--2--4---8--3--2--7--1--3-5--6--1-6--8--4--'
-
 Clear-Host
 $RawBoard = $Puzzle -replace "[^1-9]",'-'
 $BoardObj = New-BoardObj -RawBrd $RawBoard
