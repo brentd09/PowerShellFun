@@ -175,6 +175,15 @@ function Complete-NakedSetCandidate {
   #Find the two pos in row or col
   #set the ruled out on every member of that row or col that is still empty
 }
+function Complete-Xwing {
+  # This is how we can scan for an xwing, the results would need to come back as the same number
+  # appearing twice in two places where the row -eq col and col -eq row of each
+  # $BoardObj | Where-Object {$_.whatremains -contains 1 } | ft
+}
+
+function Complete-SwordFish {
+  
+}
 
 
 ########### MAIN CODE ############
