@@ -22,7 +22,7 @@
 #>
 [CmdletBinding()]
 Param(
-  $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
+  $Puzzle = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
 )
 # Class - Create BoardPosition Obj
 Class SudokuBoardPos {
@@ -166,7 +166,7 @@ function Complete-HiddenPair {
   # this seeks for a pair of numbers that appear in a sqr, col, row and all other values in that list
   # can be removed from this pair as they have to be one of the two values
 }
-function Complete-NakedSetCandidate {
+function Complete-NakedPair {
   Param(
     $BoardObj
   )
@@ -182,7 +182,37 @@ function Complete-Xwing {
 }
 
 function Complete-SwordFish {
-  
+  # need to look for candidate values and where they exist on the board
+  # to be a swordfish they need to be in a configuration where the number
+  # is found only 3 times in a row or col and then the same situation happens
+  # three times only in the board, for example:
+  <#
+  Below is a result from $BoardObj | Where-Object {$_.whatremains -contains 5 }| ft
+  and this shows a swordfish pattern by looking at the rows that are listed 3 times
+  and then seeing the pattern repeated with the cols 0,1,7 or 0,1 as swordfish can have one
+  row with 2 only
+
+  BoardPosition SudokuNumber BoardRow BoardCol BoardSqr WhatIsPossible RuledOut WhatRemains
+------------- ------------ -------- -------- -------- -------------- -------- -----------
+            0 -                   0        0        0 {3, 5, 6}               {3, 5, 6}    !
+            1 -                   0        1        0 {1, 3, 5}               {1, 3, 5}    !
+            7 -                   0        7        2 {1, 3, 5}               {1, 3, 5}    !
+           11 -                   1        2        0 {1, 3, 5}               {1, 3, 5}
+           13 -                   1        4        1 {3, 5}                  {3, 5}
+           16 -                   1        7        2 {1, 3, 5, 8}            {1, 3, 5, 8}
+           20 -                   2        2        0 {3, 5, 6}               {3, 5, 6}
+           22 -                   2        4        1 {3, 5}                  {3, 5}
+           25 -                   2        7        2 {3, 5, 7, 8}            {3, 5, 7, 8}
+           26 -                   2        8        2 {3, 4, 5}               {3, 4, 5}
+           27 -                   3        0        3 {3, 5}                  {3, 5}       !
+           28 -                   3        1        3 {3, 5}                  {3, 5}       !
+           55 -                   6        1        6 {1, 4, 5, 7}            {1, 4, 5, 7}
+           56 -                   6        2        6 {1, 5}                  {1, 5}
+           62 -                   6        8        8 {4, 5}                  {4, 5}
+           63 -                   7        0        6 {3, 5, 8}               {3, 5, 8}    !
+           64 -                   7        1        6 {3, 5, 7, 8}            {3, 5, 7, 8} !
+           70 -                   7        7        8 {3, 5, 7, 8}            {3, 5, 7, 8} !
+  #>
 }
 
 
@@ -199,7 +229,7 @@ do {
     Complete-UniqueCandidate -BoardObj $BoardObj
     $FinalBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
     if ($FinalBlankCount -eq $InitBlankCount) {
-      Complete-NakedSetCandidate -BoardObj $BoardObj
+      Complete-NakedPair -BoardObj $BoardObj
     }
   }
   Show-SudokuBoard -BoardObj $BoardObj
