@@ -34,6 +34,7 @@ Class SudokuBoardPos {
   [string[]]$WhatIsPossible
   [string[]]$RuledOut
   [string[]]$WhatRemains
+  [string]$WhatRemainsStr
   # Class Constructor
   SudokuBoardPos ([String]$SudokuNumber,[int]$BoardPosition) {
     $this.SudokuNumber = $SudokuNumber
@@ -50,6 +51,7 @@ Class SudokuBoardPos {
     elseif ($BoardPosition -in @(57,58,59,66,67,68,75,76,77)) {$this.BoardSqr = 7}
     elseif ($BoardPosition -in @(60,61,62,69,70,71,78,79,80)) {$this.BoardSqr = 8}
     $this.WhatRemains = $null
+    $this.WhatRemainsStr = $this.WhatRemains -join ''
   }
 }
 # Logic to remove one array from another # $Obj.WhatIsPossible | Where-Object {$_ -notin $Obj.RuledOut}
@@ -114,10 +116,12 @@ function Complete-SoleCandidate {
         $BoardObj[$Pos].SudokuNumber = $WhatsMissing
         $BoardObj[$Pos].WhatIsPossible = $null
         $BoardObj[$Pos].WhatRemains = $null
+        $BoardObj[$Pos].WhatRemainsStr = $null
       }#found unique solution
       else {
         $BoardObj[$Pos].WhatIsPossible = $WhatsMissing
         $BoardObj[$Pos].WhatRemains = $BoardObj[$Pos].WhatIsPossible | Where-Object {$_ -notin $BoardObj[$Pos].RuledOut}
+        $BoardObj[$Pos].WhatRemainsStr = ($BoardObj[$Pos].WhatIsPossible | Where-Object {$_ -notin $BoardObj[$Pos].RuledOut} | Sort-Object) -join ''
       }
     }
   }
@@ -135,6 +139,7 @@ function Complete-UniqueCandidate {
       $BoardObj[$WhichPos].SudokuNumber = $UniqueNum.Group
       $BoardObj[$WhichPos].WhatIsPossible = $null
       $BoardObj[$WhichPos].WhatRemains = $null
+      $BoardObj[$WhichPos].WhatRemainsStr = $null
     }
   }
 }
@@ -237,3 +242,12 @@ do {
     Start-Sleep -Milliseconds 500
   }
 } while ($BoardObj.SudokuNumber -contains '-')
+
+
+# if ( -not ($a|Where-Object{$_ -notin $b}) -and  -not ($b|Where-Object{$_ -notin $a})){$true}else{false}
+# Tests to see if two arrays have the same values
+
+# code to check for pairs
+###########################
+# $pairs = $BoardObj | where {$_.whatremains.count -eq 2} | Group-Object -Property whatremainsstr | where {$_.count -eq 2}
+# $BoardObj | where whatremainsstr -eq $Pairs.Name
