@@ -75,8 +75,9 @@ function Show-SudokuBoard {
   $host.UI.RawUI.CursorPosition = $Coords
   Write-Host
   $Margin = '   '
-  $LineColor = "Cyan"
-  $NumberColor = "Yellow"
+  $LineColor = "DarkCyan"
+  $NumberColor = "Cyan"
+  $NumberComplete = "Yellow"
   $BlankColor = "Red"
   Write-Host -ForegroundColor $LineColor "$Margin -----------------------"
   foreach ($ShowRow in (0..8)) {
@@ -84,7 +85,9 @@ function Show-SudokuBoard {
     foreach ($ShowCol in (0..8)) {
       if ($ShowCol -eq 0) {Write-Host -NoNewline -ForegroundColor $LineColor "| "}
       $BoardPosObj = $BoardObj | Where-Object {$_.BoardRow -eq $ShowRow -and $_.BoardCol -eq $ShowCol}
-      if ($BoardPosObj.SudokuNumber -match '\d') {Write-Host -NoNewline -ForegroundColor $NumberColor $BoardPosObj.SudokuNumber}
+      $HowMany = ($BoardObj | Where-Object {$_.SudokuNumber -eq $BoardPosObj.SudokuNumber}).count
+      if ($BoardPosObj.SudokuNumber -match '\d' -and $HowMany -eq 9 ){Write-Host -NoNewline -ForegroundColor $NumberComplete $BoardPosObj.SudokuNumber}
+      if ($BoardPosObj.SudokuNumber -match '\d' -and $HowMany -lt 9 ){Write-Host -NoNewline -ForegroundColor $NumberColor $BoardPosObj.SudokuNumber}
       if ($BoardPosObj.SudokuNumber -eq '-') {Write-Host -NoNewline -ForegroundColor $BlankColor $BoardPosObj.SudokuNumber}
       Write-Host -NoNewline " "
       if ($ShowCol -eq 2 -or $ShowCol -eq 5 -or $ShowCol -eq 8) {Write-Host -NoNewline -ForegroundColor $LineColor "| "}
