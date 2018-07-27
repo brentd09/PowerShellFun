@@ -150,14 +150,22 @@ function Complete-HiddenPair {
   param (
     $BoardObj
   )
-  #Sqrs
-  foreach ($SqrNum in (0..8)) {
-    $HiddenPairValues = ($boardobj | Where-Object {$_.boardsqr -eq $SqrNum} | Select-Object -ExpandProperty WhatRemains | Group-Object -NoElement | Where-Object count -eq 2).Name
-    $HiddenPairPos = $BoardObj | Where-Object {$_.boardsqr -eq $SqrNum -and $_.WhatRemains -contains $HiddenPairValues}
-  }
+
+  <#
+    $PairObj = $BoardObj | where {$_.whatremains.count -eq 2}
+    $DuplicatedStrings = ($PairObj | Group-Object -Property whatremainsstr | where count -ge 2).name
+    $DuplicatObjects = $PairObj | where {$_.whatremainsstr -in $DuplicatedStrings}
+    ## Locate which rows col and sqr these appear in 
+    ## if found then add pair array to ruledout property fr all other candidates in the group- r c s
+  #>
 
 #  if (-not ($b | foreach {$_ -in $a}) -eq $false) {"subset yes"} # this will test if an array is a subset of another array
 # this tests if $b array is a subset of $a array
+  #Sqrs
+  ##  foreach ($SqrNum in (0..8)) {
+  ##    $HiddenPairValues = ($boardobj | Where-Object {$_.boardsqr -eq $SqrNum} | Select-Object -ExpandProperty WhatRemains | Group-Object -NoElement | Where-Object count -eq 2).Name
+  ##    $HiddenPairPos = $BoardObj | Where-Object {$_.boardsqr -eq $SqrNum -and $_.WhatRemains -contains $HiddenPairValues}
+  ##  }
 
   <#
     This will determine if a value only appears twice in a sqr.
@@ -179,13 +187,7 @@ function Complete-NakedPair {
     $BoardObj
   )
 
-  <#
-  $PairObj = $BoardObj | where {$_.whatremains.count -eq 2}
-  $DuplicatedStrings = ($PairObj | Group-Object -Property whatremainsstr | where count -ge 2).name
-  $DuplicatObjects = $PairObj | where {$_.whatremainsstr -in $DuplicatedStrings}
-  ## Locate which rows col and sqr these appear in 
-  ## if found then add pair array to ruledout property fr all other candidates in the group- r c s
-  #>
+
 }
 function Complete-Xwing {
   # This is how we can scan for an xwing, the results would need to come back as the same number
@@ -241,7 +243,12 @@ do {
     Complete-UniqueCandidate -BoardObj $BoardObj
     $FinalBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
     if ($FinalBlankCount -eq $InitBlankCount) {
-      Complete-NakedPair -BoardObj $BoardObj
+      Complete-HiddenPair -BoardObj $BoardObj
+      $FinalBlankCount = ($BoardObj | Where-Object {$_.SudokuNumber -eq '-'} | Measure-Object ).Count
+      if ($FinalBlankCount -eq $InitBlankCount) {
+
+      }
+
     }
   }
   Show-SudokuBoard -BoardObj $BoardObj
