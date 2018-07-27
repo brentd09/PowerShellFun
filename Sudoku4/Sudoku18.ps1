@@ -22,7 +22,7 @@
 #>
 [CmdletBinding()]
 Param(
-  $Puzzle = '-2-------17---9--4---1367--431---2------8------8---163--3624---2--8---49-------3-'
+  $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
 )
 # Class - Create BoardPosition Obj
 Class SudokuBoardPos {
@@ -178,10 +178,14 @@ function Complete-NakedPair {
   Param(
     $BoardObj
   )
-  $TwoPossible = $BoardObj | Where-Object {$_.WhatIsPossible.Count -eq 2}
-  start-sleep 1
-  #Find the two pos in row or col
-  #set the ruled out on every member of that row or col that is still empty
+
+  <#
+  $PairObj = $BoardObj | where {$_.whatremains.count -eq 2}
+  $DuplicatedStrings = ($PairObj | Group-Object -Property whatremainsstr | where count -ge 2).name
+  $DuplicatObjects = $PairObj | where {$_.whatremainsstr -in $DuplicatedStrings}
+  ## Locate which rows col and sqr these appear in 
+  ## if found then add pair array to ruledout property fr all other candidates in the group- r c s
+  #>
 }
 function Complete-Xwing {
   # This is how we can scan for an xwing, the results would need to come back as the same number
