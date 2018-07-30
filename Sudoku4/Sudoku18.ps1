@@ -150,14 +150,26 @@ function Complete-HiddenPair {
   param (
     $BoardObj
   )
-
-
-    $PairObj = $BoardObj | Where-Object {$_.whatremains.count -eq 2}
-    $DuplicatedStrings = ($PairObj | Group-Object -Property whatremainsstr | Where-Object {$_.count -ge 2}).name
-    $DuplicatObjects = $PairObj | Where-Object {$_.whatremainsstr -in $DuplicatedStrings}
+  $PairObj = $BoardObj | Where-Object {$_.whatremains.count -eq 2}
+  $DuplicatedStrings = ($PairObj | Group-Object -Property whatremainsstr | Where-Object {$_.count -ge 2}).name
+  foreach ($DuplicatedString in $DuplicatedStrings) {
+    $DuplicatObjects = $PairObj | Where-Object {$_.whatremainsstr -in $DuplicatedString}
+    $ColNums = $DuplicatObjects | Group-Object BoardCol | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
+    foreach ($ColNum in $ColNums) {
+      $DupCols = $DuplicatObjects | Where-Object {$_.BoardCol -eq $ColNum}
+    }
+    $RowNums = $DuplicatObjects | Group-Object BoardRow | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
+    foreach ($RowNum in $RowNums) {
+      $DupRows = $DuplicatObjects | Where-Object {$_.BoardRow -eq $RowNum}
+    }
+    $SqrNums = $DuplicatObjects | Group-Object BoardSqr | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
+    foreach ($SqrNum in $SqrNums) {
+      $DupSqrs = $DuplicatObjects | Where-Object {$_.BoardSqr -eq $SqrNum}
+    }
     Write-Verbose $DuplicatObjects
-    ## Locate which rows col and sqr these appear in 
-    ## if found then add pair array to ruledout property fr all other candidates in the group- r c s
+  }
+  ## Locate which rows col and sqr these appear in 
+  ## if found then add pair array to ruledout property fr all other candidates in the group- r c s
 
 
 #  if (-not ($b | foreach {$_ -in $a}) -eq $false) {"subset yes"} # this will test if an array is a subset of another array
