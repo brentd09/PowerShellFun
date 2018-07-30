@@ -150,28 +150,7 @@ function Complete-HiddenPair {
   param (
     $BoardObj
   )
-  ##$PairObj = $BoardObj | Where-Object {$_.whatremains.count -eq 2}
-  ##$DuplicatedStrings = ($PairObj | Group-Object -Property whatremainsstr | Where-Object {$_.count -ge 2}).name
-  ##foreach ($DuplicatedString in $DuplicatedStrings) {
-  ##  $DuplicatObjects = $PairObj | Where-Object {$_.whatremainsstr -in $DuplicatedString}
-  ##  $ColNums = $DuplicatObjects | Group-Object BoardCol | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
-  ##  foreach ($ColNum in $ColNums) {
-  ##    $DupCols = $DuplicatObjects | Where-Object {$_.BoardCol -eq $ColNum}
-  ##    $ModCols = $BoardObj | Where-Object {$_.BoardCol -eq $DupCols[0].BoardCol -and $_.BoardPosition -notin $DupCols.BoardPosition -and $_.SudokuNumber -eq '-'}
-  ##  }
-  ##  $RowNums = $DuplicatObjects | Group-Object BoardRow | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
-  ##  foreach ($RowNum in $RowNums) {
-  ##    $DupRows = $DuplicatObjects | Where-Object {$_.BoardRow -eq $RowNum}
-  ##    $ModRows = $BoardObj | Where-Object {$_.BoardRow -eq $DupRows[0].BoardRow -and $_.BoardPosition -notin $DupRows.BoardPosition -and $_.SudokuNumber -eq '-'}
-  ##
-  ##  }
-  ##  $SqrNums = $DuplicatObjects | Group-Object BoardSqr | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
-  ##  foreach ($SqrNum in $SqrNums) {
-  ##    $DupSqrs = $DuplicatObjects | Where-Object {$_.BoardSqr -eq $SqrNum}
-  ##    $ModSqrs = $BoardObj | Where-Object {$_.BoardSqr -eq $DupSqrs[0].BoardSqr -and $_.BoardPosition -notin $DupSqrs.BoardPosition -and $_.SudokuNumber -eq '-'}
-  ##  }
-  ##  Write-Verbose $DuplicatObjects
-  ##}
+
   ## Locate which rows col and sqr these appear in 
   ## if found then add pair array to ruledout property fr all other candidates in the group- r c s
 
@@ -203,7 +182,28 @@ function Complete-NakedPair {
   Param(
     $BoardObj
   )
-
+  $PairObj = $BoardObj | Where-Object {$_.whatremains.count -eq 2}
+  $DuplicatedStrings = ($PairObj | Group-Object -Property whatremainsstr | Where-Object {$_.count -ge 2}).name
+  foreach ($DuplicatedString in $DuplicatedStrings) {
+    $DuplicatObjects = $PairObj | Where-Object {$_.whatremainsstr -in $DuplicatedString}
+    $ColNums = $DuplicatObjects | Group-Object BoardCol | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
+    foreach ($ColNum in $ColNums) {
+      $DupCols = $DuplicatObjects | Where-Object {$_.BoardCol -eq $ColNum}
+      $ModCols = $BoardObj | Where-Object {$_.BoardCol -eq $DupCols[0].BoardCol -and $_.BoardPosition -notin $DupCols.BoardPosition -and $_.SudokuNumber -eq '-'}
+    }
+    $RowNums = $DuplicatObjects | Group-Object BoardRow | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
+    foreach ($RowNum in $RowNums) {
+      $DupRows = $DuplicatObjects | Where-Object {$_.BoardRow -eq $RowNum}
+      $ModRows = $BoardObj | Where-Object {$_.BoardRow -eq $DupRows[0].BoardRow -and $_.BoardPosition -notin $DupRows.BoardPosition -and $_.SudokuNumber -eq '-'}
+  
+    }
+    $SqrNums = $DuplicatObjects | Group-Object BoardSqr | Where-Object {$_.count -eq 2} | Select-Object -ExpandProperty name
+    foreach ($SqrNum in $SqrNums) {
+      $DupSqrs = $DuplicatObjects | Where-Object {$_.BoardSqr -eq $SqrNum}
+      $ModSqrs = $BoardObj | Where-Object {$_.BoardSqr -eq $DupSqrs[0].BoardSqr -and $_.BoardPosition -notin $DupSqrs.BoardPosition -and $_.SudokuNumber -eq '-'}
+    }
+    Write-Verbose $DuplicatObjects
+  }
 
 }
 function Complete-Xwing {
