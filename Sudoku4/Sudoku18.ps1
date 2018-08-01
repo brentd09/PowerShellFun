@@ -224,7 +224,7 @@ function Complete-SwordFish {
   and then seeing the pattern repeated with the cols 0,1,7 or 0,1 as swordfish can have one
   row with 2 only
 
-  BoardPosition SudokuNumber BoardRow BoardCol BoardSqr WhatIsPossible RuledOut WhatRemains
+BoardPosition SudokuNumber BoardRow BoardCol BoardSqr WhatIsPossible RuledOut WhatRemains
 ------------- ------------ -------- -------- -------- -------------- -------- -----------
             0 -                   0        0        0 {3, 5, 6}               {3, 5, 6}    !
             1 -                   0        1        0 {1, 3, 5}               {1, 3, 5}    !
