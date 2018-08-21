@@ -16,12 +16,12 @@
 
    This launches the TTT game as a two player game 
 .EXAMPLE
-   Play-TTT  -Computer
+   Play-TTT  -People
 
-   This launches the TTT game as a computer opponent
-.Parameter Computer
-   Computer is a switch parameter that tells the game 
-   the computer should be the opponent.
+   This launches the TTT game as a person opponent
+.Parameter People
+   People is a switch parameter that tells the game 
+   a real person should be the opponent.
 .Notes
    Created
      By: Brent Denny
@@ -29,7 +29,7 @@
 #>
 [CmdLetBinding()]
 Param (
-  [switch]$Computer 
+  [switch]$People 
 )
 
 function Draw-Board {
@@ -277,7 +277,7 @@ do {
   Draw-Board -Board $MainBoard.psobject.Copy() -Border $Border
   $Turn = @("X","O") | Get-Random
   do {
-    if ($Computer -eq $true -and $Turn -eq 'O') {
+    if ($People -eq $false -and $Turn -eq 'O') {
       $RowColDiag = Get-RowColDiag -Board $MainBoard
       $Move = Get-BestOPos -Board $MainBoard -RCD $RowColDiag
       if ($Move.Threat -eq $true) {
