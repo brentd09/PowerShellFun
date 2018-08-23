@@ -10,7 +10,8 @@
    1. Seek to win with this turn
    2. Block opponent with this turn
    3. Build a line with this turn
-   4. Randomly select a blank position (With a little intelligence avoiding double win lines by opponent)
+   4. Block future attacks by going to the centre
+   5. Randomly select a blank position (With a little intelligence avoiding double win lines by opponent)
 .EXAMPLE
    Play-TTT 
 
