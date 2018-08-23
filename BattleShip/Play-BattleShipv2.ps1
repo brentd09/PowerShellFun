@@ -80,8 +80,8 @@ function Display-Grid {
   $KeyColor = "Cyan"
 
     Write-Host -ForegroundColor Yellow 'KEY:' 
-    Write-Host -ForegroundColor Cyan 'SHIPS: '' A - Aircraft Carrier, B - Battleship, C - Cruiser, D - Destroyer, S - Submarine'
-    Write-Host -ForegroundColor Cyan 'ATTACKS : M - Missed, H - HIT  '
+    Write-Host -ForegroundColor $KeyColor 'SHIPS: '' A - Aircraft Carrier, B - Battleship, C - Cruiser, D - Destroyer, S - Submarine'
+    Write-Host -ForegroundColor $KeyColor 'ATTACKS : M - Missed, H - HIT  '
   }
   Write-Host
   $CoordsColor = "Yellow"  
