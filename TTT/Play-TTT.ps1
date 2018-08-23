@@ -103,9 +103,9 @@ function Pick-Location {
   )
   if ($WhichTurn -eq "X") {$Color = "Red"}
   else {$Color = "White"}
-  if ($Pos -in 0..8) {
-    $arrayLoc = $Pos
-  }
+  $NumberOfBlanks = ($Board | Where-Object {$_ -eq ' '} | Measure-Object).Count
+  if ($NumberOfBlanks -eq 1 -and $WhichTurn -eq "X") {$arrayLoc = $Board.indexof(' '); Start-Sleep -Seconds 1 }
+  elseif ($Pos -in 0..8) {$arrayLoc = $Pos}
   else {
     do {
       Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play "
