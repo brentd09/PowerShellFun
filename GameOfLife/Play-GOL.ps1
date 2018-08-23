@@ -18,8 +18,8 @@
 #>
 [CmdletBinding()]
 Param (
-  [int]$GridSize = 10,
-  [switch]$RandomLifeEvents 
+  [int]$GridSize = 20,
+  [switch]$RandomLifeEvents
 )
 
 function New-GridObject {
@@ -152,7 +152,13 @@ function Next-LifeCycle {
 [string[]]$GridArray = @()
 $LastGridPos = ($GridSize * $GridSize) - 1
 $GridObj = New-GridObject -GridSize $GridSize -LastGridPos $LastGridPos
-$StartArray = @(11,31,42,43,44,45,35,25,14,47,53,52,51,66,67,88,87,88)
+#$StartArray = @(11,31,42,43,44,45,35,25,14,47,53,52,51,66,67,88,87,88)
+$StartArray =@()
+1..($GridSize*$GridSize/5) | ForEach-Object {
+  $RandomNum = Get-Random -Maximum ($GridSize*$GridSize) -Minimum 1
+  $StartArray += $RandomNum
+}
+$StartArray = $StartArray | Select-Object -Unique
 foreach ($startPos in $StartArray) {$GridObj[$startPos].Value = '@'}
 $StartCount = ($StartArray | Measure-Object).Count
 Clear-Host
