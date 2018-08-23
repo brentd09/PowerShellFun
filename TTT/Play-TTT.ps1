@@ -238,6 +238,10 @@ function Get-BestOPos {
   if ($Offence -eq $true) {$ThreatPos = $OffencePos | Select-Object -Unique | Get-Random}
   if ($Offence -eq $false -and $Threat -eq $false -and $Build -eq $true) {
     if ($BuildPos -contains 4) {$ThreatPos = 4}
+    elseif ($BlankPos.count -eq 7 -and (($Board[0] -eq "X" -and $board[8] -eq "O" ) -or ($Board[8] -eq "X" -and $board[0] -eq "O" ) -or 
+           ($Board[2] -eq "X" -and $board[6] -eq "O" ) -or ($Board[6] -eq "X" -and $board[2] -eq "O" ))) {$ThreatPos = 4}
+    elseif ($BlankPos.count -eq 7 -and (($Board[1] -eq "X" -and $board[7] -eq "O" ) -or ($Board[7] -eq "X" -and $board[1] -eq "O" ) -or 
+           ($Board[3] -eq "X" -and $board[5] -eq "O" ) -or ($Board[5] -eq "X" -and $board[3] -eq "O" ))){$ThreatPos = 4}
     elseif ($BlankPos.count -eq 6 -and ($Board[0] -eq "X" -and $Board[8] -eq "X") -or ($Board[2] -eq "X" -and $Board[6] -eq "X" )) {
       $ThreatPos = @(1,3,5,7) | get-random
     }
