@@ -19,8 +19,8 @@
    Play-TTT  -People
 
    This launches the TTT game as a person opponent
-.Parameter People
-   People is a switch parameter that tells the game 
+.Parameter Person
+   Person is a switch parameter that tells the game 
    a real person should be the opponent.
 .Notes
    Created
@@ -29,7 +29,7 @@
 #>
 [CmdLetBinding()]
 Param (
-  [switch]$People 
+  [switch]$Person 
 )
 
 function Draw-Board {
@@ -277,7 +277,7 @@ do {
   Draw-Board -Board $MainBoard.psobject.Copy() -Border $Border
   $Turn = @("X","O") | Get-Random
   do {
-    if ($People -eq $false -and $Turn -eq 'O') {
+    if ($Person -eq $false -and $Turn -eq 'O') {
       $RowColDiag = Get-RowColDiag -Board $MainBoard
       $Move = Get-BestOPos -Board $MainBoard -RCD $RowColDiag
       if ($Move.Threat -eq $true) {
