@@ -63,7 +63,7 @@ function Check-WhoWon {
     else {$WhoWon = "noone"}
   }
   if ($DealerInfo.busted -eq $false -and $PlayerInfo.busted -eq $false) {
-    if ($DealerInfo.score  -eq $PlayerInfo.score) {$WhoWon = "noone"}
+    if ($DealerInfo.score  -eq $PlayerInfo.score) {$WhoWon = "No One"}
     elseif ($DealerInfo.score -gt $PlayerInfo.score) {$WhoWon = "Dealer"}
     elseif ($PlayerInfo.score -gt $DealerInfo.score) {$WhoWon = "Player"} 
   }
@@ -95,7 +95,7 @@ do {
   Clear-Host
   if ($PlayersTurn) {$Title = "Players "}
   elseif ($DealersTurn) {$Title = "Dealers "}
-  Write-Host -ForegroundColor black -BackgroundColor DarkYellow "$Title Turn"
+  Write-Host -ForegroundColor black -BackgroundColor Red "$Title Turn"
   Write-Host ''
   # Display the Dealers Hand
   Write-Host -ForegroundColor Yellow  "Dealer Hand"
@@ -115,7 +115,7 @@ do {
   }
   else {Write-Host -ForegroundColor Cyan "Waiting For Player"}
   # Display the Players Hand
-  Write-Host -ForegroundColor Yellow  "Player Hand"
+  Write-Host -ForegroundColor Green  "`nPlayer Hand"
   $PlayerStatus = Check-HandScore -EntireHand $InitShuffle[$PlayerHand] 
   foreach ($PlayerCard in $PlayerHand) {
     Display-Card -DeckShuffled $InitShuffle -WhichCard $PlayerCard
@@ -160,4 +160,8 @@ do {
 } until ($DealersTurn -eq $false -and $PlayersTurn -eq $false)
 # Determine the winner, if there is one
 $Winner = Check-WhoWon -DealerInfo $DealerStatus -PlayerInfo $PlayerStatus
-Write-Host -BackgroundColor Yellow -ForegroundColor black "Winner is: $Winner"
+Write-Host -NoNewline  "Winner is:"
+if ($Winner -eq 'Player') {$WinColor = 'Green'}
+if ($Winner -eq 'Dealer') {$WinColor = 'Yellow'}
+
+write-host -foregroundcolor $WinColor "$Winner"
