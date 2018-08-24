@@ -111,7 +111,8 @@ function Pick-Location {
       Write-Host -ForegroundColor Yellow -NoNewline "Choose location to play "
       Write-Host -ForegroundColor $Color -NoNewline $WhichTurn
       Write-Host -ForegroundColor Yellow -NoNewline ": "
-      $Location = Read-Host 
+      if ($Host.Name -eq 'ConsoleHost') {$Location = ($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')).Character -as [string]} 
+      else {$Location = (Read-Host).Substring(0,1)}
       $arrayLoc = $Location - 1
     } until (1..9 -contains $Location -and $Board[$arrayLoc] -eq " ") 
   }
