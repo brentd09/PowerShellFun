@@ -1,3 +1,10 @@
+[CmdletBinding()]
+Param (
+  $IPAddress,
+  [int]$Port,
+  [switch]$Primary
+)
+
 function receive-UDP {
   Param (
     $port = 20000
@@ -16,6 +23,10 @@ function receive-UDP {
   $DataTransferred | ConvertFrom-Json
 }
 function Send-UDP {
+  Param (
+    [int] $Port , 
+    $IP  
+  )
     [string[]]$board = '---------'
   $hashtable = @{
     Master = 'X'
@@ -25,10 +36,6 @@ function Send-UDP {
   $BoardObj = New-Object -TypeName psobject -Property $hashtable
   $SerializeBoard = $BoardObj | ConvertTo-Json
   
-  # Define port and target IP address 
-  # Random here! 
-  [int] $Port = 20000 
-  $IP = "127.0.0.1" 
   $Address = [system.net.IPAddress]::Parse($IP) 
   
   # Create IP Endpoint 
@@ -51,4 +58,14 @@ function Send-UDP {
   
   # Send the buffer 
   $Sent   = $Sock.Send($Buffer)
+}
+
+### Main Code ###
+#################
+
+If ($Primary -eq $true) {
+  
+}
+else {
+
 }
