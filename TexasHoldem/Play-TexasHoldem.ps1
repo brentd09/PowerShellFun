@@ -13,7 +13,10 @@
     Created on: 31-Aug-2018
 #>
 [CmdletBinding()]
-Param ()
+Param (
+  [parameter(Mandatory=$true)]
+  [int]$NumberOfPlayers
+)
 
 Class PlayingCard {
   # NOTE: the original order will be (Clubs, Diamonds, Hearts, Spades) going on the Alphabetic sort that seems standard
@@ -54,14 +57,6 @@ Class PlayingCard {
   } # Playingcard constructor
 } # Class PlayingCard
 
-function New-Card {
-  Param (
-    $Index
-  )
-  [PlayingCard]::New($Index)
-} # function New Card
-
-
 ### Main Code ###
 #################
 
@@ -74,8 +69,20 @@ and card color... So all we have to do is call the New() method to create a new
 object using this class and constructor
 #>
 
+function New-Card {
+  Param (
+    $Index
+  )
+  [PlayingCard]::New($Index)
+} # function New Card
+
 [PlayingCard[]]$Deck = @()
 foreach ($CardSpot in (0..51)) {
   $deck += New-Card -Index $CardSpot
 }
-$deck | Format-Table -AutoSize
+# Sorts in a random order or in other words, shuffles the objects
+$ShuffleDeck = $Deck | Sort-Object {Get-Random}
+$ShuffleDeck | Format-Table -AutoSize
+foreach ($Player in (0..($NumberOfPlayers - 1))) {
+  
+}
