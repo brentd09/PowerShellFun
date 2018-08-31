@@ -28,7 +28,7 @@
 .NOTES
   General notes
   Created By: Brent Denny
-  Created On: 30-Aug-@018
+  Created On: 30-Aug-2018
 #>
 [CmdletBinding()]
 Param (
