@@ -26,10 +26,11 @@ Class PlayingCard {
   [string]$CardFace
   [string]$CardSuitName
   [string]$CardSuitColor
-  
+  [string]$CardSuitIcon
   #Class Constructor: This is the code that runs every time the script creates a new PlayingCard object
   PlayingCard ([int]$CardIndex) {
     [string[]]$SuitNames = @('Clubs','Diamonds','Hearts','Spades')
+    [int[]]$SuitIconChar = @(9827,9830,9829,9824)
     [string[]]$SuitColors = @('Black','Red','Red','Black')
     [int]$SuitIndex = [math]::Truncate($CardIndex/13)
     [int]$Value = ($CardIndex % 13) + 1
@@ -53,7 +54,7 @@ Class PlayingCard {
     }
     $this.CardSuitName = $SuitNames[$SuitIndex]
     $this.CardSuitColor = $SuitColors[$SuitIndex]
-
+    $this.CardSuitIcon = [char]($SuitIconChar[$SuitIndex])
   } # Playingcard constructor
 } # Class PlayingCard
 
