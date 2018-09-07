@@ -46,6 +46,7 @@ Param ($BoardPlacements)
 
   $color = 'darkgray'
   $lcol  = 'darkgray'
+  $blkcolor = 'darkgreen'
   $Pos = @("$br","$bn","$bb","$bq","$bk","$bb","$bn","$br",
            "$bp","$bp","$bp","$bp","$bp","$bp","$bp","$bp",
            " "," "," "," "," "," "," "," ",
@@ -62,40 +63,40 @@ Param ($BoardPlacements)
   write-host -ForegroundColor $lCol $gtr$tlc$hb$hb$hb$hb$tt$hb$hb$hb$hb$tt$hb$hb$hb$hb$tt$hb$hb$hb$hb$tt$hb$hb$hb$hb$tt$hb$hb$hb$hb$tt$hb$hb$hb$hb$tt$hb$hb$hb$hb$trc
   write-host -NoNewline '8 '
   Write-Host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -BackgroundColor $color -NoNewline " $($Pos[0])  "
+  write-host -BackgroundColor $color -ForegroundColor $blkcolor -NoNewline " $($Pos[0])  "
   Write-Host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[1])  "
+  write-host -NoNewline -ForegroundColor $blkcolor " $($Pos[1])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline -BackgroundColor $color " $($Pos[2])  "
+  write-host -NoNewline -ForegroundColor $blkcolor -BackgroundColor $color " $($Pos[2])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[3])  "
+  write-host -NoNewline -ForegroundColor $blkcolor " $($Pos[3])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline -BackgroundColor $color " $($Pos[4])  "
+  write-host -NoNewline -ForegroundColor $blkcolor -BackgroundColor $color " $($Pos[4])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[5])  "
+  write-host -NoNewline -ForegroundColor $blkcolor " $($Pos[5])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline -BackgroundColor $color " $($Pos[6])  "
+  write-host -NoNewline -ForegroundColor $blkcolor -BackgroundColor $color " $($Pos[6])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[7])  "
+  write-host -NoNewline -ForegroundColor $blkcolor " $($Pos[7])  "
   write-host -ForegroundColor $lcol "$vb"
   write-host -ForegroundColor $lcol $gtr$lt$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$rt
   write-host -NoNewline '7 '
   Write-Host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[8])  "
+  write-host -NoNewline -ForegroundColor $blkcolor " $($Pos[8])  "
   Write-Host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -BackgroundColor $color -NoNewline " $($Pos[9])  "
+  write-host -BackgroundColor $color -ForegroundColor $blkcolor -NoNewline " $($Pos[9])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[10])  "
+  write-host -NoNewline -ForegroundColor $blkcolor " $($Pos[10])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -BackgroundColor $color -NoNewline " $($Pos[11])  "
+  write-host -BackgroundColor $color -ForegroundColor $blkcolor -NoNewline " $($Pos[11])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[12])  "
+  write-host -NoNewline -ForegroundColor $blkcolor " $($Pos[12])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -BackgroundColor $color -NoNewline " $($Pos[13])  "
+  write-host -ForegroundColor $blkcolor -BackgroundColor $color -NoNewline " $($Pos[13])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -NoNewline " $($Pos[14])  "
+  write-host -ForegroundColor $blkcolor -NoNewline " $($Pos[14])  "
   write-host -NoNewline -ForegroundColor $lcol "$vb"
-  write-host -BackgroundColor $color -NoNewline " $($Pos[15])  "
+  write-host -ForegroundColor $blkcolor -BackgroundColor $color -NoNewline " $($Pos[15])  "
   write-host -ForegroundColor $lcol "$vb"
   write-host -ForegroundColor $lcol $gtr$lt$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$mc$hb$hb$hb$hb$rt
   write-host -NoNewline '6 '
