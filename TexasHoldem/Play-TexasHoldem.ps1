@@ -58,6 +58,18 @@ Class PlayingCard {
   } # Playingcard constructor
 } # Class PlayingCard
 
+
+Class Player {
+  [int]$PlayerNumber
+  [int]$Kitty
+  [playingcard[]]$CardsInHand
+
+  Player ([int]$Number,[playingcard]$Card) {
+    $this.PlayerNumber = $Number
+    $this.CardsInHand = $Card
+    $this.Kitty = 1000
+  }
+}
 ### Main Code ###
 #################
 
@@ -77,13 +89,24 @@ function New-Card {
   [PlayingCard]::New($Index)
 } # function New Card
 
+function New-Player {
+  Param ([int]$PlayerNumber,[PlayingCard]$Card)
+  [Player]::New($PlayerNumber,$Card)
+}
+
 [PlayingCard[]]$Deck = @()
+[Player[]]$Players = @()
+
 foreach ($CardSpot in (0..51)) {
   $deck += New-Card -Index $CardSpot
 }
 # Sorts in a random order or in other words, shuffles the objects
 $ShuffleDeck = $Deck | Sort-Object {Get-Random}
 $ShuffleDeck | Format-Table -AutoSize
-foreach ($Player in (0..($NumberOfPlayers - 1))) {
-  
+foreach ($PlayerNum in (0..($NumberOfPlayers - 1))) {
+  $CurrentPlayer += New-Player -PlayerNumber $PlayerNum -Card $Deck[$PlayerNum]
+  $SecCardPos = $PlayerNum+$NumberOfPlayers
+  $CurrentPlayer.CardsInHand += $Deck[$SecCardPos]
+  $Players += $CurrentPlayer
 }
+$Players
