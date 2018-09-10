@@ -64,7 +64,7 @@ Class Player {
   [int]$Kitty
   [playingcard[]]$CardsInHand
 
-  Player ([int]$Number,[playingcard]$Card) {
+  Player ([int]$Number,[playingcard[]]$Card) {
     $this.PlayerNumber = $Number
     $this.CardsInHand = $Card
     $this.Kitty = 1000
@@ -90,23 +90,35 @@ function New-Card {
 } # function New Card
 
 function New-Player {
-  Param ([int]$PlayerNumber,[PlayingCard]$Card)
+  Param ([int]$PlayerNumber,[PlayingCard[]]$Card)
   [Player]::New($PlayerNumber,$Card)
 }
 
 [PlayingCard[]]$Deck = @()
-[Player[]]$Players.Clear()
+[Player[]]$Players=@()
 
 foreach ($CardSpot in (0..51)) {
   $deck += New-Card -Index $CardSpot
 }
 # Sorts in a random order or in other words, shuffles the objects
 $ShuffleDeck = $Deck | Sort-Object {Get-Random}
-$ShuffleDeck | Format-Table -AutoSize
-foreach ($PlayerNum in (0..($NumberOfPlayers - 1))) {
-  $CurrentPlayer += New-Player -PlayerNumber $PlayerNum -Card $Deck[$PlayerNum]
-  $SecCardPos = $PlayerNum+$NumberOfPlayers
-  $CurrentPlayer.CardsInHand += $Deck[$SecCardPos]
-  $Players += $CurrentPlayer
+$NumberOfPlayersIndex = $NumberOfPlayers - 1
+foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
+  $Players += New-Player -PlayerNumber $PlayerNum -Card @($ShuffleDeck[$PlayerNum],$ShuffleDeck[$PlayerNum+$NumberOfPlayers] )
 }
-$Players
+$DeadCard = ($NumberOfPlayers * 2 )
+[PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3]
+[PlayingCard]$Turn = $ShuffleDeck[$DeadCard+4]
+[PlayingCard]$River = $ShuffleDeck[$DeadCard+5]
+write-host "Players"
+foreach ($Player in $Players) {
+  Write-Host "Player $($Player.PlayerNumber)"
+  $Player.CardsInHand | Format-Table -Property CardFace,CardSuitIcon
+}
+Write-Host "The Flop"
+$Flop | Format-Table -Property CardFace,CardSuitIcon
+Write-Host "The Turn"
+$Turn | Format-Table -Property CardFace,CardSuitIcon
+Write-Host "The River"
+$River | Format-Table -Property CardFace,CardSuitIcon
+
