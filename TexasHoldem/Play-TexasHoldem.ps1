@@ -95,7 +95,7 @@ function New-Player {
 }
 
 [PlayingCard[]]$Deck = @()
-[Player[]]$Players = @()
+[Player[]]$Players.Clear()
 
 foreach ($CardSpot in (0..51)) {
   $deck += New-Card -Index $CardSpot
