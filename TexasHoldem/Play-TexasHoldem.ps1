@@ -70,8 +70,6 @@ Class Player {
     $this.Kitty = 1000
   }
 }
-### Main Code ###
-#################
 
 <#
 Classes allow the main code to be much smaller and more effiecient as a lot of
@@ -81,6 +79,10 @@ takes an index value and from that derives the card face, card suit, card value
 and card color... So all we have to do is call the New() method to create a new
 object using this class and constructor
 #>
+
+
+
+#@@@ Functions @@@#
 
 function New-Card {
   Param (
@@ -93,6 +95,9 @@ function New-Player {
   Param ([int]$PlayerNumber,[PlayingCard[]]$Card)
   [Player]::New($PlayerNumber,$Card)
 }
+
+
+#@@@ Main Code @@@#
 
 [PlayingCard[]]$Deck = @()
 [Player[]]$Players=@()
@@ -107,18 +112,14 @@ foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
   $Players += New-Player -PlayerNumber $PlayerNum -Card @($ShuffleDeck[$PlayerNum],$ShuffleDeck[$PlayerNum+$NumberOfPlayers] )
 }
 $DeadCard = ($NumberOfPlayers * 2 )
-[PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3]
-[PlayingCard]$Turn = $ShuffleDeck[$DeadCard+4]
-[PlayingCard]$River = $ShuffleDeck[$DeadCard+5]
+[PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+4],$ShuffleDeck[$DeadCard+5]
 write-host "Players"
-foreach ($Player in $Players) {
-  Write-Host "Player $($Player.PlayerNumber)"
-  $Player.CardsInHand | Format-Table -Property CardFace,CardSuitIcon
+$Hands = foreach ($Player in $Players) {
+  $Player | Select-Object -Property PlayerNumber,
+                                    @{n='Card1';e={$_.CardsInHand[0].CardFace+$_.CardsInHand[0].CardSuitIcon}},
+                                    @{n='Card2';e={$_.CardsInHand[1].CardFace+$_.CardsInHand[1].CardSuitIcon}}
 }
-Write-Host "The Flop"
-$Flop | Format-Table -Property CardFace,CardSuitIcon
-Write-Host "The Turn"
-$Turn | Format-Table -Property CardFace,CardSuitIcon
-Write-Host "The River"
-$River | Format-Table -Property CardFace,CardSuitIcon
-
+$Hands 
+Start-Sleep -Seconds 1
+Write-Host "The Flop, Turn and River"
+$Flop
