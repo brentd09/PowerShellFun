@@ -82,23 +82,23 @@ object using this class and constructor
 
 
 
-#@@@ Functions @@@#
+# Functions #
 
 function New-Card {
   Param (
     $Index
   )
   [PlayingCard]::New($Index)
-} # function New Card
+} # fn New Card
 
 function New-Player {
   Param ([int]$PlayerNumber,[PlayingCard[]]$Card)
   [Player]::New($PlayerNumber,$Card)
-}
+} #fn New Player
 
 
-#@@@ Main Code @@@#
-
+# Main Code #
+Clear-Host
 [PlayingCard[]]$Deck = @()
 [Player[]]$Players=@()
 
@@ -113,13 +113,25 @@ foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
 }
 $DeadCard = ($NumberOfPlayers * 2 )
 [PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+4],$ShuffleDeck[$DeadCard+5]
-write-host "Players"
-$Hands = foreach ($Player in $Players) {
-  $Player | Select-Object -Property PlayerNumber,
-                                    @{n='Card1';e={$_.CardsInHand[0].CardFace+$_.CardsInHand[0].CardSuitIcon}},
-                                    @{n='Card2';e={$_.CardsInHand[1].CardFace+$_.CardsInHand[1].CardSuitIcon}}
+foreach ($EachPlayer in $Players) {
+  Write-Host -ForegroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
+  foreach ($Card in $EachPlayer.CardsInHand) {
+    if ($Card.CardValue -eq 10) {$Spc = ''}
+    else {$Spc = ' '}
+    Write-Host -NoNewline '  '
+    Write-Host -BackgroundColor White -ForegroundColor $Card.CardSuitColor "$Spc$($Card.CardFace)$($Card.CardSuitIcon)"
+  }
+  Write-Host
 }
-$Hands 
-Start-Sleep -Seconds 1
-Write-Host "The Flop, Turn and River"
-$Flop
+Write-Host "The Flop"
+$count = 0
+foreach ($FCard in $Flop) {
+  $count++
+  if ($FCard.CardValue -eq 10) {$Spc = ''}
+  else {$Spc = ' '}
+  if ($count -eq 4) {Write-Host "The Turn"}
+  if ($count -eq 5) {Write-Host "The River"}
+  Write-Host -NoNewline '  '
+  Write-Host -BackgroundColor White -ForegroundColor $FCard.CardSuitColor "$Spc$($FCard.CardFace)$($FCard.CardSuitIcon)"
+  if ($count -ge 3) {start-sleep -Seconds 3}
+}
