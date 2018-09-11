@@ -112,7 +112,7 @@ foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
   $Players += New-Player -PlayerNumber $PlayerNum -Card @($ShuffleDeck[$PlayerNum],$ShuffleDeck[$PlayerNum+$NumberOfPlayers] )
 }
 $DeadCard = ($NumberOfPlayers * 2 )
-[PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+4],$ShuffleDeck[$DeadCard+5]
+[PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+5],$ShuffleDeck[$DeadCard+7]
 foreach ($EachPlayer in $Players) {
   Write-Host -ForegroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
   foreach ($Card in $EachPlayer.CardsInHand) {
@@ -123,15 +123,30 @@ foreach ($EachPlayer in $Players) {
   }
   Write-Host
 }
-Write-Host "The Flop"
+Write-Host -BackgroundColor Red -ForegroundColor White "The Flop"
 $count = 0
 foreach ($FCard in $Flop) {
   $count++
   if ($FCard.CardValue -eq 10) {$Spc = ''}
   else {$Spc = ' '}
-  if ($count -eq 4) {Write-Host "The Turn"}
-  if ($count -eq 5) {Write-Host "The River"}
+  if ($count -eq 4) {Write-Host -BackgroundColor Red -ForegroundColor White "The Turn"}
+  if ($count -eq 5) {Write-Host -BackgroundColor Red -ForegroundColor White "The River"}
   Write-Host -NoNewline '  '
   Write-Host -BackgroundColor White -ForegroundColor $FCard.CardSuitColor "$Spc$($FCard.CardFace)$($FCard.CardSuitIcon)"
   if ($count -ge 3) {start-sleep -Seconds 3}
 }
+
+<#
+Poker Hands in order
+--------------------
+Royal Flush
+Straight Flush
+Four of a Kind
+Full House
+Flush
+Straight
+Three of a Kind
+Two Pairs
+Single Pair
+High Card
+#>
