@@ -63,11 +63,15 @@ Class Player {
   [int]$PlayerNumber
   [int]$Kitty
   [playingcard[]]$CardsInHand
+  [string]$Result
+  [string]$Reason
 
   Player ([int]$Number,[playingcard[]]$Card) {
     $this.PlayerNumber = $Number
     $this.CardsInHand = $Card
     $this.Kitty = 1000
+    $this.Result = ''
+    $this.Reason = ''
   }
 }
 
@@ -98,7 +102,7 @@ function New-Player {
 
 
 # Main Code #
-Clear-Host
+
 [PlayingCard[]]$Deck = @()
 [Player[]]$Players=@()
 
@@ -112,9 +116,13 @@ foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
   $Players += New-Player -PlayerNumber $PlayerNum -Card @($ShuffleDeck[$PlayerNum],$ShuffleDeck[$PlayerNum+$NumberOfPlayers] )
 }
 $DeadCard = ($NumberOfPlayers * 2 )
-[PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+5],$ShuffleDeck[$DeadCard+7]
+[PlayingCard[]]$CommunityCards = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+5],$ShuffleDeck[$DeadCard+7]
+
+Clear-Host
 foreach ($EachPlayer in $Players) {
-  Write-Host -ForegroundColor Black -BackgroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
+  Write-Host -NoNewline -ForegroundColor Black -BackgroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
+  if ($EachPlayer.Result -ne '') {Write-Host -ForegroundColor Yellow "  $($EachPlayer.Result)  $($EachPlayer.Reason)"}
+  else {Write-Host}
   foreach ($Card in $EachPlayer.CardsInHand) {
     if ($Card.CardValue -eq 10) {$Spc = ''}
     else {$Spc = ' '}
@@ -123,16 +131,16 @@ foreach ($EachPlayer in $Players) {
   }
   Write-Host
 }
-Write-Host -BackgroundColor Red -ForegroundColor White "The Flop"
+Write-Host -BackgroundColor Red -ForegroundColor White "The CommunityCards"
 $count = 0
-foreach ($FCard in $Flop) {
+foreach ($CommCard in $CommunityCards) {
   $count++
-  if ($FCard.CardValue -eq 10) {$Spc = ''}
+  if ($CommCard.CardValue -eq 10) {$Spc = ''}
   else {$Spc = ' '}
   if ($count -eq 4) {Write-Host -BackgroundColor Red -ForegroundColor White "The Turn"}
   if ($count -eq 5) {Write-Host -BackgroundColor Red -ForegroundColor White "The River"}
   Write-Host -NoNewline '  '
-  Write-Host -BackgroundColor White -ForegroundColor $FCard.CardSuitColor "$Spc$($FCard.CardFace)$($FCard.CardSuitIcon)"
+  Write-Host -BackgroundColor White -ForegroundColor $CommCard.CardSuitColor "$Spc$($CommCard.CardFace)$($CommCard.CardSuitIcon)"
   if ($count -ge 3) {start-sleep -Seconds 3}
 }
 
