@@ -114,7 +114,7 @@ foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
 $DeadCard = ($NumberOfPlayers * 2 )
 [PlayingCard[]]$Flop = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+5],$ShuffleDeck[$DeadCard+7]
 foreach ($EachPlayer in $Players) {
-  Write-Host -ForegroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
+  Write-Host -ForegroundColor Black -BackgroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
   foreach ($Card in $EachPlayer.CardsInHand) {
     if ($Card.CardValue -eq 10) {$Spc = ''}
     else {$Spc = ' '}
