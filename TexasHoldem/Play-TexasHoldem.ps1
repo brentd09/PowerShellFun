@@ -88,6 +88,30 @@ object using this class and constructor
 
 # Functions #
 
+function Check-PokerHand {
+  Param (
+    [parameter(Mandatory=$true)]
+    [PlayingCard[]]$PokerHand
+  )
+
+  # check for straight
+  [int[]]$Found = @()
+  foreach ($EndVal in (13..5)) {
+    if ($EndVal -eq 13 -and $PokerHand.Value -contains 1) {
+      $Range = 1,10,11,12,13
+      $Found = $Range | Where-Object {$_ -in ($PokerHand.Value | Select-Object -Unique | Sort-Object)}
+    }
+    if ($Found.count -ne 5) {
+      $Range = ($EndVal-4)..$EndVal
+      $Found = $Range | Where-Object {$_ -in ($PokerHand.Value | Select-Object -Unique | Sort-Object)}
+    }
+    else {
+      $Range
+      break
+    }
+  }
+}
+
 function New-Card {
   Param (
     $Index
