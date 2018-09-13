@@ -169,6 +169,11 @@ foreach ($CommCard in $CommunityCards) {
 }
 
 <#
+ $Players[0].CardsInHand + $CommunityCards this
+#>
+
+
+<#
 Poker Hands in order
 --------------------
 Royal Flush
