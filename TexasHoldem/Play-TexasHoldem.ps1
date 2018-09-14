@@ -87,13 +87,11 @@ object using this class and constructor
 
 
 # Functions #
-
 function Check-PokerHand {
   Param (
     [parameter(Mandatory=$true)]
     [PlayingCard[]]$PokerHand
   )
-
   # check for straight
   [int[]]$Found = @()
   foreach ($EndVal in (13..5)) {
@@ -111,30 +109,60 @@ function Check-PokerHand {
     }
   }
 }
-
 function New-Card {
   Param (
     $Index
   )
   [PlayingCard]::New($Index)
 } # fn New Card
-
 function New-Player {
   Param ([int]$PlayerNumber,[PlayingCard[]]$Card)
   [Player]::New($PlayerNumber,$Card)
 } #fn New Player
-
-
-# Main Code #
-
-[PlayingCard[]]$Deck = @()
-[Player[]]$Players=@()
-
-foreach ($CardSpot in (0..51)) {
-  $deck += New-Card -Index $CardSpot
+function Show-PlayersHands {
+  Param (
+    [Player[]]$PlayersHands
+  )
+  foreach ($EachPlayer in $PlayersHands) {
+    Write-Host -NoNewline -ForegroundColor Black -BackgroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
+    if ($EachPlayer.Result -ne '') {Write-Host -ForegroundColor Yellow "  $($EachPlayer.Result)  $($EachPlayer.Reason)"}
+    else {Write-Host}
+    foreach ($Card in $EachPlayer.CardsInHand) {
+      if ($Card.CardValue -eq 10) {$Spc = ''}
+      else {$Spc = ' '}
+      Write-Host -NoNewline '  '
+      Write-Host -BackgroundColor White -ForegroundColor $Card.CardSuitColor "$Spc$($Card.CardFace)$($Card.CardSuitIcon)"
+    }
+    Write-Host
+  }
 }
-# Sorts in a random order or in other words, shuffles the objects
-$ShuffleDeck = $Deck | Sort-Object {Get-Random}
+function Show-CommunityCards {
+  Param (
+    [int]$EndIndex,
+    [PlayingCard[]]$CommCards
+  )
+  Write-Host -BackgroundColor Red -ForegroundColor White "The CommunityCards"
+  foreach ($CommCardPos in (0..$EndIndex)) {
+    if ($CommCards[$CommCardPos].CardValue -eq 10) {$Spc = ''}
+    else {$Spc = ' '}
+    if ($CommCardPos -eq 3) {Write-Host -BackgroundColor Red -ForegroundColor White "The Turn"}
+    if ($CommCardPos -eq 4) {Write-Host -BackgroundColor Red -ForegroundColor White "The River"}
+    Write-Host -NoNewline '  '
+    Write-Host -BackgroundColor White -ForegroundColor $CommCards[$CommCardPos].CardSuitColor "$Spc$($CommCards[$CommCardPos].CardFace)$($CommCards[$CommCardPos].CardSuitIcon)"
+  }
+}
+function Get-ShuffledDeck {
+  [PlayingCard[]]$Deck = @()
+  foreach ($CardSpot in (0..51)) {
+    $deck += New-Card -Index $CardSpot
+  }
+  # Sorts in a random order or in other words, shuffles the objects
+  $Deck | Sort-Object {Get-Random}
+}
+
+# # # # # Main Code # # # # # #
+[Player[]]$Players=@()
+[PlayingCard[]]$ShuffleDeck = Get-ShuffledDeck
 $NumberOfPlayersIndex = $NumberOfPlayers - 1
 foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
   $Players += New-Player -PlayerNumber $PlayerNum -Card @($ShuffleDeck[$PlayerNum],$ShuffleDeck[$PlayerNum+$NumberOfPlayers] )
@@ -142,38 +170,14 @@ foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
 $DeadCard = ($NumberOfPlayers * 2 )
 [PlayingCard[]]$CommunityCards = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+5],$ShuffleDeck[$DeadCard+7]
 
-Clear-Host
-foreach ($EachPlayer in $Players) {
-  Write-Host -NoNewline -ForegroundColor Black -BackgroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
-  if ($EachPlayer.Result -ne '') {Write-Host -ForegroundColor Yellow "  $($EachPlayer.Result)  $($EachPlayer.Reason)"}
-  else {Write-Host}
-  foreach ($Card in $EachPlayer.CardsInHand) {
-    if ($Card.CardValue -eq 10) {$Spc = ''}
-    else {$Spc = ' '}
-    Write-Host -NoNewline '  '
-    Write-Host -BackgroundColor White -ForegroundColor $Card.CardSuitColor "$Spc$($Card.CardFace)$($Card.CardSuitIcon)"
-  }
-  Write-Host
+foreach ($WhatToDisplay in (2,3,4)) {
+  Clear-Host
+  Show-PlayersHands -PlayersHands $Players
+  Show-CommunityCards -EndIndex $WhatToDisplay -CommCards $CommunityCards
 }
-Write-Host -BackgroundColor Red -ForegroundColor White "The CommunityCards"
-$count = 0
-foreach ($CommCard in $CommunityCards) {
-  $count++
-  if ($CommCard.CardValue -eq 10) {$Spc = ''}
-  else {$Spc = ' '}
-  if ($count -eq 4) {Write-Host -BackgroundColor Red -ForegroundColor White "The Turn"}
-  if ($count -eq 5) {Write-Host -BackgroundColor Red -ForegroundColor White "The River"}
-  Write-Host -NoNewline '  '
-  Write-Host -BackgroundColor White -ForegroundColor $CommCard.CardSuitColor "$Spc$($CommCard.CardFace)$($CommCard.CardSuitIcon)"
-  if ($count -ge 3) {start-sleep -Seconds 3}
-}
-
 <#
- $Players[0].CardsInHand + $CommunityCards this
-#>
+ $Players[0].CardsInHand + $CommunityCards (this combines the hole cards and community cards)
 
-
-<#
 Poker Hands in order
 --------------------
 Royal Flush
