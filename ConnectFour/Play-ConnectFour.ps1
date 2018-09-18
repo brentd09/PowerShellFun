@@ -77,7 +77,7 @@ function Get-FDiag {
   $StartPos = @(3,4,5,6,13,20)
   $CurrPos = $StartPos[$WhichDiag]
   $Number =@(4,5,6,6,5,4)
-  1..$Number[$WhichDiag] | foreach {
+  1..$Number[$WhichDiag] | ForEach-Object {
     $Diag += $fnFrame[$CurrPos]
     $CurrPos = $CurrPos + 6
   }
@@ -93,7 +93,7 @@ function Get-RDiag {
   $StartPos = @(14,7,0,1,2,3)
   $CurrPos = $StartPos[$WhichDiag]
   $Number =@(4,5,6,6,5,4)
-  1..$Number[$WhichDiag] | foreach {
+  1..$Number[$WhichDiag] | ForEach-Object {
     $Diag += $fnFrame[$CurrPos]
     $CurrPos = $CurrPos + 8
   }
@@ -118,7 +118,7 @@ function Draw-Frame {
       if ($fnFrame[$fnFramePos] -eq "R") {$FGcolor = 'Red'}
       elseif ($fnFrame[$fnFramePos] -eq "Y") {$FGcolor = 'Yellow'}
       else {$FGcolor = 'darkgray'}
-      if ($fnFrame[$fnFramePos] -match "[RY]" ) { $displayChar = "O"}
+      if ($fnFrame[$fnFramePos] -match "[RY]" ) { $displayChar = [char]9787}
       else {$displayChar = "-"}
       Write-Host -NoNewline -ForegroundColor $FGcolor $displayChar ; Write-Host -NoNewline " "
     }
