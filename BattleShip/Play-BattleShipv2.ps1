@@ -67,7 +67,7 @@ function Init-Board {
   }
 }
 
-function Display-Grid {  
+function Display-Grid {
   Param (
     $Grid,
     [String]$WhosBoard,
