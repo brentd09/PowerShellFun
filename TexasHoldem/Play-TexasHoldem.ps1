@@ -31,7 +31,7 @@ Class PlayingCard {
   PlayingCard ([int]$CardIndex) {
     [string[]]$SuitNames = @('Clubs','Diamonds','Hearts','Spades')
     [int[]]$SuitIconChar = @(9827,9830,9829,9824)
-    [string[]]$SuitColors = @('Black','Red','Red','Black')
+    [string[]]$SuitColors = @('Black','DarkRed','DarkRed','Black')
     [int]$SuitIndex = [math]::Truncate($CardIndex/13)
     [int]$Value = ($CardIndex % 13) + 1
     # Construct the object based on the card index 0..51
