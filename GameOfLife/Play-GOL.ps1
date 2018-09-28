@@ -44,7 +44,7 @@ function Show-Grid {
     $Grid,
     $Alive,
     $MaxAlive,
-    [int]$GettingSet
+    [int]$LifeCycles
   )
   $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 }
   $LiteralSize = (($GridSize - 1) * 3 ) + 1
@@ -63,13 +63,16 @@ function Show-Grid {
       Write-Host -NoNewline '  '
     }
   }
-  if ($GettingSet -lt 2) {
+  if ($LifeCycles -lt 2) {
     Write-Host "Maximum Alive: -----   "
+    Write-Host "Current Alive: -----   "
+    Write-Host "Life Cycle No: -----   "
   }
   else {
     Write-Host "Maximum Alive: $MaxAlive       "
-  }  
-  Write-Host "Current Alive: $Alive       "
+    Write-Host "Current Alive: $Alive       "
+    Write-Host "Life Cycle No: $($LifeCycles-1)       "
+  }
 }
 
 function Next-LifeCycle {
@@ -168,7 +171,7 @@ $StartArray = $StartArray | Select-Object -Unique
 foreach ($startPos in $StartArray) {$GridObj[$startPos].Value = '@'}
 $StartCount = ($StartArray | Measure-Object).Count
 Clear-Host
-Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj -Alive $StartCount -MaxAlive $StartCount -GettingSet $FirstRun
+Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj -Alive $StartCount -MaxAlive $StartCount -LifeCycles $FirstRun
 $MaxAlive = 0
 $Turns = 0
 do {
@@ -178,7 +181,7 @@ do {
   $CurrentLiveCount = ($CurrentLive | Measure-Object).Count
   $CurrentLivePosString = $CurrentLive.Pos -join ''
   if ($CurrentLiveCount -gt $MaxAlive -and $Turns -gt 1) {$MaxAlive = $CurrentLiveCount}
-  Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj -Alive $CurrentLiveCount -MaxAlive $MaxAlive -GettingSet $Turns
+  Show-Grid -GridSize $GridSize -LastGridPos $LastGridPos -Grid $GridObj -Alive $CurrentLiveCount -MaxAlive $MaxAlive -LifeCycles $Turns
   if ($PrevLive -eq $CurrentLivePosString) {
     $SameGrid++
   }
