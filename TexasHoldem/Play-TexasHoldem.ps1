@@ -168,7 +168,11 @@ foreach ($PlayerNum in (0..$NumberOfPlayersIndex)) {
   $Players += New-Player -PlayerNumber $PlayerNum -Card @($ShuffleDeck[$PlayerNum],$ShuffleDeck[$PlayerNum+$NumberOfPlayers] )
 }
 $DeadCard = ($NumberOfPlayers * 2 )
-[PlayingCard[]]$CommunityCards = $ShuffleDeck[$DeadCard+1],$ShuffleDeck[$DeadCard+2],$ShuffleDeck[$DeadCard+3],$ShuffleDeck[$DeadCard+5],$ShuffleDeck[$DeadCard+7]
+[PlayingCard[]]$CommunityCards = $ShuffleDeck[$DeadCard+1],
+                                 $ShuffleDeck[$DeadCard+2],
+                                 $ShuffleDeck[$DeadCard+3],
+                                 $ShuffleDeck[$DeadCard+5],
+                                 $ShuffleDeck[$DeadCard+7]
 
 foreach ($WhatToDisplay in (2,3,4)) {
   Clear-Host
