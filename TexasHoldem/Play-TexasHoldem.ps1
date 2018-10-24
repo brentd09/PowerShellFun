@@ -15,7 +15,7 @@
 [CmdletBinding()]
 Param (
   [parameter(Mandatory=$true)]
-  [int]$NumberOfPlayers
+  [int]$NumberOfPlayers 
 )
 
 Class PlayingCard {
@@ -123,9 +123,11 @@ function Show-PlayersHands {
   Param (
     [Player[]]$PlayersHands
   )
-  Write-Host -ForegroundColor Green -BackgroundColor Black "   TEXAS HOLDEM   `n"
+  Write-Host -ForegroundColor Green -BackgroundColor Black "   TEXAS HOLD'EM   `n"
   foreach ($EachPlayer in $PlayersHands) {
-    Write-Host -NoNewline -ForegroundColor Black -BackgroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
+    if (($EachPlayer.PlayerNumber + 1) -lt 10) {$Gap = ' '}
+    else {$Gap = ''}
+    Write-Host -NoNewline -ForegroundColor Black -BackgroundColor Yellow "Player $Gap$($EachPlayer.PlayerNumber + 1)"
     if ($EachPlayer.Result -ne '') {Write-Host -NoNewline -ForegroundColor Yellow "  $($EachPlayer.Result)  $($EachPlayer.Reason)"}
     else {}
     foreach ($Card in $EachPlayer.CardsInHand) {
@@ -143,20 +145,22 @@ function Show-CommunityCards {
     [int]$EndIndex,
     [PlayingCard[]]$CommCards
   )
-  Write-Host -BackgroundColor Red -ForegroundColor White "The Flop"
+  write-host -ForegroundColor Yellow '-------------------------------------------------'
+  Write-Host -NoNewline -BackgroundColor Red -ForegroundColor White "Community Cards"
   foreach ($CommCardPos in (0..$EndIndex)) {
     if ($CommCards[$CommCardPos].CardValue -eq 10) {$Spc = ''}
     else {$Spc = ' '}
     if ($CommCardPos -eq 3) {
       Start-Sleep 3
-      Write-Host -BackgroundColor Red -ForegroundColor White "The Turn"
+      #Write-Host -NoNewline -BackgroundColor Red -ForegroundColor White "The Turn"
     }
     if ($CommCardPos -eq 4) {
       Start-Sleep 3
-      Write-Host -BackgroundColor Red -ForegroundColor White "The River"
+      #Write-Host -NoNewline -BackgroundColor Red -ForegroundColor White "The River"
     }
     Write-Host -NoNewline '  '
-    Write-Host -BackgroundColor White -ForegroundColor $CommCards[$CommCardPos].CardSuitColor "$Spc$($CommCards[$CommCardPos].CardFace)$($CommCards[$CommCardPos].CardSuitIcon)"
+    Write-Host -NoNewline -BackgroundColor White -ForegroundColor $CommCards[$CommCardPos].CardSuitColor "$Spc$($CommCards[$CommCardPos].CardFace)$($CommCards[$CommCardPos].CardSuitIcon) "
+    Write-Host -NoNewline ' '
   }
 }
 function Get-ShuffledDeck {
