@@ -123,16 +123,18 @@ function Show-PlayersHands {
   Param (
     [Player[]]$PlayersHands
   )
+  Write-Host -ForegroundColor Green -BackgroundColor Black "   TEXAS HOLDEM   `n"
   foreach ($EachPlayer in $PlayersHands) {
     Write-Host -NoNewline -ForegroundColor Black -BackgroundColor Yellow "Player $($EachPlayer.PlayerNumber + 1)"
-    if ($EachPlayer.Result -ne '') {Write-Host -ForegroundColor Yellow "  $($EachPlayer.Result)  $($EachPlayer.Reason)"}
-    else {Write-Host}
+    if ($EachPlayer.Result -ne '') {Write-Host -NoNewline -ForegroundColor Yellow "  $($EachPlayer.Result)  $($EachPlayer.Reason)"}
+    else {}
     foreach ($Card in $EachPlayer.CardsInHand) {
       if ($Card.CardValue -eq 10) {$Spc = ''}
       else {$Spc = ' '}
       Write-Host -NoNewline '  '
-      Write-Host -BackgroundColor White -ForegroundColor $Card.CardSuitColor "$Spc$($Card.CardFace)$($Card.CardSuitIcon)"
+      Write-Host -NoNewline -BackgroundColor White -ForegroundColor $Card.CardSuitColor "$Spc$($Card.CardFace)$($Card.CardSuitIcon) "
     }
+    Write-Host
     Write-Host
   }
 }
@@ -141,12 +143,18 @@ function Show-CommunityCards {
     [int]$EndIndex,
     [PlayingCard[]]$CommCards
   )
-  Write-Host -BackgroundColor Red -ForegroundColor White "The CommunityCards"
+  Write-Host -BackgroundColor Red -ForegroundColor White "The Flop"
   foreach ($CommCardPos in (0..$EndIndex)) {
     if ($CommCards[$CommCardPos].CardValue -eq 10) {$Spc = ''}
     else {$Spc = ' '}
-    if ($CommCardPos -eq 3) {Write-Host -BackgroundColor Red -ForegroundColor White "The Turn"}
-    if ($CommCardPos -eq 4) {Write-Host -BackgroundColor Red -ForegroundColor White "The River"}
+    if ($CommCardPos -eq 3) {
+      Start-Sleep 3
+      Write-Host -BackgroundColor Red -ForegroundColor White "The Turn"
+    }
+    if ($CommCardPos -eq 4) {
+      Start-Sleep 3
+      Write-Host -BackgroundColor Red -ForegroundColor White "The River"
+    }
     Write-Host -NoNewline '  '
     Write-Host -BackgroundColor White -ForegroundColor $CommCards[$CommCardPos].CardSuitColor "$Spc$($CommCards[$CommCardPos].CardFace)$($CommCards[$CommCardPos].CardSuitIcon)"
   }
@@ -177,6 +185,7 @@ $DeadCard = ($NumberOfPlayers * 2 )
 foreach ($WhatToDisplay in (2,3,4)) {
   Clear-Host
   Show-PlayersHands -PlayersHands $Players
+  if ($WhatToDisplay -eq 2) {Start-Sleep 3}
   Show-CommunityCards -EndIndex $WhatToDisplay -CommCards $CommunityCards
 }
 <#
