@@ -23,6 +23,7 @@ Class PlayingCard {
   # Class: This is the properties of the PlayingCard Class
   [int]$CardIndex
   [int]$CardValue
+  [int]$CardWorth
   [string]$CardFace
   [string]$CardSuitName
   [string]$CardSuitColor
@@ -35,6 +36,8 @@ Class PlayingCard {
     [int]$SuitIndex = [math]::Truncate($CardIndex/13)
     [int]$Value = ($CardIndex % 13) + 1
     # Construct the object based on the card index 0..51
+    if ($Value -eq 1) {$this.CardWorth = 13}
+    else {$this.CardWorth = $Value - 1}
     $this.CardIndex = $CardIndex
     $this.CardValue = $Value
     if ($Value -eq 1 ) {
@@ -84,29 +87,18 @@ and card color... So all we have to do is call the New() method to create a new
 object using this class and constructor
 #>
 
-
-
-# Functions #
+# # # # # # # # Functions # # # # # # # #
 function Check-PokerHand {
   Param (
     [parameter(Mandatory=$true)]
-    [PlayingCard[]]$PokerHand
+    $CheckPlayers,
+    [parameter(Mandatory=$true)]
+    $CheckCommunityCards
   )
-  # check for straight
-  [int[]]$Found = @()
-  foreach ($EndVal in (13..5)) {
-    if ($EndVal -eq 13 -and $PokerHand.Value -contains 1) {
-      $Range = 1,10,11,12,13
-      $Found = $Range | Where-Object {$_ -in ($PokerHand.Value | Select-Object -Unique | Sort-Object)}
-    }
-    if ($Found.count -ne 5) {
-      $Range = ($EndVal-4)..$EndVal
-      $Found = $Range | Where-Object {$_ -in ($PokerHand.Value | Select-Object -Unique | Sort-Object)}
-    }
-    else {
-      $Range
-      break
-    }
+  foreach ($EachPlayer in $CheckPlayers) {
+    $Cards = $EachPlayer.CardsInHand
+    ## Check for royal flush
+    if ($Cards[0].CardWorth - )
   }
 }
 function New-Card {
@@ -150,13 +142,8 @@ function Show-CommunityCards {
   foreach ($CommCardPos in (0..$EndIndex)) {
     if ($CommCards[$CommCardPos].CardValue -eq 10) {$Spc = ''}
     else {$Spc = ' '}
-    if ($CommCardPos -eq 3) {
+    if ($CommCardPos -ge 3) {
       Start-Sleep 3
-      #Write-Host -NoNewline -BackgroundColor Red -ForegroundColor White "The Turn"
-    }
-    if ($CommCardPos -eq 4) {
-      Start-Sleep 3
-      #Write-Host -NoNewline -BackgroundColor Red -ForegroundColor White "The River"
     }
     Write-Host -NoNewline '  '
     Write-Host -NoNewline -BackgroundColor White -ForegroundColor $CommCards[$CommCardPos].CardSuitColor "$Spc$($CommCards[$CommCardPos].CardFace)$($CommCards[$CommCardPos].CardSuitIcon) "
@@ -185,7 +172,7 @@ $DeadCard = ($NumberOfPlayers * 2 )
                                  $ShuffleDeck[$DeadCard+3],
                                  $ShuffleDeck[$DeadCard+5],
                                  $ShuffleDeck[$DeadCard+7]
-
+Check-PokerHand -CheckPlayers $Players -CheckCommunityCards $CommunityCards
 foreach ($WhatToDisplay in (2,3,4)) {
   Clear-Host
   Show-PlayersHands -PlayersHands $Players
