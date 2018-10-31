@@ -263,7 +263,10 @@ function Get-BestOPos {
     elseif ($BlankPos.Count -eq 8 -and ($Board[0] -eq "X" -or $Board[2] -eq "X" -or $Board[6] -eq "X" -or $Board[8] -eq "X" )) {
       $Offence = $true
       if ($Board[4] -eq ' ') {$ThreatPos = 4}
-      else {$ThreatPos = @(1,3,5,7) | get-random}
+    }
+    elseif ($BlankPos.Count -eq 8 -and ($Board[1] -eq "X" -or $Board[3] -eq "X" -or $Board[5] -eq "X" -or $Board[7] -eq "X" )) {
+      $Offence = $true
+      if ($Board[4] -eq ' ') {$ThreatPos = 4}
     }
     else {
       $Offence = $true
