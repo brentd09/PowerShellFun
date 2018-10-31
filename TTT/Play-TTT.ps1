@@ -112,7 +112,9 @@ function Pick-Location {
       Write-Host -ForegroundColor $Color -NoNewline $WhichTurn
       Write-Host -ForegroundColor Yellow -NoNewline ": "
       if ($Host.Name -eq 'ConsoleHost') {$Location = ($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')).Character -as [string]} 
-      else {$Location = (Read-Host).Substring(0,1)}
+      else {$Location = Read-Host}
+      $Location = $Location -replace "[^1-9]",''
+      if ($Location -match '[^1-9]') {continue}
       $arrayLoc = $Location - 1
     } until (1..9 -contains $Location -and $Board[$arrayLoc] -eq " ") 
   }
