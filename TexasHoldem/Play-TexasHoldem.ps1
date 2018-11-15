@@ -1,10 +1,15 @@
 <#
 .SYNOPSIS
-  Demonstrate Classes and Constructors
+  Poker Games
 .DESCRIPTION
-  This script has a class definition with a class constructor so that when ever the class is used to create a 
-  new object and an index is injected. The playingcard constructor will build the values in the other properties
-  listed in the constructor code.
+  This program plays the traditional game of Texas Holem Poker card game.
+  For those learning to script:
+  -----------------------------
+  This script has a class definition for a playing card and one for a player
+  each with a class constructor so that when ever the playing card class is
+  used to create a new object and an index is injected. The playingcard
+  constructor will build the values in the other properties listed in the
+  constructor code.
 .EXAMPLE
   Play-TexasHoldem
 .NOTES
@@ -28,6 +33,7 @@ Class PlayingCard {
   [string]$CardSuitName
   [string]$CardSuitColor
   [string]$CardSuitIcon
+  [bool]$IsCommunityCard
   #Class Constructor: This is the code that runs every time the script creates a new PlayingCard object
   PlayingCard ([int]$CardIndex) {
     [string[]]$SuitNames = @('Clubs','Diamonds','Hearts','Spades')
@@ -58,6 +64,7 @@ Class PlayingCard {
     $this.CardSuitName = $SuitNames[$SuitIndex]
     $this.CardSuitColor = $SuitColors[$SuitIndex]
     $this.CardSuitIcon = [char]($SuitIconChar[$SuitIndex])
+    $this.IsCommunityCard = $false
   } # Playingcard constructor
 } # Class PlayingCard
 
@@ -95,11 +102,30 @@ function Check-PokerHand {
     [parameter(Mandatory=$true)]
     $CheckCommunityCards
   )
-  foreach ($EachPlayer in $CheckPlayers) {
-    $Cards = $EachPlayer.CardsInHand
-    ## Check for royal flush
-    if ($Cards[0].CardWorth - )
+  #Royal Flush Check
+  foreach ($Player in $CheckPlayers) {
+    #Check for Royal Flush
+    $RFValues = @(13,12,11,10,9)
+    $ValuesInHand = $Player.CardsInHand.CardWorth
+    $valuesInCCrd = $CheckCommunityCards.CardWorth
+    #
   }
+
+
+$desiredMatch = 13,12,11,10,9
+
+$sortNums = $numbers | Sort-Object -Descending
+$Same = 0
+foreach ($index in (0..4)) {
+  if ($desiredMatch[$index] -eq $sortNums[$index]) {$Same++}
+}
+if ($Same -eq 5) {write-host -ForegroundColor green  "All matched"}
+else {Write-Host -ForegroundColor Red "Not a complete match"}
+ # foreach ($EachPlayer in $CheckPlayers) {
+ #   $Cards = $EachPlayer.CardsInHand
+ #   ## Check for royal flush
+ #   if ($Cards[0].CardWorth - )
+ # }
 }
 function New-Card {
   Param (
@@ -172,6 +198,9 @@ $DeadCard = ($NumberOfPlayers * 2 )
                                  $ShuffleDeck[$DeadCard+3],
                                  $ShuffleDeck[$DeadCard+5],
                                  $ShuffleDeck[$DeadCard+7]
+foreach ($CCard in $CommunityCards) {
+  $CCard.IsCommunityCard = $true
+}
 Check-PokerHand -CheckPlayers $Players -CheckCommunityCards $CommunityCards
 foreach ($WhatToDisplay in (2,3,4)) {
   Clear-Host
@@ -193,7 +222,7 @@ Straight
 Three of a Kind
 Two Pairs
 Single Pair
-High Card
+Single High Card
 
 Tie Breaker Rules of Poker Cash Game - Poker Rules
 -------------------------------------------------- 
