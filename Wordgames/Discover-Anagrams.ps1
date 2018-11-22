@@ -25,7 +25,6 @@ While ($MatchWord -ne "q") {
   Write-Host '-------------------------'
   Write-Host $MatchWord
   Write-Host '-------------------------'
-  [string[]]$Result = $Words -match "^$RegExMW$" 
-  $Result |select-object -property   @{Name="Word"; Expression = {$_}} | Format-Wide -AutoSize
+  $Words -match "^$RegExMW$"
   Write-Host '-------------------------'
 }
