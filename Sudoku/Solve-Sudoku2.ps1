@@ -40,14 +40,15 @@ class BoardPosition {
     elseif ($Pos -in @(54,55,56,63,64,65,72,73,74)) {$this.Box = 6}
     elseif ($Pos -in @(57,58,59,66,67,68,75,76,77)) {$this.Box = 7}
     elseif ($Pos -in @(60,61,62,69,70,71,78,79,80)) {$this.Box = 8}
+    $this.PossibleValues = 1..9
   }
 }
 
 # Functions
 Function Get-SoleCandidate {
-  Param {
-    [BoardPosition[]]$fnPuzzle
-  }
+  Param (
+    $fnPuzzle
+  )
   $RefNums = @('1','2','3','4','5','6','7','8','9')
   foreach ($fnPos in $fnBoardPosition) {
     if ($fnPos.Val -match '\d' ) {continue}
@@ -57,5 +58,28 @@ Function Get-SoleCandidate {
     $AllVals = ($RowVals + $ColVals + $BoxVals) | Select-Object -Unique
     $PossVals = $RefNums | Where-Object {$_ -notin $AllVals}
     $fnPuzzle.$PossibleValues = $PossVals
+    if ($PossVals.count -eq 1) {$fnPuzzle.Val = $PossVals}
   }
 }
+
+function Remove-Possibles  {
+  Param ($FnPuzzle)
+}
+foreach ($Pos in (0..80)) {
+  
+}
+
+function Create-Board {
+  Param (
+    $fnPuzzle
+  )
+  $Board = @()
+  foreach ($Pos in (0..80)){
+    $BoardVal = $fnPuzzle.Substring($Pos,1)
+    $Board += [BoardPosition]::New($BoardVal,$Pos)
+  }
+  $Board
+}
+
+$Board = Create-Board $Puzzle
+$Board 
