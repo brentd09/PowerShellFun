@@ -12,10 +12,11 @@
   Output (if any)
 .NOTES
   General notes
+    $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+  $Puzzle = '1----3-----6--5----291--6-361-5-23---3--6--9---84-1-267-5--943----7--8-----3----9'
 )
 class BoardPosition {
   [string]$Val
@@ -68,11 +69,27 @@ Function Get-SoleCandidate {
   }
 }
 
+function Get-UniqueCandidate {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($BoxPos in 0..8) {
+    $BoxFocus = $fnPuzzle | Where-Object {$_.Box -eq $BoxPos}
+    [array]$Uniques = (($BoxFocus | Where-Object {$_.val -match '-'}).possiblevalues | Group-Object | Where-Object {$_.count -eq 1}).Name
+    if ($Uniques.Count -ge 1) {
+      foreach ($Unique in $Uniques) {
+        $Index = ($BoxFocus | Where-Object {$_.PossibleValues -contains $Unique}).Pos
+        $fnPuzzle[$Index].Val = $Unique
+      }
+    }
+  }
+}
+
 function Show-Board {
   Param (
     $fnPuzzle
   )
-  Clear-Host
+ Clear-Host
   $FGColor = 'Yellow'
   foreach ($PosCol in (0..8)) {
     if ($PosCol -eq 2 -or $PosCol -eq 5) {$HBdr = "`n------+-------+------"}
@@ -104,11 +121,11 @@ function Remove-Possibles  {
   }
 }
 
-
-do {
 $Board = Create-Board $Puzzle
+do {
 Remove-Possibles -fnPuzzle $Board
 Get-SoleCandidate -fnPuzzle $Board
+Get-UniqueCandidate -fnPuzzle $Board
 Show-Board -fnPuzzle $Board
-Read-Host
-} while ($true)
+Start-Sleep -Seconds 5
+} until ($Board.Val -notcontains '-')
