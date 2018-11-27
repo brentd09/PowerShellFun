@@ -15,7 +15,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
+  $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
 )
 class BoardPosition {
   [string]$Val
@@ -44,31 +44,6 @@ class BoardPosition {
   }
 }
 
-# Functions
-Function Get-SoleCandidate {
-  Param (
-    $fnPuzzle
-  )
-  $RefNums = @('1','2','3','4','5','6','7','8','9')
-  foreach ($fnPos in $fnBoardPosition) {
-    if ($fnPos.Val -match '\d' ) {continue}
-    [String[]]$RowVals = ($fnPuzzle | Where-Object {$_.Row -eq $fnPos.Row}).Val | Where-Object {$_ -match '\d'}
-    [String[]]$ColVals = ($fnPuzzle | Where-Object {$_.Col -eq $fnPos.Col}).val | Where-Object {$_ -match '\d'}
-    [String[]]$BoxVals = ($fnPuzzle | Where-Object {$_.Box -eq $fnPos.Box}).val | Where-Object {$_ -match '\d'}
-    $AllVals = ($RowVals + $ColVals + $BoxVals) | Select-Object -Unique
-    $PossVals = $RefNums | Where-Object {$_ -notin $AllVals}
-    $fnPuzzle.$PossibleValues = $PossVals
-    if ($PossVals.count -eq 1) {$fnPuzzle.Val = $PossVals}
-  }
-}
-
-function Remove-Possibles  {
-  Param ($FnPuzzle)
-}
-foreach ($Pos in (0..80)) {
-  
-}
-
 function Create-Board {
   Param (
     $fnPuzzle
@@ -81,5 +56,59 @@ function Create-Board {
   $Board
 }
 
+# Functions
+Function Get-SoleCandidate {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($Pos in (0..80)) {
+    if ($fnPuzzle[$Pos].PossibleValues.count -eq 1) {
+      $fnPuzzle[$Pos].Val = $fnPuzzle[$Pos].PossibleValues[0]
+    }
+  }
+}
+
+function Show-Board {
+  Param (
+    $fnPuzzle
+  )
+  Clear-Host
+  $FGColor = 'Yellow'
+  foreach ($PosCol in (0..8)) {
+    if ($PosCol -eq 2 -or $PosCol -eq 5) {$HBdr = "`n------+-------+------"}
+    else {$HBdr = ''}
+    foreach ($PosRow in (0..8)) {
+      if ($PosRow -eq 2 -or $PosRow -eq 5) {$Bdr = ' | '}
+      else {$Bdr = ' '}
+      Write-Host -NoNewline $fnPuzzle[($PosRow+($PosCol*9))].Val
+      Write-Host -NoNewline -ForegroundColor $FGColor "$Bdr"
+    }
+    Write-Host -ForegroundColor $FGColor $HBdr
+  }
+}
+
+function Remove-Possibles  {
+  Param ($fnPuzzle)
+
+  foreach ($Pos in (0..80)) {
+    if ($fnPuzzle[$Pos].Val -match '\d') {
+      $fnPuzzle[$Pos].PossibleValues = $fnPuzzle[$Pos].Val
+    }
+    else {
+      [array]$FocusRowVals = ($fnPuzzle | Where-Object {$_.Row -eq $fnPuzzle[$Pos].Row}).Val | Where-Object {$_ -match '\d'}
+      [array]$FocusColVals = ($fnPuzzle | Where-Object {$_.Col -eq $fnPuzzle[$Pos].Col}).Val | Where-Object {$_ -match '\d'}
+      [array]$FocusBoxVals = ($fnPuzzle | Where-Object {$_.Box -eq $fnPuzzle[$Pos].Box}).Val | Where-Object {$_ -match '\d'}
+      $focusArray = ($FocusRowVals + $FocusColVals + $FocusBoxVals) | Select-Object -Unique
+      $fnPuzzle[$Pos].PossibleValues = $fnPuzzle[$Pos].PossibleValues | Where-Object {$_ -notin $focusArray}
+    }  
+  }
+}
+
+
+do {
 $Board = Create-Board $Puzzle
-$Board 
+Remove-Possibles -fnPuzzle $Board
+Get-SoleCandidate -fnPuzzle $Board
+Show-Board -fnPuzzle $Board
+Read-Host
+} while ($true)
