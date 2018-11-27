@@ -89,7 +89,7 @@ function Show-Board {
   Param (
     $fnPuzzle
   )
- Clear-Host
+  #Clear-Host
   $FGColor = 'Yellow'
   foreach ($PosCol in (0..8)) {
     if ($PosCol -eq 2 -or $PosCol -eq 5) {$HBdr = "`n------+-------+------"}
@@ -102,6 +102,7 @@ function Show-Board {
     }
     Write-Host -ForegroundColor $FGColor $HBdr
   }
+  Write-Host
 }
 
 function Remove-Possibles  {
@@ -122,10 +123,14 @@ function Remove-Possibles  {
 }
 
 $Board = Create-Board $Puzzle
+Show-Board -fnPuzzle $Board
+Start-Sleep -Seconds 3
 do {
 Remove-Possibles -fnPuzzle $Board
 Get-SoleCandidate -fnPuzzle $Board
+Remove-Possibles -fnPuzzle $Board
 Get-UniqueCandidate -fnPuzzle $Board
+Remove-Possibles -fnPuzzle $Board
 Show-Board -fnPuzzle $Board
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 3
 } until ($Board.Val -notcontains '-')
