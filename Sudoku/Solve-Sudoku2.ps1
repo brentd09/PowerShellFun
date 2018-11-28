@@ -25,7 +25,8 @@ class BoardPosition {
   [int]$Row
   [int]$Box
   [string[]]$PossibleValues
-  [string[]]$RulledOutValues
+  [string]$PossValString
+  [int]$PossCount
 
   BoardPosition([string]$Val,[int]$Pos) {
     $this.Val = $Val
@@ -42,6 +43,8 @@ class BoardPosition {
     elseif ($Pos -in @(57,58,59,66,67,68,75,76,77)) {$this.Box = 7}
     elseif ($Pos -in @(60,61,62,69,70,71,78,79,80)) {$this.Box = 8}
     $this.PossibleValues = 1..9
+    $this.PossValString = 1..9 -join ''
+    $this.PossCount = (1..9).Count
   }
 }
 
@@ -63,7 +66,7 @@ Function Get-SoleCandidate {
     $fnPuzzle
   )
   foreach ($Pos in (0..80)) {
-    if ($fnPuzzle[$Pos].PossibleValues.count -eq 1) {
+    if ($fnPuzzle[$Pos].PossCount -eq 1) {
       $fnPuzzle[$Pos].Val = $fnPuzzle[$Pos].PossibleValues[0]
     }
   }
@@ -111,6 +114,8 @@ function Remove-Possibles  {
   foreach ($Pos in (0..80)) {
     if ($fnPuzzle[$Pos].Val -match '\d') {
       $fnPuzzle[$Pos].PossibleValues = $fnPuzzle[$Pos].Val
+      $fnPuzzle[$Pos].PossValString = $fnPuzzle[$Pos].PossibleValues -join ''
+      $fnPuzzle[$Pos].PossCount = ($fnPuzzle[$Pos].PossibleValues).Count
     }
     else {
       [array]$FocusRowVals = ($fnPuzzle | Where-Object {$_.Row -eq $fnPuzzle[$Pos].Row}).Val | Where-Object {$_ -match '\d'}
@@ -118,6 +123,8 @@ function Remove-Possibles  {
       [array]$FocusBoxVals = ($fnPuzzle | Where-Object {$_.Box -eq $fnPuzzle[$Pos].Box}).Val | Where-Object {$_ -match '\d'}
       $focusArray = ($FocusRowVals + $FocusColVals + $FocusBoxVals) | Select-Object -Unique
       $fnPuzzle[$Pos].PossibleValues = $fnPuzzle[$Pos].PossibleValues | Where-Object {$_ -notin $focusArray}
+      $fnPuzzle[$Pos].PossValString = $fnPuzzle[$Pos].PossibleValues -join ''
+      $fnPuzzle[$Pos].PossCount = ($fnPuzzle[$Pos].PossibleValues).Count
     }  
   }
 }
