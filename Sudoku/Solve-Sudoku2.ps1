@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
-  Short description
+  Solve Sudoku
 .DESCRIPTION
-  Long description
+  This Script solves Sudoku Puzzles, you will need to input the puzzle as one string of characters
+  use - for blank squares
 .EXAMPLE
-  PS C:\> <example usage>
-  Explanation of what the example does
-.INPUTS
-  Inputs (if any)
-.OUTPUTS
-  Output (if any)
-.NOTES
+  Solve-Sudoku -Puzzle '1----3-----6--5----291--6-361-5-23---3--6--9---84-1-267-5--943----7--8-----3----9'
+  This represents the Puzzle as a string to the script
+.Notes  
   General notes
+  Created By: Brent Denny
+          On: 28-Nov-2018
+  Puzzles        
     $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
 #>
 [CmdletBinding()]
@@ -122,6 +122,16 @@ function Remove-Possibles  {
   }
 }
 
+function Naked-Pair {
+  Param (
+    $fnPuzzle
+  )
+  # In this function I need to find a pair of possible values that appear twice with only those values in them
+  # Thexe values can then be removed from all of the other possible values in the corresponding row/col/box
+  
+}
+
+##  Main Code ##
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
 Start-Sleep -Seconds 3
