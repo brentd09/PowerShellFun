@@ -129,12 +129,24 @@ function Remove-Possibles  {
   }
 }
 
-function Naked-Pair {
+function Naked-PairCol {
   Param (
     $fnPuzzle
   )
-  # In this function I need to find a pair of possible values that appear twice with only those values in them
-  # Thexe values can then be removed from all of the other possible values in the corresponding row/col/box
+  
+}
+
+function Naked-PairRow {
+  Param (
+    $fnPuzzle
+  )
+  
+}
+
+function Naked-PairBox {
+  Param (
+    $fnPuzzle
+  )
   
 }
 
