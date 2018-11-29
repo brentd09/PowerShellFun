@@ -133,21 +133,29 @@ function Naked-PairCol {
   Param (
     $fnPuzzle
   )
-  
+  foreach ($Col in (0..8)) {
+    $Pairs = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -eq 2}
+  }
 }
 
 function Naked-PairRow {
   Param (
     $fnPuzzle
   )
-  
+  foreach ($Row in (0..8)) {
+    $Pairs = $fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.PossCount -eq 2}
+  }
+
 }
 
 function Naked-PairBox {
   Param (
     $fnPuzzle
   )
-  
+  foreach ($Box in (0..8)) {
+    $Pairs = $fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.PossCount -eq 2}
+  }
+
 }
 
 ##  Main Code ##
