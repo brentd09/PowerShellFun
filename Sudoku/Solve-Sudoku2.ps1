@@ -129,7 +129,7 @@ function Remove-Possibles  {
   }
 }
 
-function Naked-PairCol {
+function Remove-NakedPairCol {
   Param (
     $fnPuzzle
   )
@@ -139,12 +139,12 @@ function Naked-PairCol {
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
       $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
-      
+      start-sleep 1
     }
   }
 }
 
-function Naked-PairRow {
+function Remove-NakedPairRow {
   Param (
     $fnPuzzle
   )
@@ -154,13 +154,13 @@ function Naked-PairRow {
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
       $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
-      
+
     }
   }
 
 }
 
-function Naked-PairBox {
+function Remove-NakedPairBox {
   Param (
     $fnPuzzle
   )
@@ -170,7 +170,7 @@ function Naked-PairBox {
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
       $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
-      
+
     }
   }
 
@@ -182,10 +182,13 @@ Show-Board -fnPuzzle $Board
 Start-Sleep -Seconds 3
 do {
 Remove-Possibles -fnPuzzle $Board
+Show-Board -fnPuzzle $Board
 Get-SoleCandidate -fnPuzzle $Board
 Remove-Possibles -fnPuzzle $Board
+Show-Board -fnPuzzle $Board
 Get-UniqueCandidate -fnPuzzle $Board
 Remove-Possibles -fnPuzzle $Board
 Show-Board -fnPuzzle $Board
+Remove-NakedPairCol -fnPuzzle $Board
 Start-Sleep -Seconds 3
 } until ($Board.Val -notcontains '-')
