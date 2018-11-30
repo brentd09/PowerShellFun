@@ -135,6 +135,12 @@ function Naked-PairCol {
   )
   foreach ($Col in (0..8)) {
     $Pairs = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -eq 2}
+    $GroupPairs = $Pairs.PossValString | Group-Object
+    $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
+    foreach ($Pair in $TwoPairs) {
+      $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
+      
+    }
   }
 }
 
@@ -144,6 +150,12 @@ function Naked-PairRow {
   )
   foreach ($Row in (0..8)) {
     $Pairs = $fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.PossCount -eq 2}
+    $GroupPairs = $Pairs.PossValString | Group-Object
+    $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
+    foreach ($Pair in $TwoPairs) {
+      $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
+      
+    }
   }
 
 }
@@ -154,6 +166,12 @@ function Naked-PairBox {
   )
   foreach ($Box in (0..8)) {
     $Pairs = $fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.PossCount -eq 2}
+    $GroupPairs = $Pairs.PossValString | Group-Object
+    $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
+    foreach ($Pair in $TwoPairs) {
+      $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
+      
+    }
   }
 
 }
