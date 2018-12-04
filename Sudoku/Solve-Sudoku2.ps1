@@ -92,7 +92,7 @@ function Show-Board {
   Param (
     $fnPuzzle
   )
-  #Clear-Host
+  Clear-Host
   $FGColor = 'Yellow'
   foreach ($PosCol in (0..8)) {
     if ($PosCol -eq 2 -or $PosCol -eq 5) {$HBdr = "`n------+-------+------"}
@@ -142,8 +142,10 @@ function Remove-NakedPairCol {
       if ($WhichArePairs.Count -eq 2) {
         $RemoveNumbers = $WhichArePairs[0].PossibleValues
         $SkipPositions = $WhichArePairs.Pos
-        # foreach element in this row/col/box check to see if exclude applys
-        # if not remove numbers from possible array
+        $CellsToConsider = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.Pos -notin $SkipPositions -and $_.Val -notmatch '\d'}
+        foreach ($Cell in $CellsToConsider) {
+          $fnPuzzle[($Cell.Pos)].possiblevalues = $fnPuzzle[($Cell.Pos)].possiblevalues | Where-Object {$_ -notin $RemoveNumbers}
+        }
       }
     }
   }
@@ -162,8 +164,10 @@ function Remove-NakedPairRow {
       if ($WhichArePairs.Count -eq 2) {
         $RemoveNumbers = $WhichArePairs[0].PossibleValues
         $SkipPositions = $WhichArePairs.Pos
-        # foreach element in this row/col/box check to see if exclude applys
-        # if not remove numbers from possible array
+        $CellsToConsider = $fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.Pos -notin $SkipPositions -and $_.Val -notmatch '\d'}
+        foreach ($Cell in $CellsToConsider) {
+          $fnPuzzle[($Cell.Pos)].possiblevalues = $fnPuzzle[($Cell.Pos)].possiblevalues | Where-Object {$_ -notin $RemoveNumbers}
+        }
       }
     }
   }
@@ -183,8 +187,10 @@ function Remove-NakedPairBox {
       if ($WhichArePairs.Count -eq 2) {
         $RemoveNumbers = $WhichArePairs[0].PossibleValues
         $SkipPositions = $WhichArePairs.Pos
-        # foreach element in this row/col/box check to see if exclude applys
-        # if not remove numbers from possible array
+        $CellsToConsider = $fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.Pos -notin $SkipPositions -and $_.Val -notmatch '\d'}
+        foreach ($Cell in $CellsToConsider) {
+          $fnPuzzle[($Cell.Pos)].possiblevalues = $fnPuzzle[($Cell.Pos)].possiblevalues | Where-Object {$_ -notin $RemoveNumbers}
+        }
       }
     }
   }
@@ -194,7 +200,7 @@ function Remove-NakedPairBox {
 ##  Main Code ##
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
-Start-Sleep -Seconds 3
+Start-Sleep -Seconds 1
 do {
 Remove-Possibles -fnPuzzle $Board
 Show-Board -fnPuzzle $Board
@@ -205,9 +211,12 @@ Get-UniqueCandidate -fnPuzzle $Board
 Remove-Possibles -fnPuzzle $Board
 Show-Board -fnPuzzle $Board
 Remove-NakedPairCol -fnPuzzle $Board
-Start-Sleep -Seconds 3
+Remove-Possibles -fnPuzzle $Board
+Show-Board -fnPuzzle $Board
 Remove-NakedPairRow -fnPuzzle $Board
-Start-Sleep -Seconds 3
+Remove-Possibles -fnPuzzle $Board
+Show-Board -fnPuzzle $Board
 Remove-NakedPairBox -fnPuzzle $Board
-Start-Sleep -Seconds 3
+Remove-Possibles -fnPuzzle $Board
+Show-Board -fnPuzzle $Board
 } until ($Board.Val -notcontains '-')
