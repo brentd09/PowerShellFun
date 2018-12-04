@@ -134,12 +134,17 @@ function Remove-NakedPairCol {
     $fnPuzzle
   )
   foreach ($Col in (0..8)) {
-    $Pairs = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -eq 2}
-    $GroupPairs = $Pairs.PossValString | Group-Object
+    $PuzzlePairs = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -eq 2}
+    $GroupPairs = $PuzzlePairs.PossValString | Group-Object
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
-      $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
-      start-sleep 1
+      $WhichArePairs = $PuzzlePairs | Where-Object {$_.Name -eq $Pair.PossValString}
+      if ($WhichArePairs.Count -eq 2) {
+        $RemoveNumbers = $WhichArePairs[0].PossibleValues
+        $SkipPositions = $WhichArePairs.Pos
+        # foreach element in this row/col/box check to see if exclude applys
+        # if not remove numbers from possible array
+      }
     }
   }
 }
@@ -149,12 +154,17 @@ function Remove-NakedPairRow {
     $fnPuzzle
   )
   foreach ($Row in (0..8)) {
-    $Pairs = $fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.PossCount -eq 2}
-    $GroupPairs = $Pairs.PossValString | Group-Object
+    $PuzzlePairs = $fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.PossCount -eq 2}
+    $GroupPairs = $PuzzlePairs.PossValString | Group-Object
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
-      $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
-
+      $WhichArePairs = $PuzzlePairs | Where-Object {$_.Name -eq $Pair.PossValString}
+      if ($WhichArePairs.Count -eq 2) {
+        $RemoveNumbers = $WhichArePairs[0].PossibleValues
+        $SkipPositions = $WhichArePairs.Pos
+        # foreach element in this row/col/box check to see if exclude applys
+        # if not remove numbers from possible array
+      }
     }
   }
 
@@ -165,12 +175,17 @@ function Remove-NakedPairBox {
     $fnPuzzle
   )
   foreach ($Box in (0..8)) {
-    $Pairs = $fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.PossCount -eq 2}
-    $GroupPairs = $Pairs.PossValString | Group-Object
+    $PuzzlePairs = $fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.PossCount -eq 2}
+    $GroupPairs = $PuzzlePairs.PossValString | Group-Object
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
-      $WhichArePairs = $Pairs | Where-Object {$_.PossValString -eq $Pair.PossValString}
-
+      $WhichArePairs = $PuzzlePairs | Where-Object {$_.Name -eq $Pair.PossValString}
+      if ($WhichArePairs.Count -eq 2) {
+        $RemoveNumbers = $WhichArePairs[0].PossibleValues
+        $SkipPositions = $WhichArePairs.Pos
+        # foreach element in this row/col/box check to see if exclude applys
+        # if not remove numbers from possible array
+      }
     }
   }
 
@@ -190,5 +205,9 @@ Get-UniqueCandidate -fnPuzzle $Board
 Remove-Possibles -fnPuzzle $Board
 Show-Board -fnPuzzle $Board
 Remove-NakedPairCol -fnPuzzle $Board
+Start-Sleep -Seconds 3
+Remove-NakedPairRow -fnPuzzle $Board
+Start-Sleep -Seconds 3
+Remove-NakedPairBox -fnPuzzle $Board
 Start-Sleep -Seconds 3
 } until ($Board.Val -notcontains '-')
