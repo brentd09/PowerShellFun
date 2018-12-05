@@ -241,14 +241,14 @@ function Remove-XWingCol {
   Param (
     $fnPuzzle
   )
-
+  # Need to find a val that appear only twice in two columns that form a rectangle
 }
 
 function Remove-XWingRow {
   Param (
     $fnPuzzle
   )
-
+  # Need to find a val that appear only twice in two rows that form a rectangle
 }
 
 
