@@ -92,7 +92,8 @@ function Show-Board {
   Param (
     $fnPuzzle
   )
-  Clear-Host
+  $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
+  $host.UI.RawUI.CursorPosition = $Coords
   $FGColor = 'Yellow'
   foreach ($PosCol in (0..8)) {
     if ($PosCol -eq 2 -or $PosCol -eq 5) {$HBdr = "`n------+-------+------"}
@@ -138,7 +139,7 @@ function Remove-NakedPairCol {
     $GroupPairs = $PuzzlePairs.PossValString | Group-Object
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
-      $WhichArePairs = $PuzzlePairs | Where-Object {$_.Name -eq $Pair.PossValString}
+      $WhichArePairs = $PuzzlePairs | Where-Object {$_.PossValString -eq $Pair.Name}
       if ($WhichArePairs.Count -eq 2) {
         $RemoveNumbers = $WhichArePairs[0].PossibleValues
         $SkipPositions = $WhichArePairs.Pos
@@ -160,7 +161,7 @@ function Remove-NakedPairRow {
     $GroupPairs = $PuzzlePairs.PossValString | Group-Object
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
-      $WhichArePairs = $PuzzlePairs | Where-Object {$_.Name -eq $Pair.PossValString}
+      $WhichArePairs = $PuzzlePairs | Where-Object {$_.PossValString -eq $Pair.Name}
       if ($WhichArePairs.Count -eq 2) {
         $RemoveNumbers = $WhichArePairs[0].PossibleValues
         $SkipPositions = $WhichArePairs.Pos
@@ -183,7 +184,7 @@ function Remove-NakedPairBox {
     $GroupPairs = $PuzzlePairs.PossValString | Group-Object
     $TwoPairs = $GroupPairs | Where-Object {$_.Count -eq 2}
     foreach ($Pair in $TwoPairs) {
-      $WhichArePairs = $PuzzlePairs | Where-Object {$_.Name -eq $Pair.PossValString}
+      $WhichArePairs = $PuzzlePairs | Where-Object {$_.PossValString -eq $Pair.Name}
       if ($WhichArePairs.Count -eq 2) {
         $RemoveNumbers = $WhichArePairs[0].PossibleValues
         $SkipPositions = $WhichArePairs.Pos
@@ -198,6 +199,7 @@ function Remove-NakedPairBox {
 }
 
 ##  Main Code ##
+Clear-Host
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
 Start-Sleep -Seconds 1
