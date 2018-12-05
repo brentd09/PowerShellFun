@@ -16,6 +16,7 @@
     $Puzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------' Medium
     $Puzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1--3------' Difficult
     $Puzzle = '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' Difficult
+    $Puzzle = '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' Difficult
     $Puzzle = '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' Very Difficult
 #>
 [CmdletBinding()]
@@ -99,6 +100,7 @@ function Show-Board {
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
   $FGColor = 'Yellow'
+  Write-Host -ForegroundColor Green "     Solve Sudoku`n"
   foreach ($PosCol in (0..8)) {
     if ($PosCol -eq 2 -or $PosCol -eq 5) {$HBdr = "`n------+-------+------"}
     else {$HBdr = ''}
@@ -223,8 +225,8 @@ function Remove-HiddenPossibles {
         }
         if ($GroupFoundRow.Count -eq $Found.Count) {
           # Start the removal process on row
-          $Row = $GroupFoundCol.Name -as [int]
-          $ModCells = $fnPuzzle | Where-Object {$_.Col -eq $Row -and $_.Box -ne $Box}
+          $Row = $GroupFoundRow.Name -as [int]
+          $ModCells = $fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.Box -ne $Box}
           foreach ($Cell in $ModCells) {
             $fnPuzzle[$Cell.Pos].PossibleValues =  $fnPuzzle[$Cell.Pos].PossibleValues | Where-Object {$_ -notin $Num}
           }
