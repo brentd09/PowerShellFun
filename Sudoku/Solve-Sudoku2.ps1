@@ -21,7 +21,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-'
+  $Puzzle = '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-'
 )
 class BoardPosition {
   [string]$Val
@@ -236,6 +236,21 @@ function Remove-HiddenPossibles {
     }
   }
 }
+
+function Remove-XWingCol {
+  Param (
+    $fnPuzzle
+  )
+
+}
+
+function Remove-XWingRow {
+  Param (
+    $fnPuzzle
+  )
+
+}
+
 
 
 ##  Main Code ##
