@@ -12,11 +12,15 @@
   Created By: Brent Denny
           On: 28-Nov-2018
   Puzzles        
-    $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+    $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2' Easy
+    $Puzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------' Medium
+    $Puzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1--3------' Difficult
+    $Puzzle = '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' Difficult
+    $Puzzle = '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' Very Difficult
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '1----3-----6--5----291--6-361-5-23---3--6--9---84-1-267-5--943----7--8-----3----9'
+  $Puzzle = '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-'
 )
 class BoardPosition {
   [string]$Val
@@ -172,7 +176,6 @@ function Remove-NakedPairRow {
       }
     }
   }
-
 }
 
 function Remove-NakedPairBox {
@@ -195,30 +198,67 @@ function Remove-NakedPairBox {
       }
     }
   }
-
 }
+
+function Remove-HiddenPossibles {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($Box in (0..8)) {
+    $BoxCells = $fnPuzzle | Where-Object {$_.Box -eq $Box}
+    $Solved = $BoxCells | Where-Object {$_.Val -match '\d'}
+    $WhatsLeft = 1..9 | Where-Object {$_ -notin $Solved.val}
+    foreach ($Num in $whatsLeft) {
+      $Found = $BoxCells | Where-Object { $_.possiblevalues -Contains $num} 
+      if ($Found.Count -eq 2 -or $Found.Count -eq 3) {
+        $GroupFoundCol = $Found | Group-Object -Property Col
+        $GroupFoundRow = $Found | Group-Object -Property Row
+        if ($GroupFoundCol.Count -eq $Found.count) {
+          # start the removal process on col
+          $Col = $GroupFoundCol.Name -as [int]
+          $ModCells = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.Box -ne $Box}
+          foreach ($Cell in $ModCells) {
+            $fnPuzzle[$Cell.Pos].PossibleValues =  $fnPuzzle[$Cell.Pos].PossibleValues | Where-Object {$_ -notin $Num}
+          }
+        }
+        if ($GroupFoundRow.Count -eq $Found.Count) {
+          # Start the removal process on row
+          $Row = $GroupFoundCol.Name -as [int]
+          $ModCells = $fnPuzzle | Where-Object {$_.Col -eq $Row -and $_.Box -ne $Box}
+          foreach ($Cell in $ModCells) {
+            $fnPuzzle[$Cell.Pos].PossibleValues =  $fnPuzzle[$Cell.Pos].PossibleValues | Where-Object {$_ -notin $Num}
+          }
+
+        }
+      }
+    }
+  }
+}
+
 
 ##  Main Code ##
 Clear-Host
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
-Start-Sleep -Seconds 1
 do {
-Remove-Possibles -fnPuzzle $Board
-Show-Board -fnPuzzle $Board
-Get-SoleCandidate -fnPuzzle $Board
-Remove-Possibles -fnPuzzle $Board
-Show-Board -fnPuzzle $Board
-Get-UniqueCandidate -fnPuzzle $Board
-Remove-Possibles -fnPuzzle $Board
-Show-Board -fnPuzzle $Board
-Remove-NakedPairCol -fnPuzzle $Board
-Remove-Possibles -fnPuzzle $Board
-Show-Board -fnPuzzle $Board
-Remove-NakedPairRow -fnPuzzle $Board
-Remove-Possibles -fnPuzzle $Board
-Show-Board -fnPuzzle $Board
-Remove-NakedPairBox -fnPuzzle $Board
-Remove-Possibles -fnPuzzle $Board
-Show-Board -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+  Get-SoleCandidate -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+  Get-UniqueCandidate -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+  Remove-NakedPairCol -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+  Remove-NakedPairRow -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+  Remove-NakedPairBox -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+  Remove-HiddenPossibles -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
 } until ($Board.Val -notcontains '-')
