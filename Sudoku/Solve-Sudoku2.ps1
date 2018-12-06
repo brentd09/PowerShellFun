@@ -15,13 +15,15 @@
     $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2' Easy
     $Puzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------' Medium
     $Puzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1--3------' Difficult
+    $Puzzle = '--97486--7---------2-1-987---7---24--64-1-59--98---3-----8-3-2---------6---2759--' Difficult
     $Puzzle = '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' Difficult
-    $Puzzle = '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' Difficult
-    $Puzzle = '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' Very Difficult
+    $Puzzle = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' Extreme
+    $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' Impossible
+    $Puzzle = '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' Impossible
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-'
+  $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--'
 )
 class BoardPosition {
   [string]$Val
@@ -133,6 +135,45 @@ function Remove-Possibles  {
       $fnPuzzle[$Pos].PossValString = $fnPuzzle[$Pos].PossibleValues -join ''
       $fnPuzzle[$Pos].PossCount = ($fnPuzzle[$Pos].PossibleValues).Count
     }  
+  }
+}
+
+function Remove-HiddenPairCol {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($Col in (0..8)) {
+    $Numbers = (($fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -gt 1}).possiblevalues | Group-Object | Where-Object {$_.Count -eq 2} ).name
+    If ($Numbers -ne $null) {
+      $HiddenCells = $fnPuzzle | Where-Object {$_.Col -eq $Col} | Where-Object {$_.PossibleValues -contains $Numbers[0] -and $_.Possiblevalues -contains $Numbers[1]}
+      foreach ($Cell in $HiddenCells){$fnPuzzle[$Cell.Pos].PossibleValues = $fnPuzzle[$Cell.Pos].PossibleValues = $Numbers}
+    }
+  }
+}
+
+function Remove-HiddenPairRow {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($Row in (0..8)) {
+    $Numbers = (($fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.PossCount -gt 1}).possiblevalues | Group-Object | Where-Object {$_.Count -eq 2} ).name
+    If ($Numbers -ne $null) {
+      $HiddenCells = $fnPuzzle | Where-Object {$_.Row -eq $Row} | Where-Object {$_.PossibleValues -contains $Numbers[0] -and $_.Possiblevalues -contains $Numbers[1]}
+      foreach ($Cell in $HiddenCells){$fnPuzzle[$Cell.Pos].PossibleValues = $fnPuzzle[$Cell.Pos].PossibleValues = $Numbers}
+    }
+  }
+}
+
+function Remove-HiddenPairBox {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($Box in (0..8)) {
+    $Numbers = (($fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.PossCount -gt 1}).possiblevalues | Group-Object | Where-Object {$_.Count -eq 2} ).name
+    If ($Numbers -ne $null) {
+      $HiddenCells = $fnPuzzle | Where-Object {$_.Box -eq $Box} | Where-Object {$_.PossibleValues -contains $Numbers[0] -and $_.Possiblevalues -contains $Numbers[1]}
+      foreach ($Cell in $HiddenCells){$fnPuzzle[$Cell.Pos].PossibleValues = $fnPuzzle[$Cell.Pos].PossibleValues = $Numbers}
+    }
   }
 }
 
@@ -255,9 +296,12 @@ function Remove-XWingRow {
 
 ##  Main Code ##
 Clear-Host
+$BruteForce = $false
+$BruteAttempt = 0
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
 do {
+  $BoardStrBefore = $Board.Val -join ''
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
   Get-SoleCandidate -fnPuzzle $Board
@@ -278,4 +322,18 @@ do {
   Remove-HiddenPossibles -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
+  Remove-HiddenPairCol -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board  
+  Remove-HiddenPairRow -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+  Remove-HiddenPairBox -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+  Show-Board -fnPuzzle $Board
+
+
+  $BoardStrAfter = $Board.Val -join ''
+  if ($BoardStrBefore -eq $BoardStrAfter ) {}
+  elseif ($BoardStrBefore -eq $BoardStrAfter ) {}
 } until ($Board.Val -notcontains '-')
