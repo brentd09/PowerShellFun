@@ -310,7 +310,7 @@ $BruteAttempt = 0
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
 do {
-  $BoardStrBefore = $Board.Val -join ''
+  $BoardStrBefore = $Board.Val -join '' 
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
   Get-SoleCandidate -fnPuzzle $Board
