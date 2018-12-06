@@ -144,7 +144,10 @@ function Remove-HiddenPairCol {
   )
   foreach ($Col in (0..8)) {
     $Numbers = (($fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -gt 1}).possiblevalues | Group-Object | Where-Object {$_.Count -eq 2} ).name
-    If ($Numbers -ne $null) {
+    If ($Numbers.Count -eq 2) {
+      $NumberCells = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossibleValues -Contains $Numbers[0] -and $_.PossibleValues -Contains $Numbers[1] }
+    }
+    If ($Numbers.Count -eq 2 -and $NumberCells.Count -eq 2) {
       $HiddenCells = $fnPuzzle | Where-Object {$_.Col -eq $Col} | Where-Object {$_.PossibleValues -contains $Numbers[0] -and $_.Possiblevalues -contains $Numbers[1]}
       foreach ($Cell in $HiddenCells){$fnPuzzle[$Cell.Pos].PossibleValues = $fnPuzzle[$Cell.Pos].PossibleValues = $Numbers}
     }
@@ -157,7 +160,10 @@ function Remove-HiddenPairRow {
   )
   foreach ($Row in (0..8)) {
     $Numbers = (($fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.PossCount -gt 1}).possiblevalues | Group-Object | Where-Object {$_.Count -eq 2} ).name
-    If ($Numbers -ne $null) {
+    If ($Numbers.Count -eq 2) {
+      $NumberCells = $fnPuzzle | Where-Object {$_.Row -eq $Row -and $_.PossibleValues -Contains $Numbers[0] -and $_.PossibleValues -Contains $Numbers[1] }
+    }
+    If ($Numbers.Count -eq 2 -and $NumberCells.Count -eq 2) {
       $HiddenCells = $fnPuzzle | Where-Object {$_.Row -eq $Row} | Where-Object {$_.PossibleValues -contains $Numbers[0] -and $_.Possiblevalues -contains $Numbers[1]}
       foreach ($Cell in $HiddenCells){$fnPuzzle[$Cell.Pos].PossibleValues = $fnPuzzle[$Cell.Pos].PossibleValues = $Numbers}
     }
@@ -170,7 +176,10 @@ function Remove-HiddenPairBox {
   )
   foreach ($Box in (0..8)) {
     $Numbers = (($fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.PossCount -gt 1}).possiblevalues | Group-Object | Where-Object {$_.Count -eq 2} ).name
-    If ($Numbers -ne $null) {
+    If ($Numbers.Count -eq 2) {
+      $NumberCells = $fnPuzzle | Where-Object {$_.Box -eq $Box -and $_.PossibleValues -Contains $Numbers[0] -and $_.PossibleValues -Contains $Numbers[1] }
+    }
+    If ($Numbers.Count -eq 2 -and $NumberCells.Count -eq 2) {
       $HiddenCells = $fnPuzzle | Where-Object {$_.Box -eq $Box} | Where-Object {$_.PossibleValues -contains $Numbers[0] -and $_.Possiblevalues -contains $Numbers[1]}
       foreach ($Cell in $HiddenCells){$fnPuzzle[$Cell.Pos].PossibleValues = $fnPuzzle[$Cell.Pos].PossibleValues = $Numbers}
     }
