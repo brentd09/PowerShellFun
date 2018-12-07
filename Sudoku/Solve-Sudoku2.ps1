@@ -25,7 +25,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----'
+  $Puzzle = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' 
 )
 class BoardPosition {
   [string]$Val
@@ -308,52 +308,73 @@ function Remove-XWingRow {
 ##  Main Code ##
 Clear-Host
 $BruteForce = $false
-$BruteAttempt = 0
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
 do {
   $BoardStrBefore = $Board.Val -join '' 
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
+#  Show-Board -fnPuzzle $Board
 
   Get-SoleCandidate -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
+#  Show-Board -fnPuzzle $Board
 
   Get-UniqueCandidate -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
+#  Show-Board -fnPuzzle $Board
 
   Remove-NakedPairCol -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
+#  Show-Board -fnPuzzle $Board
 
   Remove-NakedPairRow -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
+#  Show-Board -fnPuzzle $Board
 
   Remove-NakedPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
-
+#  Show-Board -fnPuzzle $Board
+ 
   Remove-HiddenPossibles -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
- 
+ <# 
   Remove-HiddenPairCol -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board 
+#  Show-Board -fnPuzzle $Board 
 
   Remove-HiddenPairRow -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
+#  Show-Board -fnPuzzle $Board
  
   Remove-HiddenPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
 
-
   $BoardStrAfter = $Board.Val -join ''
-  if ($BoardStrBefore -eq $BoardStrAfter ) {}
-  elseif ($BoardStrBefore -eq $BoardStrAfter ) {}
+  if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\d') {
+    $Dummy = Read-Host -Prompt 'Stumped, add more code to solve the impossible ones'
+    break
+  }
+ 
+  if ($BoardStrBefore -eq $BoardStrAfter ) {
+    if ($BruteForce -eq $true) {
+      #restore old board
+      $Board = $CopyBoard.psobject.Copy()
+      $BruteForce = $false
+    }
+    else {
+      $BruteForce = $true
+      #Copy board
+      $CopyBoard = $Board.psobject.Copy()
+      #randomly select a value
+      $TwoRemaining = $Board | Where-Object {$_.PossCount -eq 2} 
+      $PickOneObject = $TwoRemaining | Get-Random
+      $PickOneValue = $PickOneObject.PossibleValues | Get-Random
+      $Board[$PickOneObject.Pos].Val = $PickOneValue
+      $Board[$PickOneObject.Pos].PossibleValues = $PickOneValue
+      Remove-Possibles -fnPuzzle $Board
+    }
+  }
+  #>
 } until ($Board.Val -notcontains '-')
