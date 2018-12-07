@@ -313,27 +313,21 @@ Show-Board -fnPuzzle $Board
 do {
   $BoardStrBefore = $Board.Val -join '' 
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board
 
   Get-SoleCandidate -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board
 
   Get-UniqueCandidate -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board
 
   Remove-NakedPairCol -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board
 
   Remove-NakedPairRow -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board
 
   Remove-NakedPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board
  
   Remove-HiddenPossibles -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
