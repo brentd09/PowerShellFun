@@ -303,6 +303,20 @@ function Remove-XWingRow {
   # Need to find a val that appear only twice in two rows that form a rectangle
 }
 
+function Remove-SwordFishCol {
+  Param (
+    $fnPuzzle
+  )
+  # 
+}
+
+function Remove-SwordFishRow {
+  Param (
+    $fnPuzzle
+  )
+  # 
+}
+
 
 
 ##  Main Code ##
