@@ -25,7 +25,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' 
+  $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' 
 )
 class BoardPosition {
   [string]$Val
@@ -360,6 +360,7 @@ function Remove-SwordFishRow {
 ##  Main Code ##
 Clear-Host
 $BeforeSolve = Get-Date
+$Stumped = $false
 $BruteForce = $false
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
@@ -400,34 +401,17 @@ do {
   Remove-HiddenPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
-
+#>
   $BoardStrAfter = $Board.Val -join ''
   if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\d') {
-    $Dummy = Read-Host -Prompt 'Stumped, add more code to solve the impossible ones'
+    Write-Host 'Stumped, add more code to solve the impossible ones'
+    $Stumped = $true
     break
   }
  
-  if ($BoardStrBefore -eq $BoardStrAfter ) {
-    if ($BruteForce -eq $true) {
-      #restore old board
-      $Board = $CopyBoard.psobject.Copy()
-      $BruteForce = $false
-    }
-    else {
-      $BruteForce = $true
-      #Copy board
-      $CopyBoard = $Board.psobject.Copy()
-      #randomly select a value
-      $TwoRemaining = $Board | Where-Object {$_.PossCount -eq 2} 
-      $PickOneObject = $TwoRemaining | Get-Random
-      $PickOneValue = $PickOneObject.PossibleValues | Get-Random
-      $Board[$PickOneObject.Pos].Val = $PickOneValue
-      $Board[$PickOneObject.Pos].PossibleValues = $PickOneValue
-      Remove-Possibles -fnPuzzle $Board
-    }
-  }
-  #>
 } until ($Board.Val -notcontains '-')
-$AfterSolve = Get-Date
-$TotalSec = ($AfterSolve - $BeforeSolve).totalseconds
-Write-Host -ForegroundColor Yellow "`nIt took $TotalSec seconds to solve that one"
+If ($Stumped -eq $false) {
+  $AfterSolve = Get-Date
+  $TotalSec = ($AfterSolve - $BeforeSolve).totalseconds
+  Write-Host -ForegroundColor Yellow "`nIt took $TotalSec seconds to solve that one"
+}
