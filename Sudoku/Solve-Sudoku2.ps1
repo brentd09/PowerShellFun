@@ -97,6 +97,44 @@ function Get-UniqueCandidate {
   }
 }
 
+function Get-HiddenCandidate {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($Index in (0..8)) {
+    #Check Row
+    $CurrentRow = $fnPuzzle | Where-Object {$_.Row -eq $Index -and $_.Val -notmatch '/d'}
+    $GroupInfo = $CurrentRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
+    if (($GroupInfo | Measure-Object).Count -ge 1){
+      foreach ($Single in $GroupInfo) {
+        $Found = $CurrentRow | Where-Object {$_.PossibleValues -contains $Single.Name}
+        $fnPuzzle[$Found.Pos].Val = $Single.Name
+        $fnPuzzle[$Found.Pos].PossibleValues = $Single.Name
+      }
+    }
+    #Check Col
+    $CurrentCol = $fnPuzzle | Where-Object {$_.Col -eq $Index -and $_.Val -notmatch '/d'}
+    $GroupInfo = $CurrentCol.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
+    if (($GroupInfo | Measure-Object).Count -ge 1){
+      foreach ($Single in $GroupInfo) {
+        $Found = $CurrentCol | Where-Object {$_.PossibleValues -contains $Single.Name}
+        $fnPuzzle[$Found.Pos].Val = $Single.Name
+        $fnPuzzle[$Found.Pos].PossibleValues = $Single.Name
+      }
+    }
+    #check Box
+    $CurrentBox = $fnPuzzle | Where-Object {$_.Box -eq $Index -and $_.Val -notmatch '/d'}
+    $GroupInfo = $CurrentBox.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
+    if (($GroupInfo | Measure-Object).Count -ge 1){
+      foreach ($Single in $GroupInfo) {
+        $Found = $CurrentBox | Where-Object {$_.PossibleValues -contains $Single.Name}
+        $fnPuzzle[$Found.Pos].Val = $Single.Name
+        $fnPuzzle[$Found.Pos].PossibleValues = $Single.Name
+      }
+    }
+  }
+}
+
 function Show-Board {
   Param (
     $fnPuzzle
@@ -321,6 +359,7 @@ function Remove-SwordFishRow {
 
 ##  Main Code ##
 Clear-Host
+$BeforeSolve = Get-Date
 $BruteForce = $false
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
@@ -341,6 +380,9 @@ do {
   Remove-Possibles -fnPuzzle $Board
 
   Remove-NakedPairBox -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+
+  Get-HiddenCandidate -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
  
   Remove-HiddenPossibles -fnPuzzle $Board
@@ -386,3 +428,6 @@ do {
   }
   #>
 } until ($Board.Val -notcontains '-')
+$AfterSolve = Get-Date
+$TotalSec = ($AfterSolve - $BeforeSolve).totalseconds
+Write-Host -ForegroundColor Yellow "`nIt took $TotalSec seconds to solve that one"
