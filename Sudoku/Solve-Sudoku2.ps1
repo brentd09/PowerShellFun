@@ -22,10 +22,12 @@
     $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' Impossible
     $Puzzle = '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' Impossible
     $Puzzle = '----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----' impossible
+    $Puzzle = '--7---28---4-25---28---46---9---6---3-------2---1---9---62---75---57-4---78---3--' impossible 
+    $Puzzle = '1-----569492-561-8-561-924---964-8-1-64-1----218-356-4-4-5---1-9-5-614-2621-----5' impossible (xwing)
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' 
+  $Puzzle =   '1-----569492-561-8-561-924---964-8-1-64-1----218-356-4-4-5---1-9-5-614-2621-----5' 
 )
 class BoardPosition {
   [string]$Val
@@ -331,13 +333,28 @@ function Remove-XWingCol {
   Param (
     $fnPuzzle
   )
+  $PairsArray = @()
+  foreach ($Col in (0..8)){
+    $GroupCol = $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -gt 1} | Group-Object -Property PossibleValues
+    [array]$TwoOnly = $GroupCol | Where-Object {$_.Count -eq 2}
+    if ($TwoOnly.Count -gt 0) {$PairsArray += $TwoOnly.Name}
+  }
+  Start-Sleep -Milliseconds 10
   # Need to find a val that appear only twice in two columns that form a rectangle
+  # $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -gt 1} | select-object -ExpandProperty possiblevalues | group-object
 }
 
 function Remove-XWingRow {
   Param (
     $fnPuzzle
   )
+  $PairsArray = @()
+  foreach ($Row in (0..8)){
+    $GroupRow = $fnPuzzle | Where-Object {$_.Row -eq $Row} | Group-Object -Property PossibleValues
+    [array]$TwoOnly = $GroupRow | Where-Object {$_.Count -eq 2}
+    if ($TwoOnly.Count -gt 0) {$PairsArray += $TwoOnly.Name}
+  }
+  Start-Sleep -Milliseconds 10
   # Need to find a val that appear only twice in two rows that form a rectangle
 }
 
@@ -381,6 +398,12 @@ do {
   Remove-Possibles -fnPuzzle $Board
 
   Remove-NakedPairBox -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+
+  Remove-XWingCol -fnPuzzle $Board
+  Remove-Possibles -fnPuzzle $Board
+ 
+  Remove-XWingRow -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
 
   Get-HiddenCandidate -fnPuzzle $Board
