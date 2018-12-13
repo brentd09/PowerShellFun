@@ -162,7 +162,8 @@ function Show-Possibles {
   Param (
     $fnPuzzle
   )
-  Clear-Host
+  Write-Host
+  $ConsoleBGColor = [console]::BackgroundColor
   foreach ($Row in (0..8)) {
     foreach ($SubRow in (1,4,7)) {
       foreach ($SubCol in (0..26)) {
@@ -171,7 +172,7 @@ function Show-Possibles {
         $Numstr = $Num -as [string]
         $Pos = $Row * 9 + $Col 
         $BoxObj = $fnPuzzle[$Pos]
-        if ($BoxObj.PossCount -eq 1) {$fg = 'black'}
+        if ($BoxObj.PossCount -eq 1) {$fg = $ConsoleBGColor}
         else {$fg = 'White'}
         If ($Num -in (3,6,9) -and $SubCol -ne 26){$Divider = ' |'; $DivFg = "DarkGray"}
         else {$Divider = ' '; $DivFg = 'Gray'}
@@ -179,7 +180,7 @@ function Show-Possibles {
         If ($BoxObj.PossibleValues -contains $NumStr) {
           $Output = $Numstr
         }
-        else {$Output = '-'; $fg = "Black"}
+        else {$Output = '-'; $fg = $ConsoleBGColor}
         Write-Host -NoNewline -ForegroundColor $fg "$Output"
         Write-Host -NoNewline -ForegroundColor $DivFg $Divider
       }
@@ -468,7 +469,6 @@ do {
 #>
   $BoardStrAfter = $Board.Val -join ''
   if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\d') {
-    [console]::BackgroundColor = 'Black'
     Show-Possibles -fnPuzzle $Board
     Write-Host 'Stumped, add more code to solve the impossible ones'
     $Stumped = $true
