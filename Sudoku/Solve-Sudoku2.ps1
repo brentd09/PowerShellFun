@@ -27,7 +27,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle =   '1-----569492-561-8-561-924---964-8-1-64-1----218-356-4-4-5---1-9-5-614-2621-----5' 
+  $Puzzle =   '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' 
 )
 class BoardPosition {
   [string]$Val
@@ -162,6 +162,7 @@ function Show-Possibles {
   Param (
     $fnPuzzle
   )
+  Clear-Host
   foreach ($Row in (0..8)) {
     foreach ($SubRow in (1,4,7)) {
       foreach ($SubCol in (0..26)) {
@@ -170,12 +171,13 @@ function Show-Possibles {
         $Numstr = $Num -as [string]
         $Pos = $Row * 9 + $Col 
         $BoxObj = $fnPuzzle[$Pos]
+        if ($BoxObj.PossCount -eq 1) {$fg = 'black'}
+        else {$fg = 'White'}
         If ($Num -in (3,6,9) -and $SubCol -ne 26){$Divider = ' |'; $DivFg = "DarkGray"}
         else {$Divider = ' '; $DivFg = 'Gray'}
-        if ($SubCol -in (8,17))  {$Divider = ' #';$DivFg = 'DarkGray' }
+        if ($SubCol -in (8,17))  {$Divider = ' |';$DivFg = 'Yellow' }
         If ($BoxObj.PossibleValues -contains $NumStr) {
           $Output = $Numstr
-          $fg = "White"
         }
         else {$Output = '-'; $fg = "Black"}
         Write-Host -NoNewline -ForegroundColor $fg "$Output"
@@ -185,13 +187,13 @@ function Show-Possibles {
     }
     if ($Row -ne 8) {
       if ($Row -in (2,5)) {      
-        Write-Host -ForegroundColor DarkGray '======+======+======#======+======+======#======+======+====='
+        Write-Host -ForegroundColor Yellow '------+------+------+------+------+------+------+------+-----'
       }
       else {
         Write-Host -NoNewline -ForegroundColor 'DarkGray' '------+------+------'
-        Write-Host -NoNewline -ForegroundColor 'DarkGray' '#'
+        Write-Host -NoNewline -ForegroundColor 'Yellow' '+'
         Write-Host -NoNewline -ForegroundColor 'DarkGray' '------+------+------'
-        Write-Host -NoNewline -ForegroundColor 'DarkGray' '#'
+        Write-Host -NoNewline -ForegroundColor 'Yellow' '+'
         Write-Host -ForegroundColor 'DarkGray' '------+------+-----'
       }
     }
