@@ -158,6 +158,45 @@ function Show-Board {
   }
   Write-Host
 }
+function Show-Possibles {
+  Param (
+    $fnPuzzle
+  )
+  foreach ($Row in (0..8)) {
+    foreach ($SubRow in (1,4,7)) {
+      foreach ($SubCol in (0..26)) {
+        $Col = [math]::Truncate($SubCol / 3)
+        $Num = ($SubCol % 3) + $SubRow
+        $Numstr = $Num -as [string]
+        $Pos = $Row * 9 + $Col 
+        $BoxObj = $fnPuzzle[$Pos]
+        If ($Num -in (3,6,9) -and $SubCol -ne 26){$Divider = ' |'; $DivFg = "DarkGray"}
+        else {$Divider = ' '; $DivFg = 'Gray'}
+        if ($SubCol -in (8,17))  {$Divider = ' #';$DivFg = 'DarkGray' }
+        If ($BoxObj.PossibleValues -contains $NumStr) {
+          $Output = $Numstr
+          $fg = "White"
+        }
+        else {$Output = '-'; $fg = "Black"}
+        Write-Host -NoNewline -ForegroundColor $fg "$Output"
+        Write-Host -NoNewline -ForegroundColor $DivFg $Divider
+      }
+     Write-Host
+    }
+    if ($Row -ne 8) {
+      if ($Row -in (2,5)) {      
+        Write-Host -ForegroundColor DarkGray '======+======+======#======+======+======#======+======+====='
+      }
+      else {
+        Write-Host -NoNewline -ForegroundColor 'DarkGray' '------+------+------'
+        Write-Host -NoNewline -ForegroundColor 'DarkGray' '#'
+        Write-Host -NoNewline -ForegroundColor 'DarkGray' '------+------+------'
+        Write-Host -NoNewline -ForegroundColor 'DarkGray' '#'
+        Write-Host -ForegroundColor 'DarkGray' '------+------+-----'
+      }
+    }
+  }
+}
 
 function Remove-Possibles  {
   Param ($fnPuzzle)
@@ -427,6 +466,7 @@ do {
 #>
   $BoardStrAfter = $Board.Val -join ''
   if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\d') {
+    Show-Possibles -fnPuzzle $Board
     Write-Host 'Stumped, add more code to solve the impossible ones'
     $Stumped = $true
     break
