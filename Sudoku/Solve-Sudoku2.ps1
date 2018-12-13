@@ -468,6 +468,7 @@ do {
 #>
   $BoardStrAfter = $Board.Val -join ''
   if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\d') {
+    [console]::BackgroundColor = 'Black'
     Show-Possibles -fnPuzzle $Board
     Write-Host 'Stumped, add more code to solve the impossible ones'
     $Stumped = $true
