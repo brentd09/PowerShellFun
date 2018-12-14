@@ -454,19 +454,16 @@ do {
   Remove-HiddenPossibles -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
- <# 
+
   Remove-HiddenPairCol -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board 
 
   Remove-HiddenPairRow -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-#  Show-Board -fnPuzzle $Board
  
   Remove-HiddenPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-  Show-Board -fnPuzzle $Board
-#>
+
   $BoardStrAfter = $Board.Val -join ''
   if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\d') {
     Show-Possibles -fnPuzzle $Board
@@ -481,3 +478,52 @@ If ($Stumped -eq $false) {
   $TotalSec = ($AfterSolve - $BeforeSolve).totalseconds
   Write-Host -ForegroundColor Yellow "`nIt took $TotalSec seconds to solve that one"
 }
+
+<#
+function Compare-Array {
+  Param (
+    [Parameter(Mandatory=$true)]
+    $RefArray,
+    [Parameter(Mandatory=$true)]
+    $DifArray
+  )
+  $RDEqual = $true
+  $RDSubset = $true
+  $DRSubset = $true
+  $RDNonCom = $true
+  # subsets
+  foreach ($element in $RefArray) {
+    if ($element -notin $DifArray) {$RDSubset = $false}
+  }
+  foreach ($element in $DifArray) {
+    if ($element -notin $RefArray) {$DRSubset = $false}
+  }
+  # equal
+  if ($RDSubset -eq $true -and $DRSubset -eq $true){$RDEqual = $true}
+  else {$RDEqual = $false}
+
+  # Do Dif and ref have non common elements
+  if ($RDSubset -eq $false -and $DRSubset -eq $false){$RDNonCom = $true}
+  else {$RDNonCom = $false}
+  $Prop = [ordered]@{
+    Ref = $RefArray
+    Dif = $DifArray
+    Equal = $RDEqual
+    SubsetRD = $RDSubset
+    SubSetDR = $DRSubset
+    NonCommon = $RDNonCom
+  }
+  New-Object -TypeName psobject -Property $Prop
+}
+
+need a function that will compare these arrays to determine which are the same and subsets
+0-1 1-2 2-3 3-4 4-5 5-6 6-7 7-8
+0-2 1-3 2-4 3-5 4-6 5-7 6-8
+0-3 1-4 2-5 3-6 4-7 5-8
+0-4 1-5 2-6 3-7 4-8
+0-5 1-6 2-7 3-8
+0-6 1-7 2-8
+0-7 1-8
+0-8
+
+#>
