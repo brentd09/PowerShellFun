@@ -1,9 +1,12 @@
 <#
 .SYNOPSIS
-  Solve Sudoku
+  Solve Sudoku puzzles
 .DESCRIPTION
   This Script solves Sudoku Puzzles, you will need to input the puzzle as one string of characters
-  use - for blank squares
+  use - for blank squares.
+  This program solves the puzzle using known elimination techniques such as:
+  Unique candidate, sole candidate, hidden candidate, hidden pair, naked pair
+  Soon it will be able to solve for X-Wing and SwordFish as well.
 .EXAMPLE
   Solve-Sudoku -Puzzle '1----3-----6--5----291--6-361-5-23---3--6--9---84-1-267-5--943----7--8-----3----9'
   This represents the Puzzle as a string to the script
@@ -454,7 +457,7 @@ do {
   Remove-NakedPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
   Show-Board -fnPuzzle $Board
-  
+
   Remove-XWingCol -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
  
