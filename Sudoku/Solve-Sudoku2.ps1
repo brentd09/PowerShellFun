@@ -404,7 +404,18 @@ function Remove-SwordFishCol {
   Param (
     $fnPuzzle
   )
-  # 
+  foreach ($TestNum in @(1..9)) {
+    foreach ($RowNum in @(0..8)) { 
+      $ObjPosMatching = $Board | Where-Object {$_.row -eq $RowNum -and $_.PossibleValues -contains $TestNum}
+      $ColsWhereNumExists = $ObjPosMatching.col
+      $NumOf = $ColsWhereNumExists.Count
+      if ($NumOf -notin @(2,3)) {continue}
+      else {
+        
+      }
+
+    }
+  }
 }
 
 function Remove-SwordFishRow {
@@ -442,12 +453,14 @@ do {
 
   Remove-NakedPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
-
+  Show-Board -fnPuzzle $Board
+  
   Remove-XWingCol -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
  
   Remove-XWingRow -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
+
 
   Get-HiddenCandidate -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
