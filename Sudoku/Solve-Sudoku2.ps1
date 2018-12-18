@@ -381,7 +381,7 @@ function Remove-XWingCol {
     [array]$TwoOnly = $GroupCol | Where-Object {$_.Count -eq 2}
     if ($TwoOnly.Count -gt 0) {$PairsArray += $TwoOnly.Name}
   }
-  Start-Sleep -Milliseconds 10
+  
   # Need to find a val that appear only twice in two columns that form a rectangle
   # $fnPuzzle | Where-Object {$_.Col -eq $Col -and $_.PossCount -gt 1} | select-object -ExpandProperty possiblevalues | group-object
 }
@@ -396,7 +396,7 @@ function Remove-XWingRow {
     [array]$TwoOnly = $GroupRow | Where-Object {$_.Count -eq 2}
     if ($TwoOnly.Count -gt 0) {$PairsArray += $TwoOnly.Name}
   }
-  Start-Sleep -Milliseconds 10
+
   # Need to find a val that appear only twice in two rows that form a rectangle
 }
 
@@ -425,7 +425,7 @@ $Brute2 = $false
 $Board = Create-Board $Puzzle
 Show-Board -fnPuzzle $Board
 do {
-  $BoardStrBefore = $Board.Val -join '' 
+  $BoardStrBefore = $Board.Val -join ''
   Remove-Possibles -fnPuzzle $Board
 
   Get-SoleCandidate -fnPuzzle $Board
@@ -467,32 +467,45 @@ do {
 
   $BoardStrAfter = $Board.Val -join ''
   if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\D') {
-    if ($Brute1 -eq $false -and $Brute2 -eq $false) {
-      $Brute1 = $true
-      $TwosPos = ($Board | Where-Object {$_.PossCount -eq 2} | Get-Random).Pos
-      $Brute1Pick = $Board[$TwosPos].PossibleValues | Get-Random
-      $Brute2Pick = $Board[$TwosPos].PossibleValues | Where-Object {$_ -ne $Brute1Pick}
-      $BoardBackup = $Board.psobject.Copy()
-      $Board[$TwosPos].PossibleValues = @($Brute1Pick)
-      $Board[$TwosPos].PossValString = @($Brute1Pick)
-      Remove-Possibles -fnPuzzle $Board
-    }
-    elseif ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\D' -and $Brute1 -eq $true -and $Brute2 -eq $false){
-      $Board = $BoardBackup.psobject.Copy()
-      $Brute2 = $true
-      $BoardBackup = $Board.psobject.Copy()
-      $Board[$TwosPos].PossibleValues = @($Brute2Pick)
-      $Board[$TwosPos].PossValString = @($Brute2Pick)
-      Remove-Possibles -fnPuzzle $Board
-    }
-    elseif (($Brute1 -eq $true -and $Brute2 -eq 2) -or $TwosPos.count -eq 0 ) {
-      $Board = $BoardBackup.psobject.Copy()
-      Show-Possibles -fnPuzzle $Board
-      Write-Host 'Stumped, add more code to solve the impossible ones'
-      $Stumped = $true
-      break
-    }
+    Show-Possibles -fnPuzzle $Board
+    Write-Host 'Stumped, add more code to solve the impossible ones'
+    $Stumped = $true
+    break
   }
+  #$BadSolve = $false
+  #foreach ($BoardPos in $Board) {
+  #  if ($BoardPos.val -match '\D' -and $BoardPos.PossibleValues.Count -eq 0){
+  #    $BadSolve = $true
+  #  }
+  #}
+  #$BoardStrAfter = $Board.Val -join ''
+  #if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\D') {
+  #  if ($Brute1 -eq $false -and $Brute2 -eq $false) {
+  #    $Brute1 = $true
+  #    $TwosPos = ($Board | Where-Object {$_.PossCount -eq 2} | Get-Random).Pos
+  #    $Brute1Pick = $Board[$TwosPos].PossibleValues | Get-Random
+  #    $Brute2Pick = $Board[$TwosPos].PossibleValues | Where-Object {$_ -ne $Brute1Pick}
+  #    $BoardBackup = $Board.psobject.Copy()
+  #    $Board[$TwosPos].PossibleValues = @($Brute1Pick)
+  #    $Board[$TwosPos].PossValString = @($Brute1Pick)
+  #    Remove-Possibles -fnPuzzle $Board
+  #  }
+  #  elseif ($BadSolve -eq $true -and $Brute2 -eq $false){
+  #    $Board = $BoardBackup.psobject.Copy()
+  #    $Brute2 = $true
+# #     $BoardBackup = $Board.psobject.Copy()
+  #    $Board[$TwosPos].PossibleValues = @($Brute2Pick)
+  #    $Board[$TwosPos].PossValString = @($Brute2Pick)
+  #    Remove-Possibles -fnPuzzle $Board
+  #  }
+  #  elseif (($Brute1 -eq $true -and $Brute2 -eq 2) -or $TwosPos.count -eq 0 ) {
+  #    $Board = $BoardBackup.psobject.Copy()
+  #    Show-Possibles -fnPuzzle $Board
+  #    Write-Host 'Stumped, add more code to solve the impossible ones'
+  #    $Stumped = $true
+  #    break
+  #  }
+  #}
 } until ($Board.Val -notcontains '-')
 If ($Stumped -eq $false) {
   $AfterSolve = Get-Date
@@ -547,4 +560,13 @@ need a function that will compare these arrays to determine which are the same a
 0-7 1-8
 0-8
 
+##################
+Some code to help identify xwing and swordfish
+$Cols = ($Board | where {$_.row -eq 0 -and $_.possiblevalues -contains 3}).col
+$NumOf = $Cols.Count 
+# The $Cols help show us where the 3 is in this row 
+# and $NumOf show us how many in this row (2) means xwing or swordfish (3) means swordfish only option
+# Then we would need to search all other rows and compare cols to see if it is xwing 
+# or swordfish or nothing at all
+################
 #>
