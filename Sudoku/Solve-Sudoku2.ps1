@@ -74,6 +74,83 @@ function Create-Board {
   $Board
 }
 
+function Compare-Array {
+  <#
+  .SYNOPSIS
+    This will compare contents of two arrays to determine what relation they are to each other
+  .DESCRIPTION
+    When running this command you enter Reference and a Difference arrays. These are compared
+    and it determines whether the arrays are equal, subset, or not the same. An object output
+    is produced showing the arays and the comparison result and a result code with the following
+    meaning:
+    0 Dif and Ref are Equal
+    1 
+  .EXAMPLE
+    Compare-Array -Reference $Array1 -Difference $Array2
+    These parameters are mandatory and require arrays as input
+  .NOTES
+    General notes
+    Created by: Brent Denny
+    Created on: 19-Dec-2018
+  #>
+  [cmdletbinding()]
+  Param (
+    [Parameter(Mandatory=$true)]
+    [string[]]$Reference,
+    [Parameter(Mandatory=$true)]
+    [string[]]$Difference
+  )
+  $DRSubset = $true
+  $RDSubset = $true
+  foreach ($element in $Reference) {
+    if ($element -notin $Difference) {$RDSubset = $false}
+  }
+  foreach ($element in $Difference) {
+    if ($element -notin $Reference) {$DRSubset = $false}
+  }
+
+  if ($RDSubset -eq $true -and $DRSubset -eq $true){
+    $RDEqual  = $true
+    $RDNonCom = $false
+    $ResultCode = 0
+  }
+  if ($RDSubset -eq $false -and $DRSubset -eq $false){
+    $RDEqual  = $false
+    $RDNonCom = $true
+    $ResultCode = 3
+  }
+
+  if ($RDSubset -eq $true -and $DRSubset -eq $false) {
+    $RDEqual  = $false
+    $RDSubset = $true
+    $DRSubset = $false
+    $RDNonCom = $false
+    $ResultCode = 1
+  }
+  if ($DRSubset -eq $true -and $RDSubset -eq $false) {
+    $RDEqual  = $false
+    $RDSubset = $false
+    $DRSubset = $true
+    $RDNonCom = $false
+    $ResultCode = 2
+  }
+  if ($RDSubset -eq $true -and $DRSubset -eq $true) {
+    $RDSubset = $false
+    $DRSubset = $false
+  }
+  $Prop = [ordered]@{
+    Ref = $Reference
+    Dif = $Difference
+    DifRefEqual = $RDEqual
+    RefSubsetOfDif = $RDSubset
+    DifSubsetOfRef = $DRSubset
+    DifRefNotSame = $RDNonCom
+    ResultCode = $ResultCode
+  }
+  New-Object -TypeName psobject -Property $Prop
+}
+
+
 # Functions
 Function Get-SoleCandidate {
   Param (
