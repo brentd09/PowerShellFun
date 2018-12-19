@@ -644,4 +644,14 @@ $NumOf = $Cols.Count
 # Then we would need to search all other rows and compare cols to see if it is xwing 
 # or swordfish or nothing at all
 ################
+
+(Compare-MultipleArray $a $b $c $d |
+ where resultcode -in (0,1,2)).refnum +
+ (Compare-MultipleArray $a $b $c $d |
+ where resultcode -in (0,1,2)).difnum |
+ Select-Object -Unique
+
+# This code will detect a swordfish given a few arrays, This could be modified to find XWing as well
+# by only detecting those that are equal for two only (3 is swordfish)
+
 #>
