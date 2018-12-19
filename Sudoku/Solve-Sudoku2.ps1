@@ -75,24 +75,6 @@ function Create-Board {
 }
 
 function Compare-Array {
-  <#
-  .SYNOPSIS
-    This will compare contents of two arrays to determine what relation they are to each other
-  .DESCRIPTION
-    When running this command you enter Reference and a Difference arrays. These are compared
-    and it determines whether the arrays are equal, subset, or not the same. An object output
-    is produced showing the arays and the comparison result and a result code with the following
-    meaning:
-    0 Dif and Ref are Equal
-    1 
-  .EXAMPLE
-    Compare-Array -Reference $Array1 -Difference $Array2
-    These parameters are mandatory and require arrays as input
-  .NOTES
-    General notes
-    Created by: Brent Denny
-    Created on: 19-Dec-2018
-  #>
   [cmdletbinding()]
   Param (
     [Parameter(Mandatory=$true)]
