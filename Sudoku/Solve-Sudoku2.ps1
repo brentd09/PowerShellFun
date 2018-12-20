@@ -547,40 +547,7 @@ do {
     $Stumped = $true
     break
   }
-  #$BadSolve = $false
-  #foreach ($BoardPos in $Board) {
-  #  if ($BoardPos.val -match '\D' -and $BoardPos.PossibleValues.Count -eq 0){
-  #    $BadSolve = $true
-  #  }
-  #}
-  #$BoardStrAfter = $Board.Val -join ''
-  #if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\D') {
-  #  if ($Brute1 -eq $false -and $Brute2 -eq $false) {
-  #    $Brute1 = $true
-  #    $TwosPos = ($Board | Where-Object {$_.PossCount -eq 2} | Get-Random).Pos
-  #    $Brute1Pick = $Board[$TwosPos].PossibleValues | Get-Random
-  #    $Brute2Pick = $Board[$TwosPos].PossibleValues | Where-Object {$_ -ne $Brute1Pick}
-  #    $BoardBackup = $Board.psobject.Copy()
-  #    $Board[$TwosPos].PossibleValues = @($Brute1Pick)
-  #    $Board[$TwosPos].PossValString = @($Brute1Pick)
-  #    Remove-Possibles -fnPuzzle $Board
-  #  }
-  #  elseif ($BadSolve -eq $true -and $Brute2 -eq $false){
-  #    $Board = $BoardBackup.psobject.Copy()
-  #    $Brute2 = $true
-# #     $BoardBackup = $Board.psobject.Copy()
-  #    $Board[$TwosPos].PossibleValues = @($Brute2Pick)
-  #    $Board[$TwosPos].PossValString = @($Brute2Pick)
-  #    Remove-Possibles -fnPuzzle $Board
-  #  }
-  #  elseif (($Brute1 -eq $true -and $Brute2 -eq 2) -or $TwosPos.count -eq 0 ) {
-  #    $Board = $BoardBackup.psobject.Copy()
-  #    Show-Possibles -fnPuzzle $Board
-  #    Write-Host 'Stumped, add more code to solve the impossible ones'
-  #    $Stumped = $true
-  #    break
-  #  }
-  #}
+
 } until ($Board.Val -notcontains '-')
 If ($Stumped -eq $false) {
   $AfterSolve = Get-Date
