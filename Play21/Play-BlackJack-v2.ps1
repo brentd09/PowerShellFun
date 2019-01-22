@@ -160,10 +160,10 @@ do {
   } until ($DealersTurn -eq $false -and $PlayersTurn -eq $false)
   # Determine the winner, if there is one
   $Winner = Check-WhoWon -DealerInfo $DealerStatus -PlayerInfo $PlayerStatus
-  Write-Host -NoNewline  "Winner is:"
+  Write-Host -NoNewline  "Winner is: "
   if ($Winner -eq 'Player') {$WinColor = 'Green'}
-  if ($Winner -eq 'Dealer') {$WinColor = 'Yellow'}
-  
-  write-host -foregroundcolor $WinColor "$Winner"
+  elseif ($Winner -eq 'Dealer') {$WinColor = 'Yellow'}
+  else {$WinColor = 'White'; $Winner = 'Draw'}
+  write-host -ForegroundColor $WinColor "$Winner"
   $PlayAgain = Read-Host -Prompt "Do you want to play again Y/N"
 } until ($PlayAgain -notlike "y*")  
