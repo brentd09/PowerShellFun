@@ -30,7 +30,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle =   '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' 
+  $Puzzle =  '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' 
 )
 class BoardPosition {
   [string]$Val
@@ -540,20 +540,20 @@ do {
   Remove-HiddenPairBox -fnPuzzle $Board
   Remove-Possibles -fnPuzzle $Board
 
-  $BoardStrAfter = $Board.Val -join ''
-  if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\D') {
-    Show-Possibles -fnPuzzle $Board
-    Write-Host 'Stumped, add more code to solve the impossible ones'
-    $Stumped = $true
-    break
-  }
+#  $BoardStrAfter = $Board.Val -join ''
+#  if ($BoardStrBefore -eq $BoardStrAfter -and $BoardStrAfter -match '\D') {
+#    Show-Possibles -fnPuzzle $Board
+#    Write-Host 'Stumped, add more code to solve the impossible ones'
+#    $Stumped = $true
+#    break
+#  }
 
 } until ($Board.Val -notcontains '-')
-If ($Stumped -eq $false) {
-  $AfterSolve = Get-Date
-  $TotalSec = ($AfterSolve - $BeforeSolve).totalseconds
-  Write-Host -ForegroundColor Yellow "`nIt took $TotalSec seconds to solve that one"
-}
+#If ($Stumped -eq $false) {
+#  $AfterSolve = Get-Date
+#  $TotalSec = ($AfterSolve - $BeforeSolve).totalseconds
+#  Write-Host -ForegroundColor Yellow "`nIt took $TotalSec seconds to solve that one"
+#}
 
 <#
 function Compare-Array {
