@@ -20,8 +20,9 @@ Param (
   [Parameter(Mandatory=$true)]
   [int]$NumberOfLifts,
   [ValidateSet("Light","Medium","Heavy")]
-  [string]$PeopleFrequency = "Medium"
+  [string]$PeopleFrequency = "light"
 )
+
 Class Lift {
   [int]$LiftNumber
   [string]$CurrentDirection
@@ -35,8 +36,8 @@ Class Lift {
     $this.LiftNumber = $LiftIndex
     $this.MaxLoad = $MaxLoad
     $this.CurrentFloor = 0
-    $this.CurrentDirection = "UP"
-    $this.LiftButtonsLit = [int]@()
+    $this.CurrentDirection = "STATIC" # UP DOWN STATIC
+    $this.LiftButtonsLit = @()
     $this.RespondingToFloor = 9999
     $this.CurrentLoad = 0
   }
@@ -45,17 +46,54 @@ Class Lift {
 Class LiftPatron {
   [int]$PersonId
   [int]$InitialFloor
-  [int]$DestinationDirection
+  [string]$DestinationDirection
   [int]$DestinationFLoor
   [bool]$TroubleMaker
+  [bool]$Status
 
-  LiftPatron ($PersonNum,$InitFloor,$DestinationDir) {
+  LiftPatron ($PersonNum,$InitFloor,$DestinationDir,$DestinationFlr) {
     $this.PersonId = $PersonNum
     $this.InitialFloor = $InitFloor
     $this.DestinationDirection = $DestinationDir
-    $this.DestinationFLoor = if ($DestinationDir = "UP") {Get-Random -Maximum ($Script:Floors + 1) -Minimum ($InitFloor + 1)}
+    $this.DestinationFloor = $DestinationFlr
     $this.TroubleMaker = ((Get-Random -Maximum 51 -Minimum 1) -eq 42)
+    $this.Status = "STATIC" # UP DOWN STATIC
   }
 }
 
-[LiftPatron]::New(1,0,"up")
+function Request-Lift {
+  Param (
+    $NewFloor,
+    $Direction,
+    [lift[]]$AllLifts
+  )
+  If ($Direction -eq "UP") {
+    $LiftsBelow = $AllLifts | Where-Object {$_.CurrentFloor -le $NewFloor -and ($_.CurrentDirection -eq "UP" -or $_.CurrentDirection -eq "STATIC")}
+    $ClosestLiftBelow = $LiftsBelow | Sort-Object -Property CurrentFloor | Select-Object -First 1
+    if ($ClosestLiftBelow.Count -gt 1) {$ClosestLiftBelow | Get-Random}
+    elseif ($ClosestLiftBelow.Count -eq 1) {$ClosestLiftBelow}
+  }
+}
+
+function Set-LiftResponding {
+  Param (
+    $RespondingLift,
+    $NewFlr,
+    
+  )
+}
+function New-Lift {
+  Param (
+    $LiftID,
+    $LiftLoad
+  )
+  [lift]::New($LiftID,$LiftLoad)
+}
+# # # # MAIN CODE # # # #
+
+$Lifts = foreach ($Index in (1..$NumberOfLifts)) {New-Lift -LiftID $Index -LiftLoad 16}
+
+
+$Patron = [LiftPatron]::New(1,5,"UP",15)
+$LiftResponding = Request-Lift -NewFloor $Patron.InitialFloor -Direction $Patron.DestinationDirection -AllLifts $Lifts
+$LiftResponding
