@@ -67,19 +67,33 @@ function Request-Lift {
     $Direction,
     [lift[]]$AllLifts
   )
+  $NoLiftsBelow = $false
+  $NoLiftsAbove = $false
   If ($Direction -eq "UP") {
-    $LiftsBelow = $AllLifts | Where-Object {$_.CurrentFloor -le $NewFloor -and ($_.CurrentDirection -eq "UP" -or $_.CurrentDirection -eq "STATIC")}
-    $ClosestLiftBelow = $LiftsBelow | Sort-Object -Property CurrentFloor | Select-Object -First 1
-    if ($ClosestLiftBelow.Count -gt 1) {$ClosestLiftBelow | Get-Random}
-    elseif ($ClosestLiftBelow.Count -eq 1) {$ClosestLiftBelow}
+    $LiftsBelow = $AllLifts | Where-Object {$_.CurrentFloor -le $NewFloor -and ($_.CurrentDirection -eq "UP" -or 
+                                                                                $_.CurrentDirection -eq "STATIC")}
+    if ($LiftsBelow.Count -ge 1) {                                                                             
+      $ClosestLiftBelow = $LiftsBelow | Sort-Object -Property CurrentFloor | Select-Object -First 1
+      $ClosestLiftBelow
+    } 
+    else {$NoLiftsBelow = $true}
   }
+  If ($Direction -eq "DOWN") {
+    $LiftsAbove = $AllLifts | Where-Object {$_.CurrentFloor -ge $NewFloor -and ($_.CurrentDirection -eq "DOWN" -or 
+                                                                                $_.CurrentDirection -eq "STATIC")}
+    if ($Lift.Count -ge 1) {
+      $ClosestLiftBelow = $LiftsBelow | Sort-Object -Property CurrentFloor | Select-Object -First 1
+      $ClosestLiftBelow
+    }
+    else {$NoLiftsAbove = $true}
+  }
+
 }
 
 function Set-LiftResponding {
   Param (
     $RespondingLift,
-    $NewFlr,
-    
+    $NewFlr
   )
 }
 function New-Lift {
@@ -93,7 +107,15 @@ function New-Lift {
 
 $Lifts = foreach ($Index in (1..$NumberOfLifts)) {New-Lift -LiftID $Index -LiftLoad 16}
 
-
-$Patron = [LiftPatron]::New(1,5,"UP",15)
-$LiftResponding = Request-Lift -NewFloor $Patron.InitialFloor -Direction $Patron.DestinationDirection -AllLifts $Lifts
-$LiftResponding
+$Seconds = 1..3600
+foreach ($Second in $Seconds) {
+  $RandomInitFloor = Get-Random -Minimum 0 -Maximum $Floors
+  do {
+    $RandomDestFloor = Get-Random -Minimum 0 -Maximum $Floors
+  } while ($RandomInitFloor -eq $RandomDestFloor )
+  if ($RandomInitFloor -gt $RandomDestFloor) {$DirectionOfRandom = 'DOWN'}
+  if ($RandomInitFloor -lt $RandomDestFloor) {$DirectionOfRandom = 'UP'}
+  $Patron = [LiftPatron]::New($Second,$RandomInitFloor,$DirectionOfRandom,$RandomDestFloor)
+  $LiftResponding = Request-Lift -NewFloor $Patron.InitialFloor -Direction $Patron.DestinationDirection -AllLifts $Lifts
+  $LiftResponding
+}
