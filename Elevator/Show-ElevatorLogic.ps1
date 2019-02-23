@@ -73,8 +73,8 @@ function Request-Lift {
     $LiftsBelow = $AllLifts | Where-Object {$_.CurrentFloor -le $NewFloor -and ($_.CurrentDirection -eq "UP" -or 
                                                                                 $_.CurrentDirection -eq "STATIC")}
     if ($LiftsBelow.Count -ge 1) {                                                                             
-      $ClosestLiftBelow = $LiftsBelow | Sort-Object -Property CurrentFloor | Select-Object -First 1
-      $ClosestLiftBelow
+      $ClosestLift = $LiftsBelow | Sort-Object -Property CurrentFloor | Select-Object -First 1
+      $ClosestLift
     } 
     else {$NoLiftsBelow = $true}
   }
@@ -82,12 +82,16 @@ function Request-Lift {
     $LiftsAbove = $AllLifts | Where-Object {$_.CurrentFloor -ge $NewFloor -and ($_.CurrentDirection -eq "DOWN" -or 
                                                                                 $_.CurrentDirection -eq "STATIC")}
     if ($Lift.Count -ge 1) {
-      $ClosestLiftBelow = $LiftsBelow | Sort-Object -Property CurrentFloor | Select-Object -First 1
-      $ClosestLiftBelow
+      $ClosestLift = $LiftsAbove | Sort-Object -Property CurrentFloor | Select-Object -First 1
+      $ClosestLift
     }
     else {$NoLiftsAbove = $true}
   }
-
+  if ($NoLiftsBelow -eq $true -or $NoLiftsAbove -eq $true) {
+    $StaticLifts = $Lifts | Where-Object {$_.Status -eq "STATIC"}
+    $LiftsDistanceAway = $StaticLifts | Select-Object -Property *,@{n=Distance;e={[math]::Abs($_.CurrentFloor - $NewFloor)}}
+    $ClosestLift = $LiftsDistanceAway | Sort-Object -Property Distance | Select-Object -First 1
+  }
 }
 
 function Set-LiftResponding {
