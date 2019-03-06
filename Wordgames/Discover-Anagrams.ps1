@@ -15,16 +15,26 @@
 #>
 [CmdletBinding()]
 Param()
-$webDictSite = Invoke-WebRequest -Uri http://www.mieliestronk.com/corncob_lowercase.txt 
-[string[]]$Words = ($webDictSite.Content -split "`n" | Where-Object {$_.length -ge 3}).trim() 
-$MatchWord = ''
-While ($MatchWord -ne "q") {
-  $MatchWord = Read-Host -Prompt "Enter the word with - for unknown letters, Q - Quit"
-  if ($MatchWord -eq 'q') {continue}
-  [string]$RegExMW = ($MatchWord -replace "[^a-z]",'.').trim()
-  Write-Host '-------------------------'
-  Write-Host $MatchWord
-  Write-Host '-------------------------'
-  $Words -match "^$RegExMW$"
-  Write-Host '-------------------------'
+
+Class DictWord {
+  [string]$Word
+  [string]$LettersSorted
+  [Char[]]$CharactersSorted
+  [int]$WordLength
+
+  DictWord ([string]$WordFromDictionary) {
+    $this.Word = $WordFromDictionary
+    $this.LettersSorted = ($WordFromDictionary -as [Char[]] | Sort-Object) -join ''
+    $this.CharactersSorted = $WordFromDictionary -as [Char[]] | Sort-Object
+    $this.WordLength = $WordFromDictionary.Length
+  }
 }
+  $webDictSite = Invoke-WebRequest -Uri http://www.mieliestronk.com/corncob_lowercase.txt 
+  [string[]]$Words = ($webDictSite.Content -split "`n" | Where-Object {$_.length -ge 3}).trim() 
+  $Dictionary = @()
+  foreach ($Word in $Words) {
+    $Dictionary += [DictWord]::New($Word)
+  }
+  $Dictionary | ConvertTo-Json | out-file C:\Users\Brent\Documents\Git-Root\PowerShellFun\Wordgames\WordsDict.json
+#[DictWord[]]$Dictionary = Get-Content ".\WordsDict.json" | ConvertFrom-Json | Sort-Object -Property WordLength
+#$Anagram = Read-Host -Prompt "Enter a bunch of letters"
