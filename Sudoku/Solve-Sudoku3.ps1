@@ -57,19 +57,45 @@ class SudokuCell {
     elseif ($Pos -in @(60,61,62,69,70,71,78,79,80)) {$this.Box = 8}
     if ($Val -match '\d') {
       $this.PossibleValues = $Val
-      $this.NotPossibleValues = 1..9 | Where-Object {$_ -ne $Val}
+      $this.NotPossibleValues = @('1','2','3','4','5','6','7','8','9') | Where-Object {$_ -ne $Val}
     }
     elseif ($Val -notmatch '\d') {
-      $this.PossibleValues = 1..9
+      $this.PossibleValues = @('1','2','3','4','5','6','7','8','9')
       $this.NotPossibleValues = $null
     }
   } # New Object method
 }
-
 function New-Board {
   Param ([string]$BoardString) 
   foreach ($Pos in (0..80)) {
     [SudokuCell]::New($Boardstring.Substring($Pos,1),$Pos)
+  }
+}
+
+function Find-UniqueCandidate {
+  Param ([SudokuCell[]]$FullBoard)
+  $AllNumbers = 1..9
+  foreach ($Cell in $FullBoard) {
+    if ($Cell.Val -notmatch '\d') {
+      $RelatedCells = $FullBoard | 
+        Where-Object {$_.Row -eq $Cell.Row -or 
+                      $_.Col -eq $Cell.Col -or 
+                      $_.Box -eq $Cell.Box
+      }
+      $RelatedCellValues = $RelatedCells.Val | 
+        Where-Object {$_ -match '\d'} | 
+        Select-Object -Unique
+      $NumbersMissing = (Compare-Object $AllNumbers $RelatedCellValues).InputObject
+      if ($NumbersMissing.Count -eq 1) {
+        $FullBoard[$Cell.Pos].Val = $NumbersMissing[0]
+        $FullBoard[$Cell.Pos].PossibleValues = $NumbersMissing[0]
+        foreach ($RelatedCell in $RelatedCells) {
+          if ($RelatedCell.Pos -ne $Cell.Pos -and $RelatedCell.Val -notmatch '\d') {
+            
+          }
+        }
+      }
+    }
   }
 }
 
