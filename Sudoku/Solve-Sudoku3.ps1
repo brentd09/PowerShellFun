@@ -38,8 +38,8 @@ class SudokuCell {
   [int]$Col
   [int]$Row
   [int]$Box
-  [string[]]$PossibleValues
-  [string[]]$NotPossibleValues
+  [System.Collections.Generic.List[string]]$PossibleValues
+  [System.Collections.Generic.List[string]]$NotPossibleValues
 
   SudokuCell([string]$Val,[int]$Pos) {
     $this.Val = $Val
@@ -91,7 +91,7 @@ function Find-UniqueCandidate {
         $FullBoard[$Cell.Pos].PossibleValues = $NumbersMissing[0]
         foreach ($RelatedCell in $RelatedCells) {
           if ($RelatedCell.Pos -ne $Cell.Pos -and $RelatedCell.Val -notmatch '\d') {
-            
+            $FullBoard[$RelatedCell.Pos].PossibleValues = ($FullBoard[$RelatedCell.Pos].PossibleValues).Remove($NumbersMissing[0])
           }
         }
       }
