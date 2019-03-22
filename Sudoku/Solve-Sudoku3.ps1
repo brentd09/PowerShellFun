@@ -30,7 +30,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $Puzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------'
+  $Puzzle = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
 )
 class SudokuCell {
   [string]$Val
@@ -56,14 +56,25 @@ class SudokuCell {
     elseif ($Pos -in @(57,58,59,66,67,68,75,76,77)) {$this.Box = 7}
     elseif ($Pos -in @(60,61,62,69,70,71,78,79,80)) {$this.Box = 8}
     if ($Val -match '\d') {
-      $this.PossibleValues = $Val
-      $this.NotPossibleValues = @('1','2','3','4','5','6','7','8','9') | Where-Object {$_ -ne $Val}
+      $this.PossibleValues = [string[]]@($Val)
+      $this.NotPossibleValues = [string[]]@('1','2','3','4','5','6','7','8','9') | Where-Object {$_ -ne $Val}
     }
     elseif ($Val -notmatch '\d') {
-      $this.PossibleValues = @('1','2','3','4','5','6','7','8','9')
-      $this.NotPossibleValues = $null
+      $this.PossibleValues = [string[]]@('1','2','3','4','5','6','7','8','9')
+      $this.NotPossibleValues = [string[]]@()
     }
   } # New Object method
+
+  [void]AssignValue ([string]$Value) {
+    $this.Val = $Value
+    $this.PossibleValues = $Value
+    $this.NotPossibleValues = $this.NotPossibleValues.Remove($Value)
+  }
+
+  [void]AssignNotPossible ([string[]]$Value) {
+    $this.NotPossibleValues += $Value
+    $this.PossibleValues.Remove($Value)
+  }
 }
 function New-Board {
   Param ([string]$BoardString) 
@@ -73,84 +84,31 @@ function New-Board {
 }
 
 Function Find-SoleCandidate {
-  Param (
-    [SudokuCell[]]$FullBoard
-  )
+  Param ([SudokuCell[]]$SudokuBoard)
   foreach ($Pos in (0..80)) {
-    if ($FullBoard[$Pos].PossibleValues.Count -eq 1) {
-      $FullBoard[$Pos].Val = $FullBoard[$Pos].PossibleValues[0]
-      $FullBoard[$Pos].NotPossibleValues = @('1','2','3','4','5','6','7','8','9') | Where-Object {$_ -ne $FullBoard[$Pos].Val}
+    if ($SudokuBoard[$Pos].PossibleValues.Count -eq 1) {
+      $SudokuBoard[$Pos].AssignValue($SudokuBoard[$Pos].PossibleValues[0])
     }
   }
 }
-function find-HiddenCandidate {
-  Param (
-    [SudokuCell[]]$FullBoard
-  )
-  foreach ($Index in (0..8)) {
-    #Check Row
-    $CurrentRow = $FullBoard | Where-Object {$_.Row -eq $Index -and $_.Val -notmatch '/d'}
-    $GroupInfo = $CurrentRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
-    if (($GroupInfo | Measure-Object).Count -ge 1){
-      foreach ($Single in $GroupInfo) {
-        $Found = $CurrentRow | Where-Object {$_.PossibleValues -contains $Single.Name}
-        $FullBoard[$Found.Pos].Val = $Single.Name
-        $FullBoard[$Found.Pos].PossibleValues = $Single.Name
-        $FullBoard[$Found.Pos].NotPossibleValues = @('1','2','3','4','5','6','7','8','9') | Where-Object {$_ -ne $Single.name}
-      }
-    }
-    #Check Col
-    $CurrentCol = $FullBoard | Where-Object {$_.Col -eq $Index -and $_.Val -notmatch '/d'}
-    $GroupInfo = $CurrentCol.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
-    if (($GroupInfo | Measure-Object).Count -ge 1){
-      foreach ($Single in $GroupInfo) {
-        $Found = $CurrentCol | Where-Object {$_.PossibleValues -contains $Single.Name}
-        $FullBoard[$Found.Pos].Val = $Single.Name
-        $FullBoard[$Found.Pos].PossibleValues = $Single.Name
-        $FullBoard[$Found.Pos].NotPossibleValues = @('1','2','3','4','5','6','7','8','9') | Where-Object {$_ -ne $Single.name}
-      }
-    }
-    #check Box
-    $CurrentBox = $FullBoard | Where-Object {$_.Box -eq $Index -and $_.Val -notmatch '/d'}
-    $GroupInfo = $CurrentBox.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
-    if (($GroupInfo | Measure-Object).Count -ge 1){
-      foreach ($Single in $GroupInfo) {
-        $Found = $CurrentBox | Where-Object {$_.PossibleValues -contains $Single.Name}
-        $FullBoard[$Found.Pos].Val = $Single.Name
-        $FullBoard[$Found.Pos].PossibleValues = $Single.Name
-        $FullBoard[$Found.Pos].NotPossibleValues = @('1','2','3','4','5','6','7','8','9') | Where-Object {$_ -ne $Single.name}
-      }
-    }
-  }
-}
-function Find-UniqueCandidate {
-  Param ([SudokuCell[]]$FullBoard)
-  $AllNumbers = 1..9
-  foreach ($Cell in $FullBoard) {
-    if ($Cell.Val -notmatch '\d') {
-      $RelatedCells = $FullBoard | 
-        Where-Object {$_.Row -eq $Cell.Row -or 
-                      $_.Col -eq $Cell.Col -or 
-                      $_.Box -eq $Cell.Box
-      }
-      $RelatedCellValues = $RelatedCells.Val | 
-        Where-Object {$_ -match '\d'} | 
-        Select-Object -Unique
-      $NumbersMissing = (Compare-Object $AllNumbers $RelatedCellValues).InputObject
-      if ($NumbersMissing.Count -eq 1) {
-        $FullBoard[$Cell.Pos].Val = $NumbersMissing[0]
-        $FullBoard[$Cell.Pos].PossibleValues = $NumbersMissing[0]
-        foreach ($RelatedCell in $RelatedCells) {
-          if ($RelatedCell.Pos -ne $Cell.Pos -and $RelatedCell.Val -notmatch '\d' -and $FullBoard[$RelatedCell.Pos].PossibleValues -ne $null) {
-            $FullBoard[$RelatedCell.Pos].PossibleValues = ($FullBoard[$RelatedCell.Pos].PossibleValues).Remove($NumbersMissing[0]) *> $null
-          }
-        }
-      }
+
+function Find-NotPossible {
+  Param([SudokuCell[]]$SudokuBoard)
+  foreach ($Pos in (0..80)) {
+    if ($SudokuBoard[$Pos].val -eq '-') {
+      $Row = $SudokuBoard[$Pos].Row
+      $Col = $SudokuBoard[$Pos].Col
+      $Box = $SudokuBoard[$Pos].Box
+      $RelatedValues = ($SudokuBoard | Where-Object {$_.Box -eq $Box -or $_.Col -eq $Col -or $_.Row -eq $Row}).val | 
+                        Where-Object {$_ -match \d} | Select-Object -Unique | Sort-Object
+      $SudokuBoard[$Pos].AssignNotPossible($RelatedValues)
+
+
     }
   }
 }
 function Show-Board {
-  Param ([SudokuCell[]]$FullBoard)
+  Param ([SudokuCell[]]$SudokuBoard)
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
   $FGColor = 'Yellow'
@@ -161,7 +119,7 @@ function Show-Board {
     foreach ($PosRow in (0..8)) {
       if ($PosRow -eq 2 -or $PosRow -eq 5) {$Bdr = ' | '}
       else {$Bdr = ' '}
-      Write-Host -NoNewline $FullBoard[($PosRow+($PosCol*9))].Val
+      Write-Host -NoNewline $SudokuBoard[($PosRow+($PosCol*9))].Val
       Write-Host -NoNewline -ForegroundColor $FGColor "$Bdr"
     }
     Write-Host -ForegroundColor $FGColor $HBdr
@@ -171,12 +129,12 @@ function Show-Board {
 
 ###MainCode
 
-$BoardObj = New-Board -BoardString $Puzzle 
+$BoardObj = New-Board -BoardString $Puzzle
 Clear-Host
 do {
-Find-UniqueCandidate -FullBoard $BoardObj
-Find-SoleCandidate -FullBoard $BoardObj
-find-HiddenCandidate -FullBoard $BoardObj
-Show-Board -FullBoard $BoardObj
+
+Find-SoleCandidate -SudokuBoard $BoardObj
+
+Show-Board -SudokuBoard $BoardObj
 Start-Sleep -Seconds 1
 } while ($BoardObj.Val -contains '-')
