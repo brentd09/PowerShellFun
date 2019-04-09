@@ -13,7 +13,6 @@
 #>
 [CmdletBinding()]
 Param()
-
 #Class Definitions
 Class ConnectFourCell {
   [int]$Pos
@@ -44,6 +43,7 @@ Class ConnectFourCell {
     $this.Val = $Value
   }
 }
+# Function Definitions
 function New-GameBoard {
   [ConnectFourCell[]]$Board = 0..41 | ForEach-Object {
     [ConnectFourCell]::New($_,'.')
@@ -65,7 +65,9 @@ function Select-GameCol {
     } 
     else {
       Write-Host -NoNewline -ForegroundColor $Color "$Color turn, please enter a number between 1 and 7: "
-      $GameColStr = (Read-Host ).Substring(0,1)
+      $GameColStr = Read-Host
+      if ($GameColStr -eq '') {$GameColStr = '9'}
+      else {$GameColStr = $GameColStr.Substring(0,1)}
     }
     if ($GameColStr -match "^[1-7]$") {[int]$GameCol = ($GameColStr -as [int]) - 1}
     $ColChosen = $Board | Where-Object {$_.Col -eq $GameCol}
@@ -83,13 +85,12 @@ function Show-GameBoard {
   Write-Host
   $Count = 0
   Write-Host -ForegroundColor Green "    C O N N E C T   F O U R`n"
-  Write-Host -ForegroundColor Yellow "   1   2   3   4   5   6   7"
+  Write-Host -ForegroundColor Yellow "   1   2   3   4   5   6   7`n   -------------------------"
   foreach ($Cell in $Board) {
     $Count++
     if ($cell.Val -eq '.') {$FColor = 'Darkgray'}
     if ($cell.Val -eq 'R') {$FColor = 'Red'}
     if ($cell.Val -eq 'Y') {$FColor = 'Yellow'}
-    
     Write-Host -NoNewline -ForegroundColor $FColor "   $($Cell.Val)"
     if ($Count%7 -eq 0) {Write-Host "`n"}
   }
@@ -197,17 +198,27 @@ function Get-Winner {
   }
   return 'None'
 }
-
+# ###################################################
 # MAIN CODE
-$TurnNumber = 0
-$GameBoard = New-GameBoard
+[int]$TurnNumber = 0
+[ConnectFourCell[]]$GameBoard = New-GameBoard
+[string[]]$TurnArray = @('R','Y')
+[string]$Even = $TurnArray | Get-Random
+[string]$Odd  = $TurnArray | Where-Object {$_ -ne $Even}
 do {
-  if ($TurnNumber%2 -eq 0) {$Turn = "R"}
-  else {$Turn = "Y"}
+  if ($TurnNumber % 2 -eq 0) {$Turn = $Even}
+  else {$Turn = $Odd}
   Show-GameBoard -Board $GameBoard
   Select-GameCol -Board $GameBoard -TurnColor $Turn
   $Winner = Get-Winner -Board $GameBoard
+  $NumberEmpty = 42 - ($GameBoard | Where-Object {$_.Val -in $TurnArray}).Count
   $TurnNumber++
-} until ($GameBoard.Val -notcontains '.' -or $Winner -ne 'None')
+} until ($NumberEmpty -eq 0 -or $Winner -ne 'None')
 Show-GameBoard -Board $GameBoard
-Write-Host -ForegroundColor $Winner "`nThe Winner is $Winner"
+if ($Winner -ne 'None') {
+  Write-Host -ForegroundColor Green -NoNewline "   The Winner is"
+  Write-Host -ForegroundColor $Winner " $($Winner.ToUpper())`n`n"
+}
+else {
+  write-Host -ForegroundColor Red "   The game is a DRAW`n`n"
+}
