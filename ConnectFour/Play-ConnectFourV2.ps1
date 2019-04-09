@@ -58,7 +58,15 @@ function Select-GameCol {
   do {
     If ($TurnColor -eq "R") {$Color = 'Red'}
     else {$Color = 'Yellow'}
-    $GameColStr = (Read-Host -Prompt "$Color turn, please enter a number between 1 and 7").Substring(0,1)
+
+    if ($Host.Name -eq 'ConsoleHost') {
+      Write-Host -NoNewline -ForegroundColor $Color "$Color turn, please enter a number between 1 and 7: "
+      $GameColStr = ($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')).Character -as [string]
+    } 
+    else {
+      Write-Host -NoNewline -ForegroundColor $Color "$Color turn, please enter a number between 1 and 7: "
+      $GameColStr = (Read-Host ).Substring(0,1)
+    }
     if ($GameColStr -match "^[1-7]$") {[int]$GameCol = ($GameColStr -as [int]) - 1}
     $ColChosen = $Board | Where-Object {$_.Col -eq $GameCol}
     $HowFullIsCol = $ColChosen | Where-Object {$_.Val -notmatch "[YR]"}
@@ -70,18 +78,19 @@ function Select-GameCol {
 function Show-GameBoard {
   param (
     [ConnectFourCell[]]$Board
-  )
+  ) 
   Clear-Host
   Write-Host
   $Count = 0
-  Write-Host -ForegroundColor Yellow "  1  2  3  4  5  6  7"
+  Write-Host -ForegroundColor Green "    C O N N E C T   F O U R`n"
+  Write-Host -ForegroundColor Yellow "   1   2   3   4   5   6   7"
   foreach ($Cell in $Board) {
     $Count++
     if ($cell.Val -eq '.') {$FColor = 'Darkgray'}
     if ($cell.Val -eq 'R') {$FColor = 'Red'}
     if ($cell.Val -eq 'Y') {$FColor = 'Yellow'}
     
-    Write-Host -NoNewline -ForegroundColor $FColor "  $($Cell.Val)"
+    Write-Host -NoNewline -ForegroundColor $FColor "   $($Cell.Val)"
     if ($Count%7 -eq 0) {Write-Host "`n"}
   }
   Write-Host
