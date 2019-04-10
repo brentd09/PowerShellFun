@@ -60,7 +60,7 @@ function Select-GameCol {
     else {$Color = 'Yellow'}
 
     if ($Host.Name -eq 'ConsoleHost') {
-      Write-Host -NoNewline -ForegroundColor $Color "$Color turn, please enter a number between 1 and 7: "
+      Write-Host -ForegroundColor $Color "$Color turn, please enter a number between 1 and 7: "
       $GameColStr = ($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')).Character -as [string]
     } 
     else {
@@ -88,10 +88,10 @@ function Show-GameBoard {
   Write-Host -ForegroundColor Yellow "   1   2   3   4   5   6   7`n   -------------------------"
   foreach ($Cell in $Board) {
     $Count++
-    if ($cell.Val -eq '.') {$FColor = 'Darkgray'}
-    if ($cell.Val -eq 'R') {$FColor = 'Red'}
-    if ($cell.Val -eq 'Y') {$FColor = 'Yellow'}
-    Write-Host -NoNewline -ForegroundColor $FColor "   $($Cell.Val)"
+    if ($cell.Val -eq '.') {$FColor = 'Darkgray'; $DisplayChar = '+'}
+    if ($cell.Val -eq 'R') {$FColor = 'Red'; $DisplayChar = [char]9787}
+    if ($cell.Val -eq 'Y') {$FColor = 'Yellow'; $DisplayChar = [char]9787}
+    Write-Host -NoNewline -ForegroundColor $FColor "   $DisplayChar"
     if ($Count%7 -eq 0) {Write-Host "`n"}
   }
   Write-Host
