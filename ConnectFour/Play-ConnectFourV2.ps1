@@ -112,6 +112,7 @@ function Get-Winner {
         if ($Val -eq 'Y' -and $RedCount -eq 0)    {$YellowCount++}
         if ($Val -eq 'R' -and $YellowCount -gt 0) {$YellowCount = 0; $RedCount = 1}
         if ($Val -eq 'Y' -and $RedCount -gt 0)    {$RedCount = 0; $YellowCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
     if ($Reds.Count -ge 4) {
@@ -121,6 +122,7 @@ function Get-Winner {
         if ($Val -eq 'R' -and $YellowCount -eq 0) {$RedCount++}
         if ($Val -eq 'Y' -and $RedCount -gt 0)    {$RedCount = 0; $YellowCount = 1}
         if ($Val -eq 'R' -and $YellowCount -gt 0) {$YellowCount = 0; $RedCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
   }
@@ -136,6 +138,7 @@ function Get-Winner {
         if ($Val -eq 'Y' -and $RedCount -eq 0)    {$YellowCount++}
         if ($Val -eq 'R' -and $YellowCount -gt 0) {$YellowCount = 0; $RedCount = 1}
         if ($Val -eq 'Y' -and $RedCount -gt 0)    {$RedCount = 0; $YellowCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
     if ($Reds.Count -ge 4) {
@@ -145,6 +148,7 @@ function Get-Winner {
         if ($Val -eq 'R' -and $YellowCount -eq 0) {$RedCount++}
         if ($Val -eq 'Y' -and $RedCount -gt 0)    {$RedCount = 0; $YellowCount = 1}
         if ($Val -eq 'R' -and $YellowCount -gt 0) {$YellowCount = 0; $RedCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
   }
@@ -160,6 +164,7 @@ function Get-Winner {
         if ($Val -eq 'Y' -and $RedCount -eq 0)    {$YellowCount++}
         if ($Val -eq 'R' -and $YellowCount -gt 0) {$YellowCount = 0; $RedCount = 1}
         if ($Val -eq 'Y' -and $RedCount -gt 0)    {$RedCount = 0; $YellowCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
     if ($Reds.Count -ge 4) {
@@ -169,6 +174,7 @@ function Get-Winner {
         if ($Val -eq 'R' -and $YellowCount -eq 0) {$RedCount++}
         if ($Val -eq 'Y' -and $RedCount -gt 0)    {$RedCount = 0; $YellowCount = 1}
         if ($Val -eq 'R' -and $YellowCount -gt 0) {$YellowCount = 0; $RedCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
   }
@@ -184,6 +190,7 @@ function Get-Winner {
         if ($Val -eq 'Y' -and $RedCount -eq 0)     {$YellowCount++}
         if ($Val -eq 'R' -and $YellowCount -gt 0)  {$YellowCount = 0; $RedCount = 1}
         if ($Val -eq 'Y' -and $RedCount -gt 0)     {$RedCount = 0; $YellowCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
     if ($Reds.Count -ge 4) {
@@ -193,6 +200,7 @@ function Get-Winner {
         if ($Val -eq 'R' -and $YellowCount -eq 0) {$RedCount++}
         if ($Val -eq 'Y' -and $RedCount -gt 0)    {$RedCount = 0; $YellowCount = 1}
         if ($Val -eq 'R' -and $YellowCount -gt 0) {$YellowCount = 0; $RedCount = 1}
+        if ($Val -notin @('Y','R'))               {$RedCount = 0; $YellowCount = 0}
       }
     }
   }
