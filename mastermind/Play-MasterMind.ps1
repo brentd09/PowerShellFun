@@ -116,10 +116,10 @@ function Draw-Board {
   Clear-Host
   Write-Host -NoNewline -ForegroundColor Yellow "`n`n         MASTER MIND         "
   Write-Host -NoNewline -BackgroundColor DarkGray -ForegroundColor Black " BLACK-PIN " 
-  Write-Host  -ForegroundColor Yellow " One of the numbers is correct and in the right position   " 
+  Write-Host  -ForegroundColor Yellow " One is correct and in the right position   " 
   Write-Host -NoNewline "                             "      
   Write-Host -NoNewline -BackgroundColor DarkGray -ForegroundColor White " WHITE-PIN "
-  Write-Host  -ForegroundColor Yellow " One of the numbers is correct but in the wrong position"
+  Write-Host  -ForegroundColor Yellow " One is correct but in the wrong position"
   write-host -NoNewline (" " * $BoardSpecs.LGutter)
   write-host -BackgroundColor DarkGray (" " * $BoardSpecs.Overall)
   write-host -NoNewline (" " * $BoardSpecs.LGutter)
