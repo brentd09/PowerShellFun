@@ -1,17 +1,21 @@
 <#
 .SYNOPSIS
-  Short description
+  Modelled on the board game Battleships
 .DESCRIPTION
-  Long description
+  This presents a view of the computers sea and the players sea
+  each in turn tries to guess the loceation of each others ships
+  with the aim of sinking all of the opponents ships before they
+  sink yours.
+  You enter the coordinates of the next attack and the screen
+  shows you HIT or MISSED your target. The first one to sink the
+  others ships is the winner. If you both sink the last ship in
+  the same turn the game is considered a drawn game.
 .EXAMPLE
-  PS C:\> <example usage>
-  Explanation of what the example does
-.INPUTS
-  Inputs (if any)
-.OUTPUTS
-  Output (if any)
+  Play-BattleShipV3
 .NOTES
   General notes
+  Created By: Brent Denny
+  Created On: 11 Apr 2019
 #>
 [CmdletBinding()]
 Param()
@@ -157,8 +161,16 @@ function Select-AttackLocation {
     $GameBoard[$PosCoord].Attack()
   }
   else {
-    $NonAttackedPos = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Get-Random
-    $GameBoard[$NonAttackedPos].Attack()
+    $HitCount = ($GameBoard | Where-Object {$_.Reveal -eq 'H'}).Count
+    if ($HitCount -le 7) {
+      $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
+      $NonAttackedPos = $NonAttackedPosses | Get-Random
+      $GameBoard[$NonAttackedPos].Attack()
+    }
+    else {
+      # fill in the gaps discovered by the 7 hits
+    }
+
   }  
 }
 # #########################################
