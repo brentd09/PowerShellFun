@@ -1,0 +1,183 @@
+<#
+.SYNOPSIS
+  Short description
+.DESCRIPTION
+  Long description
+.EXAMPLE
+  PS C:\> <example usage>
+  Explanation of what the example does
+.INPUTS
+  Inputs (if any)
+.OUTPUTS
+  Output (if any)
+.NOTES
+  General notes
+#>
+[CmdletBinding()]
+Param()
+#Class Definitions
+Class BattleShipBoard {
+  [int]$Pos
+  [int]$Col
+  [int]$Row
+  [string]$Content
+  [string]$Reveal
+  [bool]$HitByOpponent
+  [string]$Neighbours
+
+  BattleShipBoard ($Position) {
+    $ColNum = $Position % 10
+    $RowNum = [math]::Truncate($Position / 10)
+    $this.Pos = $Position
+    $this.Col = $ColNum
+    $this.Row = $RowNum
+    $this.Content = '-'
+    $this.Reveal  = '-'
+    $this.HitByOpponent = $false
+    if ($RowNum -notin @(0,9) -and $ColNum -notin @(0,9)) {$this.Neighbours = 'UDLR'}
+    elseif ($RowNum -eq 0 -and $ColNum -eq 0) {$this.Neighbours = 'DR'}
+    elseif ($RowNum -eq 9 -and $ColNum -eq 0) {$this.Neighbours = 'UR'}
+    elseif ($RowNum -eq 0 -and $ColNum -eq 9) {$this.Neighbours = 'DL'}
+    elseif ($RowNum -eq 9 -and $ColNum -eq 9) {$this.Neighbours = 'UL'}
+    elseif ($RowNum -eq 0) {$this.Neighbours = 'DLR'}
+    elseif ($RowNum -eq 9) {$this.Neighbours = 'ULR'}
+    elseif ($ColNum -eq 0) {$this.Neighbours = 'UDR'}
+    elseif ($ColNum -eq 9) {$this.Neighbours = 'UDL'}
+  }
+
+  [void]Attack () {
+    $this.HitByOpponent = $true
+    if ($this.Content -in @('A','B','C','D','S')) {$this.Reveal = 'H'}
+    else {$this.Reveal = 'M'}
+  }
+
+  [void]SetShipValue ($ShipType) {
+    if ($ShipType -in 'A','B','C','D','S') {
+      $this.Content = $ShipType
+    }
+  }
+}
+# Function Definitions
+function Show-Boards {
+  Param (
+    [BattleShipBoard[]]$ComputerBoard,
+    [BattleShipBoard[]]$PlayerBoard
+  )
+  $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 } 
+  $LegendColor = 'Yellow'
+  foreach ($Grid in ('Computer','Player')) {
+    Write-Host "$Grid's Ships"
+    if ($Grid -eq 'Computer') {$Array = $ComputerBoard}
+    else {$Array = $PlayerBoard}
+    foreach ($RowToDisplay in (0..9)) {
+      if ($RowToDisplay -eq 0) {Write-Host -ForegroundColor $LegendColor "   A  B  C  D  E  F  G  H  I  J"}
+      foreach ($ColToDisplay in (0..9)) {
+        if ($ColToDisplay -eq 0) {Write-Host -ForegroundColor $LegendColor -NoNewline "$($RowToDisplay)  "}
+        $Position = $RowToDisplay * 10 + $ColToDisplay
+        switch -Regex ($Array[$Position].Reveal) {
+          '[-M]'       {$FColor = 'Darkgray'}
+          '[ABCDS]' {$FColor = 'Yellow'}
+          'H'       {$FColor = 'Red'}
+        }
+        if ($Grid -eq 'Computer') {Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Reveal)  "}
+        else {
+          if ($Array[$Position].Content -in @('A','B','C','D','S') -and $Array[$Position].HitByOpponent -eq $false) {$FColor = 'Green'}
+          Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Reveal)  "
+        }
+      }
+      Write-Host
+    }  
+    Write-Host
+  }
+}
+function Set-ShipPlacement {
+  Param ([BattleShipBoard[]]$GameBoard)
+  $Ships = @()
+  $Ships += New-Object -TypeName psobject -Property @{ID='A';Size=5}
+  $Ships += New-Object -TypeName psobject -Property @{ID='B';Size=4}
+  $Ships += New-Object -TypeName psobject -Property @{ID='C';Size=3}
+  $Ships += New-Object -TypeName psobject -Property @{ID='S';Size=3}
+  $Ships += New-Object -TypeName psobject -Property @{ID='D';Size=2}
+  foreach ($Ship in $Ships) {
+    do {
+      $Direction = @('H','V') | Get-Random
+      if ($Direction -eq 'V') {
+        $StartRow = 0..(10-$Ship.Size) | Get-Random
+        $StartCol = 0..9 | get-random
+        $EndRow   = $Ship.Size + $StartRow -1
+        $GoodPlacement = $true
+        foreach ($PotentailRow in @($StartRow..$EndRow)) {
+          $PotentailPos = $PotentailRow * 10 + $StartCol
+          if ($GameBoard[$PotentailPos].Content -in @('A','B','C','D','S')) {$GoodPlacement = $false}
+        }
+        if ($GoodPlacement -eq $true) {
+          foreach ($PotentailRow in @($StartRow..$EndRow)) {
+            $PotentailPos = $PotentailRow * 10 + $StartCol
+            $GameBoard[$PotentailPos].Content = $Ship.ID
+          }
+        }
+      }
+      else {
+        $StartCol = 0..(10-$Ship.Size) | Get-Random
+        $StartRow = 0..9 | get-random
+        $EndCol   = $Ship.Size + $StartCol -1
+        $GoodPlacement = $true
+        foreach ($PotentailCol in @($StartCol..$EndCol)) {
+          $PotentailPos = $StartRow * 10 + $PotentailCol
+          if ($GameBoard[$PotentailPos].Content -in @('A','B','C','D','S')) {$GoodPlacement = $false}
+        }
+        if ($GoodPlacement -eq $true) {
+          foreach ($PotentailCol in @($StartCol..$EndCol)) {
+            $PotentailPos = $StartRow * 10 + $PotentailCol
+            $GameBoard[$PotentailPos].Content = $Ship.ID
+          }
+        }
+      }  
+    } until ($GoodPlacement -eq $true)
+  }
+}
+function Select-AttackLocation {
+  Param (
+    [BattleShipBoard[]]$GameBoard,
+    [switch]$Automatic
+  )
+  if ($AutoMatic -eq $false) {
+    $GoodSelection = $false
+    do {
+      $Choice = Read-Host -Prompt 'Enter the coordinates to attack'
+      if ($Choice -match '(^[A-J][0-9]$)|(^[0-9][A-J]$)') {
+        $Choice = ($Choice.ToUpper()) -replace '(\d)(\w)','$2$1'
+        $ColCoord = [byte][char]($Choice.Substring(0,1)) - 65
+        $RowCoord = [byte][char]($Choice.Substring(1,1)) - 48
+        $PosCoord = $RowCoord * 10 + $ColCoord
+        $GoodSelection = $true
+        if ($GameBoard[$PosCoord].HitByOpponent -eq $true) {$GoodSelection = $false}
+      }
+    } until ($GoodSelection -eq $true)
+    $GameBoard[$PosCoord].Attack()
+  }
+  else {
+    $NonAttackedPos = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Get-Random
+    $GameBoard[$NonAttackedPos].Attack()
+  }  
+}
+# #########################################
+# MAIN CODE
+[BattleShipBoard[]]$Player   = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
+[BattleShipBoard[]]$Computer = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
+Set-ShipPlacement $Player
+Set-ShipPlacement $Computer
+Clear-Host
+Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
+do {
+  # Player attacks computer's board
+  Select-AttackLocation -GameBoard $Computer 
+  # Computer attacks Player's board
+  Select-AttackLocation -GameBoard $Player -Automatic
+  Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
+  $ComputerBoardHits = ($Computer | Where-Object {$_.Reveal -eq 'H'}).Count
+  $PlayerBoardHits = ($Player | Where-Object {$_.Reveal -eq 'H'}).Count
+} until ($ComputerBoardHits -eq 17 -or $PlayerBoardHits -eq 17)
+If ($ComputerBoardHits -eq 17 -and $PlayerBoardHits -lt 17)     {Write-Host -ForegroundColor Green "`nPLAYER WINS`n`n"}
+elseif ($ComputerBoardHits -lt 17 -and $PlayerBoardHits -eq 17) {Write-Host -ForegroundColor Green "`nCOMPUTER WINS`n`n"}
+elseif ($ComputerBoardHits -eq 17 -and $PlayerBoardHits -eq 17) {Write-Host -ForegroundColor Green "`nGAME IS A DRAW`n`n"}
