@@ -166,31 +166,25 @@ function Select-AttackLocation {
   }
   else { # If $Automatic is $True 
     $HitCount = ($GameBoard | Where-Object {$_.Reveal -eq 'H'}).Count
-    if ($HitCount -le 7) {
-      $CheckNeighbours = $GameBoard | Where-Object {$_.Reveal -eq 'H' -and $_.Neighbours.length -gt 0} 
-      $CheckNeighbour = $CheckNeighbours | Get-Random
-      if ($CheckNeighbours.Count -eq 0) {
-        $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
-        $NonAttackedPos = $NonAttackedPosses | Get-Random
-        $GameBoard[$NonAttackedPos].Attack()
+    $CheckNeighbours = $GameBoard | Where-Object {$_.Reveal -eq 'H' -and $_.Neighbours.length -gt 0} 
+    $CheckNeighbour = $CheckNeighbours | Get-Random
+    if ($CheckNeighbours.Count -eq 0 -or $HitCount -le 7) {
+      $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
+      $NonAttackedPos = $NonAttackedPosses | Get-Random
+      $GameBoard[$NonAttackedPos].Attack()
+    }
+    else { #Check Hit neighbours
+      $RandomDirection = (($CheckNeighbour.Neighbours).toCharArray() | Get-Random) -as [string]
+      switch ($RandomDirection) {
+        'U' {$Shift = -10}
+        'D' {$Shift =  10}
+        'L' {$Shift =  -1}
+        'R' {$Shift=    1}
       }
-      else { #Check Hit neighbours
-        $RandomDirection = (($CheckNeighbour.Neighbours).toCharArray() | Get-Random) -as [string]
-        switch ($RandomDirection) {
-          'U' {$Shift = -10}
-          'D' {$Shift =  10}
-          'L' {$Shift =  -1}
-          'R' {$Shift=    1}
-        }
-        $NeighbourPos = $CheckNeighbour.Pos + $Shift
-        $GameBoard[$NeighbourPos].Attack()
-        $CheckNeighbour.RemoveNeighbour($RandomDirection)
-      } 
-    }
-    else {
-      # fill in the gaps discovered by the 7 hits
-    }
-
+      $NeighbourPos = $CheckNeighbour.Pos + $Shift
+      $GameBoard[$NeighbourPos].Attack()
+      $GameBoard[$CheckNeighbour.Pos].RemoveNeighbour($RandomDirection)
+    } 
   }  
 }
 # #########################################
@@ -203,7 +197,7 @@ Clear-Host
 Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
 do {
   # Player attacks computer's board
-  Select-AttackLocation -GameBoard $Computer -Automatic
+  Select-AttackLocation -GameBoard $Computer 
   # Computer attacks Player's board
   Select-AttackLocation -GameBoard $Player -Automatic
   Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
