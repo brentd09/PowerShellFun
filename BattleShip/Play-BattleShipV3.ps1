@@ -168,7 +168,7 @@ function Select-AttackLocation {
     $HitCount = ($GameBoard | Where-Object {$_.Reveal -eq 'H'}).Count
     $CheckNeighbours = $GameBoard | Where-Object {$_.Reveal -eq 'H' -and $_.Neighbours.length -gt 0} 
     $CheckNeighbour = $CheckNeighbours | Get-Random
-    if ($CheckNeighbours.Count -eq 0 -or $HitCount -le 7) {
+    if ($CheckNeighbours.Count -eq 0 -or $HitCount -le 4) {
       $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
       $NonAttackedPos = $NonAttackedPosses | Get-Random
       $GameBoard[$NonAttackedPos].Attack()
