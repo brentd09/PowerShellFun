@@ -60,6 +60,10 @@ Class BattleShipBoard {
       $this.Content = $ShipType
     }
   }
+
+  [void]RemoveNeighbour ([string]$Direction) {
+    if ($this.Neighbours -match $Direction -and $Direction.length -eq 1) {$this.Neighbours = $this.Neighbours -replace "$Direction",''}
+  }
 }
 # Function Definitions
 function Show-Boards {
@@ -160,12 +164,28 @@ function Select-AttackLocation {
     } until ($GoodSelection -eq $true)
     $GameBoard[$PosCoord].Attack()
   }
-  else {
+  else { # If $Automatic is $True 
     $HitCount = ($GameBoard | Where-Object {$_.Reveal -eq 'H'}).Count
     if ($HitCount -le 7) {
-      $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
-      $NonAttackedPos = $NonAttackedPosses | Get-Random
-      $GameBoard[$NonAttackedPos].Attack()
+      $CheckNeighbours = $GameBoard | Where-Object {$_.Reveal -eq 'H' -and $_.Neighbours.length -gt 0} 
+      $CheckNeighbour = $CheckNeighbours | Get-Random
+      if ($CheckNeighbours.Count -eq 0) {
+        $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
+        $NonAttackedPos = $NonAttackedPosses | Get-Random
+        $GameBoard[$NonAttackedPos].Attack()
+      }
+      else { #Check Hit neighbours
+        $RandomDirection = (($CheckNeighbour.Neighbours).toCharArray() | Get-Random) -as [string]
+        switch ($RandomDirection) {
+          'U' {$Shift = -10}
+          'D' {$Shift =  10}
+          'L' {$Shift =  -1}
+          'R' {$Shift=    1}
+        }
+        $NeighbourPos = $CheckNeighbour.Pos + $Shift
+        $GameBoard[$NeighbourPos].Attack()
+        $CheckNeighbour.RemoveNeighbour($RandomDirection)
+      } 
     }
     else {
       # fill in the gaps discovered by the 7 hits
@@ -183,7 +203,7 @@ Clear-Host
 Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
 do {
   # Player attacks computer's board
-  Select-AttackLocation -GameBoard $Computer 
+  Select-AttackLocation -GameBoard $Computer -Automatic
   # Computer attacks Player's board
   Select-AttackLocation -GameBoard $Player -Automatic
   Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
