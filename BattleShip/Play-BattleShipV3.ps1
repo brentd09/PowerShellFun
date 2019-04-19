@@ -197,7 +197,7 @@ Clear-Host
 Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
 do {
   # Player attacks computer's board
-  Select-AttackLocation -GameBoard $Computer 
+  Select-AttackLocation -GameBoard $Computer -Automatic
   # Computer attacks Player's board
   Select-AttackLocation -GameBoard $Player -Automatic
   Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
