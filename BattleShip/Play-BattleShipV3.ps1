@@ -69,7 +69,8 @@ Class BattleShipBoard {
 function Show-Boards {
   Param (
     [BattleShipBoard[]]$ComputerBoard,
-    [BattleShipBoard[]]$PlayerBoard
+    [BattleShipBoard[]]$PlayerBoard,
+    [switch]$ShowShips
   )
   $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 } 
   $LegendColor = 'Yellow'
@@ -87,10 +88,19 @@ function Show-Boards {
           '[ABCDS]' {$FColor = 'Yellow'}
           'H'       {$FColor = 'Red'}
         }
-        if ($Grid -eq 'Computer') {Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Reveal)  "}
-        else {
-          if ($Array[$Position].Content -in @('A','B','C','D','S') -and $Array[$Position].HitByOpponent -eq $false) {$FColor = 'Green'}
-          Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Reveal)  "
+        if ($ShowShips -eq $true) {
+          if ($Grid -eq 'Computer') {Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Reveal)  "}
+          else {
+            if ($Array[$Position].Content -in @('A','B','C','D','S') -and $Array[$Position].HitByOpponent -eq $false) {$FColor = 'Green'}
+            Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Content)  "
+          }
+        }
+        else { # Do not reveal the players ships
+          if ($Grid -eq 'Computer') {Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Reveal)  "}
+          else {
+            if ($Array[$Position].Content -in @('A','B','C','D','S') -and $Array[$Position].HitByOpponent -eq $false) {$FColor = 'Green'}
+            Write-Host -ForegroundColor $FColor -NoNewline "$($Array[$Position].Reveal)  "
+          }
         }
       }
       Write-Host
@@ -109,7 +119,7 @@ function Set-ShipPlacement {
   foreach ($Ship in $Ships) {
     do {
       $Direction = @('H','V') | Get-Random
-      if ($Direction -eq 'V') {
+      if ($Direction -eq 'V') { # Vertical ship placement
         $StartRow = 0..(10-$Ship.Size) | Get-Random
         $StartCol = 0..9 | get-random
         $EndRow   = $Ship.Size + $StartRow -1
@@ -125,7 +135,7 @@ function Set-ShipPlacement {
           }
         }
       }
-      else {
+      else { # Horizontal ship placement
         $StartCol = 0..(10-$Ship.Size) | Get-Random
         $StartRow = 0..9 | get-random
         $EndCol   = $Ship.Size + $StartCol -1
@@ -191,7 +201,14 @@ function Select-AttackLocation {
 # MAIN CODE
 [BattleShipBoard[]]$Player   = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
 [BattleShipBoard[]]$Computer = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
-Set-ShipPlacement $Player
+$PlayerShipPlacementApproved = $false
+do {
+  [BattleShipBoard[]]$Player   = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
+  Set-ShipPlacement $Player
+  Show-Boards -ComputerBoard $Computer -PlayerBoard $Player -ShowShips
+  $Answer = Read-Host -Prompt "Do you approve of your ship placement"
+  if ($Answer -like 'y*') {$PlayerShipPlacementApproved = $true}
+} until ($PlayerShipPlacementApproved -eq $true)
 Set-ShipPlacement $Computer
 Clear-Host
 Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
