@@ -201,7 +201,9 @@ function Select-AttackLocation {
       $GameBoard[$NeighbourPos].Attack($TurnNumber)
       $GameBoard[$CheckNeighbour.Pos].RemoveNeighbour($RandomDirection)
       # if it was a hit remember the direction for the next move and also the opposite dirction
-      #if ($GameBoard[$NeighbourPos].Reveal -match 'H') ()
+      #if ($GameBoard[$NeighbourPos].Reveal -match 'H') {
+
+      }
     }
   }
 }
