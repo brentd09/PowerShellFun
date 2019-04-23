@@ -28,6 +28,8 @@ Class BattleShipBoard {
   [string]$Reveal
   [bool]$HitByOpponent
   [string]$Neighbours
+  [int]$NextBestPosToGuess
+  [int]$ChangeID
 
   BattleShipBoard ($Position) {
     $ColNum = $Position % 10
@@ -47,12 +49,15 @@ Class BattleShipBoard {
     elseif ($RowNum -eq 9) {$this.Neighbours = 'ULR'}
     elseif ($ColNum -eq 0) {$this.Neighbours = 'UDR'}
     elseif ($ColNum -eq 9) {$this.Neighbours = 'UDL'}
+    $this.ChangeID = 0
+    $this.NextBestPosToGuess = -1
   }
 
-  [void]Attack () {
+  [void]Attack ([int]$Turn) {
     $this.HitByOpponent = $true
     if ($this.Content -in @('A','B','C','D','S')) {$this.Reveal = 'H'}
     else {$this.Reveal = 'M'}
+    $this.ChangeID = $Turn
   }
 
   [void]SetShipValue ($ShipType) {
@@ -157,6 +162,7 @@ function Set-ShipPlacement {
 function Select-AttackLocation {
   Param (
     [BattleShipBoard[]]$GameBoard,
+    [int]$TurnNumber,
     [switch]$Automatic
   )
   if ($AutoMatic -eq $false) {
@@ -181,7 +187,7 @@ function Select-AttackLocation {
     if ($CheckNeighbours.Count -eq 0 -or $HitCount -le 4) {
       $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
       $NonAttackedPos = $NonAttackedPosses | Get-Random
-      $GameBoard[$NonAttackedPos].Attack()
+      $GameBoard[$NonAttackedPos].Attack($TurnNumber)
     }
     else { #Check Hit neighbours
       $RandomDirection = (($CheckNeighbour.Neighbours).toCharArray() | Get-Random) -as [string]
@@ -192,13 +198,16 @@ function Select-AttackLocation {
         'R' {$Shift=    1}
       }
       $NeighbourPos = $CheckNeighbour.Pos + $Shift
-      $GameBoard[$NeighbourPos].Attack()
+      $GameBoard[$NeighbourPos].Attack($TurnNumber)
       $GameBoard[$CheckNeighbour.Pos].RemoveNeighbour($RandomDirection)
-    } 
-  }  
+      # if it was a hit remember the direction for the next move and also the opposite dirction
+      #if ($GameBoard[$NeighbourPos].Reveal -match 'H') ()
+    }
+  }
 }
 # #########################################
 # MAIN CODE
+$TurnSequence = 0
 [BattleShipBoard[]]$Computer = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
 Set-ShipPlacement $Computer
 $PlayerShipPlacementApproved = $false
@@ -212,10 +221,11 @@ do {
 Clear-Host
 Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
 do {
+  $TurnSequence++
   # Player attacks computer's board
-  Select-AttackLocation -GameBoard $Computer -Automatic
+  Select-AttackLocation -GameBoard $Computer -TurnNumber $TurnSequence -Automatic
   # Computer attacks Player's board
-  Select-AttackLocation -GameBoard $Player -Automatic
+  Select-AttackLocation -GameBoard $Player -TurnNumber $TurnSequence -Automatic
   Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
   $ComputerBoardHits = ($Computer | Where-Object {$_.Reveal -eq 'H'}).Count
   $PlayerBoardHits = ($Player | Where-Object {$_.Reveal -eq 'H'}).Count
