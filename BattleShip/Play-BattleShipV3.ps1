@@ -199,8 +199,8 @@ function Select-AttackLocation {
 }
 # #########################################
 # MAIN CODE
-[BattleShipBoard[]]$Player   = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
 [BattleShipBoard[]]$Computer = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
+Set-ShipPlacement $Computer
 $PlayerShipPlacementApproved = $false
 do {
   [BattleShipBoard[]]$Player   = 0..99 | ForEach-Object {[BattleShipBoard]::New($_)}
@@ -209,7 +209,6 @@ do {
   $Answer = Read-Host -Prompt "Do you approve of your ship placement"
   if ($Answer -like 'y*') {$PlayerShipPlacementApproved = $true}
 } until ($PlayerShipPlacementApproved -eq $true)
-Set-ShipPlacement $Computer
 Clear-Host
 Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
 do {
