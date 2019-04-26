@@ -190,10 +190,9 @@ function Select-AttackLocation {
       $GameBoard[$NonAttackedPos].Attack($TurnNumber)
     }
     else { #Check Hit neighbours
-      #need to check the last two turns 1last 2last
-      #if both are HITS need to check if they are close or sequential 
-      #and then keep trying on that same line until no HIT
-      #if both hits are not hits then do the following 
+      # Need to look at all of the HITS to see if any are close proximity
+      # if they are need to guess on the same line (row or col) until MISS
+      # on both ends of the line are found!
       $RandomDirection = (($CheckNeighbour.Neighbours).toCharArray() | Get-Random) -as [string]
       switch ($RandomDirection) {
         'U' {$Shift = -10}
