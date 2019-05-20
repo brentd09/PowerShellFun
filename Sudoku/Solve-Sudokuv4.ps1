@@ -132,7 +132,12 @@ function Get-UniqueCandidate {
   }
 }
 
-
+function Get-NakedPair {
+  Param (
+    [SudokuCell[]]$GameBoard
+  )
+  
+}
 
 function Show-Board {
   Param ([SudokuCell[]]$GameBoard)
@@ -167,7 +172,7 @@ do {
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
   if ($NumberStillToGuess -eq $PreNumberToGuess) {Get-UniqueCandidate -GameBoard $SudokuGameBoard}
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
-  if ($NumberStillToGuess -eq $PreNumberToGuess) {Get-UniqueCandidate -GameBoard $SudokuGameBoard}
+  #if ($NumberStillToGuess -eq $PreNumberToGuess) {Get-NakedPair -GameBoard $SudokuGameBoard}
   Start-Sleep -Seconds 2
   Show-Board -GameBoard $SudokuGameBoard
   #$SudokuGameBoard  | Sort-Object -Property Box | ft
