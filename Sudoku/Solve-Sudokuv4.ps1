@@ -68,7 +68,7 @@ class SudokuCell {
   [void]AssignValue ([string[]]$Value) {
     $this.Val = $Value
     $this.PossibleValues = $Value
-    $this.NotPossibleValues = $this.NotPossibleValues.Remove($Value)
+    #$this.NotPossibleValues = $this.NotPossibleValues.Remove($Value)
   }
 
   [void]AssignPossible ([string[]]$Possibles) {
@@ -122,7 +122,14 @@ function Get-SoleCandidate {
 }
 function Get-UniqueCandidate {
   Param ([SudokuCell[]]$GameBoard)
-  
+  foreach ($Box in (0..8)) {
+    $CurrentBox = $GameBoard | Where-Object {$_.Box -eq $Box -and $_.Val -notmatch '[1-9]'}
+    $SingleValues = $CurrentBox.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
+    foreach ($SingleValueVal in $SingleValues.Name) {
+      $SinglePos = ($GameBoard | Where-Object {$_.Box -eq $Box -and $_.PossibleValues -contains $SingleValueVal}).Pos
+      $GameBoard[$SinglePos].AssignValue($SingleValueVal)
+    }
+  }
 }
 
 
@@ -156,12 +163,13 @@ $PreNumberToGuess = 81
 do {
 
   Get-SoleCandidate -GameBoard $SudokuGameBoard
+  $PreNumberToGuess = $NumberStillToGuess
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
-  if ($NumberStillToGuess -eq $PreNumberToGuess) {
-
-  }
+  if ($NumberStillToGuess -eq $PreNumberToGuess) {Get-UniqueCandidate -GameBoard $SudokuGameBoard}
+  [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
+  if ($NumberStillToGuess -eq $PreNumberToGuess) {Get-UniqueCandidate -GameBoard $SudokuGameBoard}
   Start-Sleep -Seconds 2
-  #Show-Board -GameBoard $SudokuGameBoard
-  $SudokuGameBoard | ft
+  Show-Board -GameBoard $SudokuGameBoard
+  #$SudokuGameBoard  | Sort-Object -Property Box | ft
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
 } until ($NumberStillToGuess -eq 0)
