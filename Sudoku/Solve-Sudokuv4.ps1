@@ -30,7 +30,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $PuzzleString = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------'
+  $PuzzleString = '----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----'
 )
 class SudokuCell {
   [string]$Val
@@ -68,17 +68,35 @@ class SudokuCell {
   [void]AssignValue ([string[]]$Value) {
     $this.Val = $Value
     $this.PossibleValues = $Value
-    #$this.NotPossibleValues = $this.NotPossibleValues.Remove($Value)
+    $this.NotPossibleValues = 1..9 | Where-Object {$_ -ne $Value}
   }
 
   [void]AssignPossible ([string[]]$Possibles) {
-    $this.PossibleValues = $Possibles
+    if ($Possibles.Count -eq 1) {
+      $this.Val = $Possibles[0]
+      $this.PossibleValues = $Possibles[0]
+      $this.NotPossibleValues = 1..9 | Where-Object {$_ -ne $Possibles[0]}
+    }
+    elseif ($Possibles.Count -gt 1) {$this.PossibleValues = $Possibles | Where-Object {$_ -notin $this.NotPossibleValues}}
   }
 
   [void]AssignNotPossible ([string[]]$Value) {
     $this.NotPossibleValues += $Value
     $this.PossibleValues.Remove($Value)
   }
+}
+# ####
+# Functions
+
+function Test-ArrayEqual {
+  Param (
+    [string[]]$Array1,
+    [string[]]$Array2
+  )
+  $CompareArray = Compare-Object -DifferenceObject $Array1 -ReferenceObject $Array2
+  if ($CompareArray.Count -eq 0) {$Hash = @{ArraysEqual = $true}}
+  else {$Hash = @{ArraysEqual = $false}}
+  New-Object -TypeName psobject -Property $Hash
 }
 function New-Board {
   Param ([string]$BoardString) 
@@ -136,7 +154,21 @@ function Get-NakedPair {
   Param (
     [SudokuCell[]]$GameBoard
   )
-  
+  foreach ($Col in (0..8)) {
+    $TwoPossibleValsInCol = $GameBoard | Where-Object {$_.Col -eq $Col -and $_.PossibleValues.Count -eq 2}  
+    if ($TwoPossibleValsInCol.Count -eq 2) {
+      $CompareArrayEqual = Test-ArrayEqual -Array1 $TwoPossibleValsInCol[0] -Array2 $TwoPossibleValsInCol[1]
+      if ($CompareArrayEqual -eq $true) {
+        # strip the naked pair from the others in col
+        $PosToRemoveNakedPair = $GameBoard | Where-Object {$_.Col -eq $Col -and $_.Pos -notin $TwoPossibleValsInCol.Pos}
+        foreach ($PosRemove in $PosToRemoveNakedPair) {
+          $Pos = $PosRemove.Pos
+          $GameBoard[$Pos].AssignNotPossible($TwoPossibleValsInCol[0])
+          $GameBoard[$Pos].AssignNotPossible($TwoPossibleValsInCol[1])
+        }
+      }
+    }
+  }
 }
 
 function Show-Board {
@@ -174,7 +206,7 @@ do {
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
   #if ($NumberStillToGuess -eq $PreNumberToGuess) {Get-NakedPair -GameBoard $SudokuGameBoard}
   Start-Sleep -Seconds 2
-  Show-Board -GameBoard $SudokuGameBoard
-  #$SudokuGameBoard  | Sort-Object -Property Box | ft
+  #Show-Board -GameBoard $SudokuGameBoard
+  $SudokuGameBoard  | Sort-Object -Property Box,Pos | ft
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
 } until ($NumberStillToGuess -eq 0)
