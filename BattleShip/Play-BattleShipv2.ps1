@@ -303,7 +303,7 @@ do {
   Clear-Host
   Display-Grid -Grid $ComputerBoard -Key -WhosBoard "Computer"
   Display-Grid -Grid $PlayersBoard -Ships -WhosBoard $PlayerName
-  $PlayersBoard = Guess-Move -OpponentGrid $PlayersBoard.psobject.Copy() 
+  $PlayersBoard = Guess-Move -OpponentGrid $PlayersBoard.psobject.Copy() -
   $Winner = Check-Winner -PlayersGrid $PlayersBoard -PersonName $PlayerName -ComputersGrid $ComputerBoard
   if ($Winner -ne 'Computer') { 
     $ComputerBoard = Guess-Move -OpponentGrid $ComputerBoard.psobject.Copy()
