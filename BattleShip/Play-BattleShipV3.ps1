@@ -178,7 +178,7 @@ function Select-AttackLocation {
         if ($GameBoard[$PosCoord].HitByOpponent -eq $true) {$GoodSelection = $false}
       }
     } until ($GoodSelection -eq $true)
-    $GameBoard[$PosCoord].Attack()
+    $GameBoard[$PosCoord].Attack($TurnNumber)
   }
   else { # If $Automatic is $True 
     $HitCount = ($GameBoard | Where-Object {$_.Reveal -eq 'H'}).Count
