@@ -4,6 +4,7 @@ Class TTTBoardCell {
   [int]$Row
   [Int]$Diag # Diag = 0 => 0-5-8 , Diag = 1 => 2,5,6
   [string]$Content
+  [bool]$Threat
 
   TTTBoardCell($Position) {
     $ColNum = $Position % 3
@@ -14,47 +15,71 @@ Class TTTBoardCell {
     $this.Content = '-'
     if ($Position -in @(0,5,8) ) {$this.Diag = 0}
     if ($Position -in @(2,5,6) ) {$this.Diag  = 1}
+    $this.Threat = $false
   }
    
   [bool]PlaceChoice([string]$Char) {
     if ($this.Content -eq '-') {
       $this.Content = $Char
+      $this.Threat = $false
       return $true
     }
     else {return $false}
   }
   
-  [psobject[]]RowThreats([TTTBoardCell[]]$Board,[string]$TurnLetter) {
+  [psobject[]]Threats([TTTBoardCell[]]$Board,[string]$TurnLetter) {
+    foreach ($Direction in @(0..7)) {
+      switch ($Direction) {
+        0 {$DirectionObjects = $Board | Where-Object {$_.Row -eq 0}}
+        1 {$DirectionObjects = $Board | Where-Object {$_.Row -eq 1}}
+        2 {$DirectionObjects = $Board | Where-Object {$_.Row -eq 2}}
+        3 {$DirectionObjects = $Board | Where-Object {$_.Col -eq 0}}
+        4 {$DirectionObjects = $Board | Where-Object {$_.Col -eq 1}}
+        5 {$DirectionObjects = $Board | Where-Object {$_.Col -eq 2}}
+        6 {$DirectionObjects = $Board | Where-Object {$_.Diag -eq 0}}
+        7 {$DirectionObjects = $Board | Where-Object {$_.Diag -eq 1}}
+      } #END Switch
+    } #END Foreach
+  } #END Threats Method
+  
+  
+
     [psobject[]]$Result = @()
     $OppositeLetter = @('X','O') | Where-Object {$_ -ne $TurnLetter}
-    foreach ($Index in (0..2)) {
-      $RowObjects = $Board | Where-Object {$_.Row -eq $Index}
-      $NumberOfBlanks = ($RowObjects | Group-Object | Where-Object {$_.Content -eq '-'}).count
-      $ThreatRow = @{
-        ThreatReal = $false
-        RowIndex = $Index
-        EmptyPos = ($RowObjects | Where-Object {$_.Content -eq '-' }).Pos
-      } 
-      if ($NumberOfBlanks -eq 1) {
-        $NumberOfOpposite = ($RowObjects | Group-Object | Where-Object {$_.Content -eq $OppositeLetter[0]}).count
-        if ($NumberOfOpposite -eq 2) {
-          [hashtable]$ThreatRow = @{
-            ThreatReal = $true
-            RowIndex = $Index
-            EmptyPos = ($RowObjects | Where-Object {$_.Content -eq '-' }).Pos
-          }
-          $Result += (New-Object -TypeName psobject -Property $ThreatRow)
-        }
-      } #end if
-      else {
-        [hashtable]$ThreatRow = @{
+    $DirectionNames = @('Row','Col','Diag')
+    foreach ($Direction in (0..2)) {
+      if ($Direction -in (0..1)) {$IndexArray = @(0..2)}
+      else {$IndexArray = @(0..1)}
+      foreach ($Index in $IndexArray) {
+        $DirectionObjects = $Board | Where-Object {$_.Row -eq $Index}
+        $NumberOfBlanks = ($DirectionObjects | Group-Object | Where-Object {$_.Content -eq '-'}).count
+        $ThreatProperties = @{
           ThreatReal = $false
           RowIndex = $Index
-          EmptyPos = ($RowObjects | Where-Object {$_.Content -eq '-' }).Pos
-        }         
-        $Result += (New-Object -TypeName psobject -Property $ThreatRow)
-      }
-    } #end foreach
+          EmptyPos = ($DirectionObjects | Where-Object {$_.Content -eq '-' }).Pos
+        } 
+        if ($NumberOfBlanks -eq 1) {
+          $NumberOfOpposite = ($DirectionObjects | Group-Object | Where-Object {$_.Content -eq $OppositeLetter[0]}).count
+          if ($NumberOfOpposite -eq 2) {
+            [hashtable]$ThreatProperties = @{
+              ThreatDirection = $DirectionNames[$Direction]
+              ThreatStatus = $true
+              ThreatIndex = $Index
+              EmptyPos = ($DirectionObjects | Where-Object {$_.Content -eq '-' }).Pos
+            }
+            $Result += (New-Object -TypeName psobject -Property $ThreatProperties)
+          }
+        } #end if
+        else {
+          [hashtable]$ThreatProperties = @{
+            ThreatReal = $false
+            RowIndex = $Index
+            EmptyPos = ($DirectionObjects | Where-Object {$_.Content -eq '-' }).Pos
+          }         
+          $Result += (New-Object -TypeName psobject -Property $ThreatProperties)
+        }
+      } #end foreach
+    } #End foreach
     return $Result
   } #end Method
 } #END Class
