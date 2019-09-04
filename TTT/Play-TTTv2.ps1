@@ -1,3 +1,9 @@
+[CmdletBinding()]
+Param(
+  [switch]$ComputerX,
+  [switch]$ComputerO = $true
+)
+
 Class TTTBoardCell {
   [int]$Pos
   [int]$Col
@@ -27,24 +33,24 @@ Class TTTBoardCell {
   [bool]PlaceChoice([string]$Char) {
     if ($this.Content -eq '-') {
       $this.Content = $Char
-      $this.Threat = $false
+      $this.ThreatO = $false
+      $this.ThreatX = $false
       return $true
     }
     else {return $false}
   }
   
   [void]UpdateStatus([TTTBoardCell[]]$Board,[string]$TurnLetter) {
-    $OpponentLettter = (@('X','O') | Where-Object {$_ -ne $TurnLetter})[0]
-    $RowCells  = $Board | Where-Object {$_.Row -eq $this.Row}
-    $CountXinRow = ($RowCells | Where-Object {$_.Content -eq 'X'}).Count
-    $CountOinRow = ($RowCells | Where-Object {$_.Content -eq 'O'}).Count
-    $ColCells  = $Board | Where-Object {$_.Col -eq $this.Col}
-    $CountXinCol = ($ColCells | Where-Object {$_.Content -eq 'X'}).Count
-    $CountOinCol = ($ColCells | Where-Object {$_.Content -eq 'O'}).Count
-    $DiagCells0 = $Board | Where-Object {$_.Diag -contains 0}
+    $RowCells = $Board | Where-Object {$_.Row -eq $this.Row}
+    $CountXinRow   = ($RowCells | Where-Object {$_.Content -eq 'X'}).Count
+    $CountOinRow   = ($RowCells | Where-Object {$_.Content -eq 'O'}).Count
+    $ColCells      = $Board | Where-Object {$_.Col -eq $this.Col}
+    $CountXinCol   = ($ColCells | Where-Object {$_.Content -eq 'X'}).Count
+    $CountOinCol   = ($ColCells | Where-Object {$_.Content -eq 'O'}).Count
+    $DiagCells0    = $Board | Where-Object {$_.Diag -contains 0}
     $CountXinDiag0 = ($DiagCells0 | Where-Object {$_.Content -eq 'X'}).Count
     $CountOinDiag0 = ($DiagCells0 | Where-Object {$_.Content -eq 'O'}).Count
-    $DiagCells1 = $Board | Where-Object {$_.Diag -contains 1}
+    $DiagCells1    = $Board | Where-Object {$_.Diag -contains 1}
     $CountXinDiag1 = ($DiagCells1 | Where-Object {$_.Content -eq 'X'}).Count
     $CountOinDiag1 = ($DiagCells1 | Where-Object {$_.Content -eq 'O'}).Count
     if ($this.Content -eq '-'){
@@ -52,25 +58,13 @@ Class TTTBoardCell {
       if ($CountOinRow -eq 2 ){$this.ThreatX = $true}
       if ($CountXinCol -eq 2 ){$this.ThreatO = $true}
       if ($CountOinCol -eq 2 ){$this.ThreatX = $true}
-      if (($ColCells.Content | Where-Object {$_.Content -eq $OpponentLettter}).count -eq 2){
-        if ($TurnLetter -eq 'X')     {$this.ThreatX = $true}
-        elseif ($TurnLetter -eq 'O') {$this.ThreatO = $true}
-      }      
       if ($this.Diag -contains 0) {
         if ($CountXinDiag0 -eq 2 ){$this.ThreatO = $true}
         if ($CountOinDiag0 -eq 2 ){$this.ThreatX = $true}
-        if (($DiagCells0.Content | Where-Object {$_.Content -eq $OpponentLettter}).count -eq 2){
-          if ($TurnLetter -eq 'X')     {$this.ThreatX = $true}
-          elseif ($TurnLetter -eq 'O') {$this.ThreatO = $true}
-        }
       }
       if ($this.Diag -contains 1) {
         if ($CountXinDiag1 -eq 2 ){$this.ThreatO = $true}
         if ($CountOinDiag1 -eq 2 ){$this.ThreatX = $true}
-        if (($DiagCells1.Content | Where-Object {$_.Content -eq $OpponentLettter}).count -eq 2){
-          if ($TurnLetter -eq 'X')     {$this.ThreatX = $true}
-          elseif ($TurnLetter -eq 'O') {$this.ThreatO = $true}
-        }
       }
     }
     else {
@@ -81,20 +75,46 @@ Class TTTBoardCell {
       if ($CountOinRow -eq 3) {$this.Winner = $true} 
       if ($CountXinCol -eq 3) {$this.Winner = $true}
       if ($CountOinCol -eq 3) {$this.Winner = $true}
-      if ($CountXinDiag0 -eq 3) {$this.Winner = $true}
-      if ($CountOinDiag0 -eq 3) {$this.Winner = $true}
-      if ($CountXinDiag1 -eq 3) {$this.Winner = $true}
-      if ($CountOinDiag1 -eq 3) {$this.Winner = $true} 
-      
+      if ($this.Diag -contains 0) {
+        if ($CountXinDiag0 -eq 3) {$this.Winner = $true}
+        if ($CountOinDiag0 -eq 3) {$this.Winner = $true}
+      }
+      if ($this.Diag -contains 1) {
+        if ($CountXinDiag1 -eq 3) {$this.Winner = $true}
+        if ($CountOinDiag1 -eq 3) {$this.Winner = $true} 
+      }
     }
   } #END DetectThreat Method
 } #END Class
 
 #Functions
+
+function Find-BestMove {
+  Param (
+    [string]$TurnLetter,
+    [TTTBoardCell[]]$Board
+  )
+  if ($TurnLetter -eq 'X') {
+    $Threats = $Board | Where-Object {$_.ThreatX -eq $true}
+    if ($Threats.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
+    else {
+      $RandomEmpty = $Board | Where-Object {$_.content -eq '-' }| Get-Random
+      return [PSCustomObject]@{Index = $RandomEmpty.Pos}
+    }
+  }
+  If ($TurnLetter -eq 'O') {
+    $Threats = $Board | Where-Object {$_.ThreatO -eq $true}
+    if ($Threats.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
+    else {
+      $RandomEmpty = $Board | Where-Object {$_.content -eq '-'} | Get-Random
+      return [PSCustomObject]@{Index = $RandomEmpty.Pos}
+    }
+  }
+}
 function Show-Board {
   Param ([TTTBoardCell[]]$Board,[string]$Padding='  ')
 
-  Clear-Host
+  #Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
   $ShowSqr = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
   $GridColor = "Yellow"
@@ -137,16 +157,20 @@ Clear-Host
 Show-Board -Board $TTTBoard
 $Turn = 'X'
 do {
-  do {
-    $BadChoice = $false
-    $BoardChoice = Read-Host "$Turn's turn - Enter the choice"
-    $ErrorActionPreference = 'stop'
-    try {[int]$ChoiceIndex = $BoardChoice - 1}
-    catch {$BadChoice = $true}
-    finally {$ErrorActionPreference = 'Continue'}
-  } until ($TTTBoard[$ChoiceIndex].PlaceChoice($Turn) -and $BadChoice -eq $false)
+  if (($Turn -eq 'X' -and $ComputerX -eq $true) -or ($Turn -eq 'O' -and $ComputerO -eq $true)) {
+    $BestMove = Find-BestMove -TurnLetter $Turn -Board $TTTBoard
+    $TTTBoard[$BestMove.index].PlaceChoice($Turn)
+  }
+  else {
+    do {
+      $BadChoice = $false
+      $BoardChoice = Read-Host "$Turn's turn - Enter the choice"
+      if ($BoardChoice -notmatch '^[1-9]$') {$BadChoice = $true}
+      else {[int]$ChoiceIndex = ($BoardChoice -as [int]) -1}
+    } until ($TTTBoard[$ChoiceIndex].PlaceChoice($Turn) -and $BadChoice -eq $false)
+  }
   Show-Board -Board $TTTBoard
   $TTTBoard | ForEach-Object {$_.UpdateStatus($TTTBoard,$Turn)}
-  $TTTBoard | ft
+  #$TTTBoard | ft
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
 } until ($TTTBoard.Content -notcontains '-' -or $TTTBoard.Winner -contains $true)
