@@ -1,6 +1,6 @@
 [CmdletBinding()]
 Param(
-  [switch]$ComputerX,
+  [switch]$ComputerX = $true,
   [switch]$ComputerO = $true
 )
 
@@ -13,6 +13,7 @@ Class TTTBoardCell {
   [bool]$ThreatO
   [bool]$ThreatX
   [bool]$Winner
+  [string]$StategicLocation 
 
   TTTBoardCell($Position) {
     $ColNum = $Position % 3
@@ -28,6 +29,9 @@ Class TTTBoardCell {
     $this.ThreatO = $false
     $this.ThreatX = $false
     $this.Winner = $false
+    if ($Position -in @(0,2,6,8)) {$this.StategicLocation = 'Corner'}
+    elseif ($Position -in @(1,3,5,7)) {$this.StategicLocation = 'Edge'}
+    else {$this.StategicLocation = 'Middle'}
   }
    
   [bool]PlaceChoice([string]$Char) {
@@ -92,7 +96,8 @@ Class TTTBoardCell {
 function Find-BestMove {
   Param (
     [string]$TurnLetter,
-    [TTTBoardCell[]]$Board
+    [TTTBoardCell[]]$Board,
+    [int]$WhichTurn
   )
   if ($TurnLetter -eq 'X') {
     $Threats = $Board | Where-Object {$_.ThreatX -eq $true}
@@ -114,7 +119,7 @@ function Find-BestMove {
 function Show-Board {
   Param ([TTTBoardCell[]]$Board,[string]$Padding='  ')
 
-  #Clear-Host
+  Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
   $ShowSqr = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
   $GridColor = "Yellow"
@@ -153,13 +158,17 @@ function Show-Board {
 
 #Main code
 Clear-Host
+$AIGameHistory = Get-content C:\GameHistory.json | ConvertFrom-Json
 [TTTBoardCell[]]$TTTBoard = foreach ($Pos in (0..8)) {[TTTBoardCell]::New($Pos)}
 Show-Board -Board $TTTBoard
 $Turn = 'X'
+$TurnCount = 1
+[string]$TurnHistory = $null
 do {
   if (($Turn -eq 'X' -and $ComputerX -eq $true) -or ($Turn -eq 'O' -and $ComputerO -eq $true)) {
-    $BestMove = Find-BestMove -TurnLetter $Turn -Board $TTTBoard
+    $BestMove = Find-BestMove -TurnLetter $Turn -Board $TTTBoard -WhichTurn $TurnCount
     $TTTBoard[$BestMove.index].PlaceChoice($Turn)
+    $TurnHistory = $TurnHistory + ($BestMove.Index -as [string])
   }
   else {
     do {
@@ -168,9 +177,35 @@ do {
       if ($BoardChoice -notmatch '^[1-9]$') {$BadChoice = $true}
       else {[int]$ChoiceIndex = ($BoardChoice -as [int]) -1}
     } until ($TTTBoard[$ChoiceIndex].PlaceChoice($Turn) -and $BadChoice -eq $false)
+    $TurnHistory = $TurnHistory + ($ChoiceIndex -as [string])
   }
   Show-Board -Board $TTTBoard
   $TTTBoard | ForEach-Object {$_.UpdateStatus($TTTBoard,$Turn)}
-  #$TTTBoard | ft
+  $TTTBoard | Format-Table
+  $TurnHistory
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
+  $TurnCount++
 } until ($TTTBoard.Content -notcontains '-' -or $TTTBoard.Winner -contains $true)
+$WinningCells = $TTTBoard | Where-Object {$_.Winner -contains $true}
+if ($WinningCells.count -eq 3) {$Winner = $WinningCells[0].Content}
+else {$Winner = 'D'}
+write-host "Winner is $Winner"
+$GameObj = [PSCustomObject]@{Moves = $TurnHistory;Result = $Winner}
+$AIGameHistory.GamePlays += $GameObj
+$AIGameHistory | ConvertTo-Json | Out-File -FilePath C:\GameHistory.json
+
+
+<#
+[PsCustomObject[]]$c1 = @()
+$c1 += [PSCustomObject]@{Moves = '0148356';Result = 'X'}
+$c1 += [PSCustomObject]@{Moves = '0845216';Result = 'X'}
+$c1 += [PSCustomObject]@{Moves = '048536217';Result = 'D'}
+$c2 = [PSCustomObject]@{Moves = '048536271';Result = 'O'}
+$hash = [ordered]@{
+  GamePlays = $c1
+}
+New-Object -TypeName psobject -Property $hash | ConvertTo-Json | Out-File c:\GameHistory.json
+
+$History = Get-Content C:\GameHistory.json | ConvertFrom-Json
+$History.GamePlays += $c2
+#>
