@@ -164,6 +164,7 @@ Show-Board -Board $TTTBoard
 $Turn = 'X'
 $TurnCount = 1
 [string]$TurnHistory = $null
+$LearnGame = $false
 do {
   if (($Turn -eq 'X' -and $ComputerX -eq $true) -or ($Turn -eq 'O' -and $ComputerO -eq $true)) {
     $BestMove = Find-BestMove -TurnLetter $Turn -Board $TTTBoard -WhichTurn $TurnCount
@@ -181,19 +182,23 @@ do {
   }
   Show-Board -Board $TTTBoard
   $TTTBoard | ForEach-Object {$_.UpdateStatus($TTTBoard,$Turn)}
-  $TTTBoard | Format-Table
-  $TurnHistory
+  #$TTTBoard | Format-Table
+  #$TurnHistory
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
   $TurnCount++
+  $OThreats = $TTTBoard | Where-Object {$_.ThreatO -eq $true}
+  $XThreats = $TTTBoard | Where-Object {$_.ThreatX -eq $true}
+  if ($OThreats.count -gt 1 -or $XThreats.count -gt 1) {$LearnGame = $true}
 } until ($TTTBoard.Content -notcontains '-' -or $TTTBoard.Winner -contains $true)
 $WinningCells = $TTTBoard | Where-Object {$_.Winner -contains $true}
 if ($WinningCells.count -eq 3) {$Winner = $WinningCells[0].Content}
 else {$Winner = 'D'}
 write-host "Winner is $Winner"
-$GameObj = [PSCustomObject]@{Moves = $TurnHistory;Result = $Winner}
-$AIGameHistory.GamePlays += $GameObj
-$AIGameHistory | ConvertTo-Json | Out-File -FilePath C:\GameHistory.json
-
+if ($LearnGame -eq $true) {
+  $GameObj = [PSCustomObject]@{Moves = $TurnHistory;Result = $Winner}
+  $AIGameHistory.GamePlays += $GameObj
+  $AIGameHistory | ConvertTo-Json | Out-File -FilePath C:\GameHistory.json
+}
 
 <#
 [PsCustomObject[]]$c1 = @()
