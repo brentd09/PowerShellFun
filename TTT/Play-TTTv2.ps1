@@ -99,17 +99,25 @@ function Find-BestMove {
     [TTTBoardCell[]]$Board,
     [int]$WhichTurn
   )
+  $ThreatsAgainstX = $Board | Where-Object {$_.ThreatX -eq $true}
+  $ThreatsAgainstO = $Board | Where-Object {$_.ThreatO -eq $true}
   if ($TurnLetter -eq 'X') {
-    $Threats = $Board | Where-Object {$_.ThreatX -eq $true}
-    if ($Threats.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
+    if ($ThreatsAgainstO.Count -ge 1) {
+      $RandomThreatPosO = $ThreatsAgainstO.Pos | Get-Random
+      return [PSCustomObject]@{Index=$RandomThreatPosO}
+    }
+    elseif ($ThreatsAgainstX.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
     else {
       $RandomEmpty = $Board | Where-Object {$_.content -eq '-' }| Get-Random
       return [PSCustomObject]@{Index = $RandomEmpty.Pos}
     }
   }
-  If ($TurnLetter -eq 'O') {
-    $Threats = $Board | Where-Object {$_.ThreatO -eq $true}
-    if ($Threats.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
+  elseIf ($TurnLetter -eq 'O') {
+    if ($ThreatsAgainstX.Count -ge 1) {
+      $RandomThreatPosX = $ThreatsAgainstX.Pos | Get-Random
+      return [PSCustomObject]@{Index=$RandomThreatPosX}
+    }
+    elseif ($ThreatsAgainstO.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
     else {
       $RandomEmpty = $Board | Where-Object {$_.content -eq '-'} | Get-Random
       return [PSCustomObject]@{Index = $RandomEmpty.Pos}
@@ -158,7 +166,7 @@ function Show-Board {
 
 #Main code
 Clear-Host
-$AIGameHistory = Get-content C:\GameHistory.json | ConvertFrom-Json
+#$AIGameHistory = Get-content C:\GameHistory.json | ConvertFrom-Json
 [TTTBoardCell[]]$TTTBoard = foreach ($Pos in (0..8)) {[TTTBoardCell]::New($Pos)}
 Show-Board -Board $TTTBoard
 $Turn = 'X'
@@ -183,7 +191,7 @@ do {
   Show-Board -Board $TTTBoard
   $TTTBoard | ForEach-Object {$_.UpdateStatus($TTTBoard,$Turn)}
   #$TTTBoard | Format-Table
-  #$TurnHistory
+  $TurnHistory
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
   $TurnCount++
   $OThreats = $TTTBoard | Where-Object {$_.ThreatO -eq $true}
@@ -194,7 +202,7 @@ $WinningCells = $TTTBoard | Where-Object {$_.Winner -contains $true}
 if ($WinningCells.count -eq 3) {$Winner = $WinningCells[0].Content}
 else {$Winner = 'D'}
 write-host "Winner is $Winner"
-if ($LearnGame -eq $true) {
+if ($LearnGame1 -eq $true) {
   $GameObj = [PSCustomObject]@{Moves = $TurnHistory;Result = $Winner}
   $AIGameHistory.GamePlays += $GameObj
   $AIGameHistory | ConvertTo-Json | Out-File -FilePath C:\GameHistory.json
