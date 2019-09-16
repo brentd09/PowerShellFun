@@ -106,7 +106,7 @@ function Find-BestMove {
       $RandomThreatPosO = $ThreatsAgainstO.Pos | Get-Random
       return [PSCustomObject]@{Index=$RandomThreatPosO}
     }
-    elseif ($ThreatsAgainstX.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
+    elseif ($ThreatsAgainstX.count -eq 1) {return [PSCustomObject]@{Index = $ThreatsAgainstX[0].Pos}}
     else {
       $RandomEmpty = $Board | Where-Object {$_.content -eq '-' }| Get-Random
       return [PSCustomObject]@{Index = $RandomEmpty.Pos}
@@ -117,7 +117,7 @@ function Find-BestMove {
       $RandomThreatPosX = $ThreatsAgainstX.Pos | Get-Random
       return [PSCustomObject]@{Index=$RandomThreatPosX}
     }
-    elseif ($ThreatsAgainstO.count -eq 1) {return [PSCustomObject]@{Index = $Threats[0].Pos}}
+    elseif ($ThreatsAgainstO.count -eq 1) {return [PSCustomObject]@{Index = $ThreatsAgainstO[0].Pos}}
     else {
       $RandomEmpty = $Board | Where-Object {$_.content -eq '-'} | Get-Random
       return [PSCustomObject]@{Index = $RandomEmpty.Pos}
@@ -199,9 +199,15 @@ do {
   if ($OThreats.count -gt 1 -or $XThreats.count -gt 1) {$LearnGame = $true}
 } until ($TTTBoard.Content -notcontains '-' -or $TTTBoard.Winner -contains $true)
 $WinningCells = $TTTBoard | Where-Object {$_.Winner -contains $true}
-if ($WinningCells.count -eq 3) {$Winner = $WinningCells[0].Content}
-else {$Winner = 'D'}
-write-host "Winner is $Winner"
+if ($WinningCells.count -eq 3) {
+  $Winner = $WinningCells[0].Content
+  write-host -ForegroundColor green "Winner is $Winner"
+}
+else {
+  $Winner = 'D'
+  Write-Host -ForegroundColor red "Drawn Game"
+}
+
 if ($LearnGame1 -eq $true) {
   $GameObj = [PSCustomObject]@{Moves = $TurnHistory;Result = $Winner}
   $AIGameHistory.GamePlays += $GameObj
