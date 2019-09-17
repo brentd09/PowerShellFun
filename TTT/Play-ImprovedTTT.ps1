@@ -118,8 +118,8 @@ Class TTTBoard {
       }
     }
     if ($BestMove -eq 99) {
-      if ($EmptyCells.Count -eq 9) {$BestMove = 0}
-      elseif ($EmptyCells.Count -eq 7 -and $this.TTTCells[4].CellBlank -eq $true -and $this.TTTCells[8].CellBlank -eq $true) {$BestMove = 4}
+      if ($EmptyCells.Count -eq 9) {$BestMove = 2,0,8,6 | Get-Random}
+      #elseif ($EmptyCells.Count -eq 7 -and $this.TTTCells[4].CellBlank -eq $true -and $this.TTTCells[8].CellBlank -eq $true) {$BestMove = 4}
       else {
         $EmptyCells = $this.TTTCells | Where-Object {$_.CellBlank -eq $true}
         $BestMove = $EmptyCells.CellIndex | Get-Random
