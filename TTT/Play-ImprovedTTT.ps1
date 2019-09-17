@@ -96,8 +96,39 @@ Class TTTBoard {
     }
   } #END method FindWinner
 
+  [int]FindBestMove ($Player) {
+    $WinningCells = @(
+      @(0,1,2),@(3,4,5),@(6,7,8),
+      @(0,3,6),@(1,4,7),@(2,5,8),
+      @(0,4,8),@(2,4,6)
+    )
+    if ($Player -eq 'X') {$Opponent = 'O'} else {$Opponent = 'X'}
+    $BestMove = 99
+    $EmptyCells = $this.TTTCells | Where-Object {$_.CellBlank -eq $true}
+    foreach ($WinningCell in $WinningCells) {
+      $CellArray = @($this.TTTCells[$WinningCell[0]], $this.TTTCells[$WinningCell[1]],  $this.TTTCells[$WinningCell[2]])
+      $CellValues = $CellArray.CellValue
+      $HumanMoves = $CellValues | Where-Object {$_ -eq $Opponent}
+      $PlayerMoves = $CellValues | Where-Object {$_ -eq $Player}
+      if ($PlayerMoves.Count -eq 2 -and $HumanMoves.Count -eq 0) {
+        0..2 | ForEach-Object {if ($CellValues[$_] -ne $Player) {$BestMove = $CellArray[$_].CellIndex ; break}}
+      }
+      if ($HumanMoves.Count -eq 2 -and $PlayerMoves.Count -eq 0) {
+        0..2 | ForEach-Object {if ($CellValues[$_] -ne $Opponent) {$BestMove = $CellArray[$_].CellIndex ; break}}
+      }
+    }
+    if ($BestMove -eq 99) {
+      if ($EmptyCells.Count -eq 9) {$BestMove = 0}
+      elseif ($EmptyCells.Count -eq 7 -and $this.TTTCells[4].CellBlank -eq $true -and $this.TTTCells[8].CellBlank -eq $true) {$BestMove = 4}
+      else {
+        $EmptyCells = $this.TTTCells | Where-Object {$_.CellBlank -eq $true}
+        $BestMove = $EmptyCells.CellIndex | Get-Random
+      }
+    }
+    return $BestMove
+  }
 
-}
+} #END Class TTTBoard
 
 # Functions
 
@@ -107,10 +138,10 @@ function Show-Board {
   Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
   $ShowSqr = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
-  $GridColor = "Yellow"
+  $GridColor = "white"
   $XColor = "Red"
-  $OColor = "white"
-  $TitleCol = "Yellow"
+  $OColor = "Yellow"
+  $TitleCol = "White"
   foreach ($Pos in (0..8)){
     if ($Board.TTTCells[$Pos].CellValue -eq "X") { $EntryColors[$Pos] = $XColor}
     if ($Board.TTTCells[$Pos].CellValue -eq "O") { $EntryColors[$Pos] = $OColor}
@@ -147,13 +178,22 @@ $MainBoard = [TTTBoard]::New()
 Show-Board -Board $MainBoard
 $Letter = 'X'
 do {
-  do {
-    try {$ErrorActionPreference = 'Stop'; $Choice = Read-Host -Prompt 'Enter a number'; if ($Choice -notin 1..9) {throw}}
-    catch {$PlayValid = $false; continue}
-    finally {$ErrorActionPreference = 'Continue'}
-    $Choice--
-    $PlayValid = $MainBoard.TTTCells[$Choice].PlayCell($Letter)
-  } until ($PlayValid)  
+  if ($Letter -eq 'O') {
+    do {
+      try {
+        $ErrorActionPreference = 'Stop'
+        $Choice = Read-Host -Prompt 'Enter a number'
+        if ($Choice -notin 1..9) {throw} else {$Choice = $Choice - 1}
+      }
+      catch {$PlayValid = $false; continue}
+      finally {$ErrorActionPreference = 'Continue'}
+      $PlayValid = $MainBoard.TTTCells[$Choice].PlayCell($Letter)
+    } until ($PlayValid)  
+  }
+  else { 
+    $Choice = $MainBoard.FindBestMove($Letter)
+    $MainBoard.TTTCells[$Choice].PlayCell($Letter)
+  }
   $MainBoard.FindWinner()
   Show-Board -Board $MainBoard
   $Letter = ('X','O') | Where-Object {$_ -ne $Letter}
