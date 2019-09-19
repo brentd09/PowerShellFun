@@ -96,42 +96,24 @@ Class TTTBoard {
     }
   } #END method FindWinner
 
-  [int]FindBestMove ($Player) {
-    $WinningCells = @(
-      @(0,1,2),@(3,4,5),@(6,7,8),
-      @(0,3,6),@(1,4,7),@(2,5,8),
-      @(0,4,8),@(2,4,6)
-    )
-    if ($Player -eq 'X') {$Opponent = 'O'} else {$Opponent = 'X'}
-    $BestMove = 99
-    $EmptyCells = $this.TTTCells | Where-Object {$_.CellBlank -eq $true}
-    foreach ($WinningCell in $WinningCells) {
-      $CellArray = @($this.TTTCells[$WinningCell[0]], $this.TTTCells[$WinningCell[1]],  $this.TTTCells[$WinningCell[2]])
-      $CellValues = $CellArray.CellValue
-      $HumanMoves = $CellValues | Where-Object {$_ -eq $Opponent}
-      $PlayerMoves = $CellValues | Where-Object {$_ -eq $Player}
-      if ($PlayerMoves.Count -eq 2 -and $HumanMoves.Count -eq 0) {
-        0..2 | ForEach-Object {if ($CellValues[$_] -ne $Player) {$BestMove = $CellArray[$_].CellIndex ; break}}
-      }
-      if ($HumanMoves.Count -eq 2 -and $PlayerMoves.Count -eq 0) {
-        0..2 | ForEach-Object {if ($CellValues[$_] -ne $Opponent) {$BestMove = $CellArray[$_].CellIndex ; break}}
-      }
-    }
-    if ($BestMove -eq 99) {
-      if ($EmptyCells.Count -eq 9) {$BestMove = 2,0,8,6 | Get-Random}
-      #elseif ($EmptyCells.Count -eq 7 -and $this.TTTCells[4].CellBlank -eq $true -and $this.TTTCells[8].CellBlank -eq $true) {$BestMove = 4}
-      else {
-        $EmptyCells = $this.TTTCells | Where-Object {$_.CellBlank -eq $true}
-        $BestMove = $EmptyCells.CellIndex | Get-Random
-      }
-    }
-    return $BestMove
-  }
 
 } #END Class TTTBoard
 
 # Functions
 
+function Find-BestMove {
+  Param ([TTTBoard]$Board,[string]$Player) 
+  $WinningCells = @(
+    @(0,1,2),@(3,4,5),@(6,7,8),
+    @(0,3,6),@(1,4,7),@(2,5,8),
+    @(0,4,8),@(2,4,6)
+  )
+  if ($Player -eq 'X') {$Opponent = 'O'} else {$Opponent = 'X'}
+  $BoardTemp = $Board | ConvertTo-Json -Compress -Depth 100 | ConvertFrom-Json 
+  $EmptyCells = $BoardTemp | where {$_.TTTCells.CellBlank -eq $true}
+  
+  return $BestMove
+}
 function Show-Board {
   Param ([TTTBoard]$Board,$Border='  ')
 
@@ -191,7 +173,7 @@ do {
     } until ($PlayValid)  
   }
   else { 
-    $Choice = $MainBoard.FindBestMove($Letter)
+    $Choice = Find-BestMove -Board $MainBoard -Player $Letter
     $MainBoard.TTTCells[$Choice].PlayCell($Letter)
   }
   $MainBoard.FindWinner()
