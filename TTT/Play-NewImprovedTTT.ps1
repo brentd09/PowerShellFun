@@ -63,41 +63,55 @@ function Show-Board {
   Write-Host -ForegroundColor $EntryColors[8] $ShowSqr[8]
   Write-Host 
 } # END function showboard
-function Find-BestMoveMiniMax {
-  Param ([string[]]$Board,[string]$Player,[int]$Level=1)
-  $BoardTemp = $Board.psobject.copy()
-  $WinX = Find-Winner -Board $BoardTemp -Player 'X'
-  $WinO = Find-Winner -Board $BoardTemp -Player 'O'
-  $CheckDraw = Find-Draw -Board $BoardTemp
-  if ($WinX.Winner -eq 'X' -and $Player -eq 'X') {return 10}
-  if ($WinO.Winner -eq 'O' -and $Player -eq 'X') {return -10}
-  if ($CheckDraw -eq $true) {return 0}
-  $EmptyIndexes =  (Find-BlankCells -Board $BoardTemp).BlankIndexes 
-  if ($Level % 2) {
-    $MaxEval = -999
-    foreach ($EmptyIndex in $EmptyIndexes) {
-      $BoardTemp = Submit-Move -Board $BoardTemp -Player 'X' -MoveIndex $EmptyIndex
-      $Eval = Find-BestMoveMiniMax -Board $BoardTemp -Player 'X' -Level ($Level + 1)
-      $MaxEval = if ($MaxEval -gt $Eval) {$MaxEval} else {$Eval}
-    }
-    return $MaxEval
-  }
-  else {
-    $MinEval = 999
-    foreach ($EmptyIndex in $EmptyIndexes) {
-      $BoardTemp = Submit-Move -Board $BoardTemp -Player 'O' -MoveIndex $EmptyIndex
-      $Eval = Find-BestMoveMiniMax -Board $BoardTemp -Player 'O' -Level ($Level + 1) 
-      $MinEval = if ($MinEval -lt $Eval) {$MinEval} else {$Eval}
-    }
-    return $MinEval
+function MiniMiniMax {
+  Param ([string[]]$Board,[string]$Player)
+  $TempBoard = $Board.psobject.copy()
+  $Empties = Find-BlankCells $TempBoard
+  foreach ($Index in $Empties.BlankIndexes) {
+    Submit-Move -Board $TempBoard -MoveIndex $Index -Player $Player
+    $WinFound = Find-Winner -Board $TempBoard -Player $Player
+    if ($WinFound.Winner -eq $Player) {return $Index}
+    else {}
   }
 }
+##function Find-BestMoveMiniMax {
+##  Param ([string[]]$Board,[string]$Player,[int]$Level=1)
+##  $BoardTemp = $Board.psobject.copy()
+##  $WinX = Find-Winner -Board $BoardTemp -Player 'X'
+##  $WinO = Find-Winner -Board $BoardTemp -Player 'O'
+##  $CheckDraw = Find-Draw -Board $BoardTemp
+##  if ($WinX.Winner -eq 'X' -and $Player -eq 'X') {return 10}
+##  if ($WinO.Winner -eq 'O' -and $Player -eq 'X') {return -10}
+##  if ($CheckDraw -eq $true) {return 0}
+##  $EmptyIndexes =  (Find-BlankCells -Board $BoardTemp).BlankIndexes 
+##  if ($Level % 2) {
+##    $MaxEval = -999
+##    foreach ($EmptyIndex in $EmptyIndexes) {
+##      $BoardTemp = Submit-Move -Board $BoardTemp -Player 'X' -MoveIndex $EmptyIndex
+##      $Eval = Find-BestMoveMiniMax -Board $BoardTemp -Player 'X' -Level ($Level + 1)
+##      $MaxEval = if ($MaxEval -gt $Eval) {$MaxEval} else {$Eval}
+##    }
+##    return $MaxEval
+##  }
+##  else {
+##    $MinEval = 999
+##    foreach ($EmptyIndex in $EmptyIndexes) {
+##      $BoardTemp = Submit-Move -Board $BoardTemp -Player 'O' -MoveIndex $EmptyIndex
+##      $Eval = Find-BestMoveMiniMax -Board $BoardTemp -Player 'O' -Level ($Level + 1) 
+##      $MinEval = if ($MinEval -lt $Eval) {$MinEval} else {$Eval}
+##    }
+##    return $MinEval
+##  }
+##} # END function Find-BestMoveMiniMax
 function Get-NextMove {
   Param ([string[]]$Board, [string]$Player, [switch]$ComputersTurn)
   if ($ComputersTurn) {
     $Blanks = Find-BlankCells -Board $Board
-    #Find-BestMoveMiniMax -Board $Board -Player $Player
-    return $Blanks.BlankIndexes[0]
+    if ($Blanks.NumberOfBlanks -eq 9) {
+      $FirstMove =  (0,2,6,8) | Get-Random 
+      return $FirstMove
+    }
+    else {return $Blanks.BlankIndexes[0] # This should be the minimax logic}
   }
   else {
     do {
@@ -119,7 +133,15 @@ function Submit-Move {
     $Board[$MoveIndex] = $Player
     return $Board
   }
-}
+} # END function Submit-Move
+function Revoke-Move {
+  Param ([string[]]$Board,[int]$MoveIndex)
+  if ($Board[$MoveIndex] -match '[XO]') {
+    $Board[$MoveIndex] = $Player
+    return $Board
+  }
+} # END function Submit-Move
+
 function Find-BlankCells {
   Param ([string[]]$Board)
   $BlankIndexes = @()
@@ -156,7 +178,7 @@ function Find-Winner {
       WinningLine = 99
     }
   }
-}
+} # END function FindWinner
 function Find-Draw {
   Param ([string[]]$Board)
   $WinX = Find-Winner -Board $Board -Player 'X'
@@ -164,11 +186,11 @@ function Find-Draw {
   $Blanks = Find-BlankCells -Board $Board
   if ($WinX.Winner -eq 'NoWinner' -and $WinO.Winner -eq 'NoWinner' -and $Blanks.NumberOfBlanks -eq 0) {return $true  }
   else {return $false}
-}
+} # END function FindDraw
 
 ### MainCode
 $MainBoard = New-TTTBoard
-$PlayerToken = 'O'
+$PlayerToken = ('O','X') | Get-Random
 $Opponent = 'X'
 Show-Board -Board $MainBoard
 do {
