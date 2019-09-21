@@ -199,11 +199,14 @@ $MainBoard = New-TTTBoard
 $PlayerToken = ('O','X') | Get-Random
 $Opponent = 'X'
 Show-Board -Board $MainBoard
+$XMoves = @() ;$OMoves = @()
 do {
   $Opponent = $PlayerToken
   $PlayerToken = ('X','O') | Where-Object {$_ -notcontains $PlayerToken}
   if ($PlayerToken -eq 'X') {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken -ComputersTurn}
   else {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken -ComputersTurn} 
+  if ($PlayerToken -eq 'X') {$XMoves += $MoveIndex}
+  if ($PlayerToken -eq 'O') {$OMoves += $MoveIndex}
   $MainBoard[$MoveIndex] = $PlayerToken
   $WinStatusPlayer = Find-Winner -Board $MainBoard -Player $PlayerToken
   $WinStatusOpponent = Find-Winner -Board $MainBoard -Player $Opponent
@@ -214,3 +217,5 @@ do {
 if ($WinStatusPlayer.Winner -ne 'NoWinner') {'Winner = ' + $WinStatusPlayer.Winner}
 if ($WinStatusOpponent.Winner -ne 'NoWinner') {'Winner = ' + $WinStatusOpponent.Winner}
 if ($DrawStatus) {'Game Drawn = ' + $DrawStatus}
+$XMoves -join ','
+$OMoves -join ','
