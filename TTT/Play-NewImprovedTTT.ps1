@@ -63,55 +63,75 @@ function Show-Board {
   Write-Host -ForegroundColor $EntryColors[8] $ShowSqr[8]
   Write-Host 
 } # END function showboard
-function MiniMiniMax {
-  Param ([string[]]$Board,[string]$Player)
-  $TempBoard = $Board.psobject.copy()
-  $Empties = Find-BlankCells $TempBoard
-  foreach ($Index in $Empties.BlankIndexes) {
-    Submit-Move -Board $TempBoard -MoveIndex $Index -Player $Player
-    $WinFound = Find-Winner -Board $TempBoard -Player $Player
-    if ($WinFound.Winner -eq $Player) {return $Index}
-    else {}
+
+function Find-MiniMiniMax {
+  Param ([string[]]$Board,[string]$Player,[switch]$Min)
+  $Opponent = ('O','X') | Where-Object {$_ -ne $Player}
+  $Empties = Find-BlankCells $Board
+  if ($Min -eq $false) {
+    foreach ($Index in $Empties.BlankIndexes) {
+      $Board[$Index] = $Player
+      $WinFound = Find-Winner -Board $Board -Player $Player
+      if ($WinFound.Winner -eq $Player) {return $Index}
+      else {$Board[$Index] = (($Index + 1) -as [string])}
+    }
+    foreach ($Index in $Empties.BlankIndexes) {
+      $Board[$Index] = $Opponent
+      $WinFound = Find-Winner -Board $Board -Player $Opponent
+      if ($WinFound.Winner -eq $Opponent) {return $Index}
+      else {$Board[$Index] = (($Index + 1) -as [string])}
+    }
   }
+  else {
+    foreach ($Index in $Empties.BlankIndexes) {
+      $Board[$Index] = $Player
+      $WinFound = Find-Winner -Board $Board -Player $Player
+      if ($WinFound.Winner -eq $Player) {return $Index}
+      elseif (Find-DualWin -Board $Board -Player $Player) {return $Index}
+      else {$Board[$Index] = (($Index + 1) -as [string])}
+    }
+    foreach ($Index in $Empties.BlankIndexes) {
+      $Board[$Index] = $Opponent
+      $WinFound = Find-Winner -Board $Board -Player $Opponent
+      if ($WinFound.Winner -eq $Opponent) {return $Index}
+      else {$Board[$Index] = (($Index + 1) -as [string])}
+    }
+  }
+  if ($Empties.BlankIndexes -contains 4) {return 4}
+  else {$RandomIndex = $Empties.BlankIndexes | Get-Random}
+  return $RandomIndex
 }
-##function Find-BestMoveMiniMax {
-##  Param ([string[]]$Board,[string]$Player,[int]$Level=1)
-##  $BoardTemp = $Board.psobject.copy()
-##  $WinX = Find-Winner -Board $BoardTemp -Player 'X'
-##  $WinO = Find-Winner -Board $BoardTemp -Player 'O'
-##  $CheckDraw = Find-Draw -Board $BoardTemp
-##  if ($WinX.Winner -eq 'X' -and $Player -eq 'X') {return 10}
-##  if ($WinO.Winner -eq 'O' -and $Player -eq 'X') {return -10}
-##  if ($CheckDraw -eq $true) {return 0}
-##  $EmptyIndexes =  (Find-BlankCells -Board $BoardTemp).BlankIndexes 
-##  if ($Level % 2) {
-##    $MaxEval = -999
-##    foreach ($EmptyIndex in $EmptyIndexes) {
-##      $BoardTemp = Submit-Move -Board $BoardTemp -Player 'X' -MoveIndex $EmptyIndex
-##      $Eval = Find-BestMoveMiniMax -Board $BoardTemp -Player 'X' -Level ($Level + 1)
-##      $MaxEval = if ($MaxEval -gt $Eval) {$MaxEval} else {$Eval}
-##    }
-##    return $MaxEval
-##  }
-##  else {
-##    $MinEval = 999
-##    foreach ($EmptyIndex in $EmptyIndexes) {
-##      $BoardTemp = Submit-Move -Board $BoardTemp -Player 'O' -MoveIndex $EmptyIndex
-##      $Eval = Find-BestMoveMiniMax -Board $BoardTemp -Player 'O' -Level ($Level + 1) 
-##      $MinEval = if ($MinEval -lt $Eval) {$MinEval} else {$Eval}
-##    }
-##    return $MinEval
-##  }
-##} # END function Find-BestMoveMiniMax
+
+function Find-DualWin {
+  Param ($Board,$Player)
+  $WinningLines = @(
+    @(0,1,2),@(3,4,5),@(6,7,8),
+    @(0,3,6),@(1,4,7),@(2,5,8),
+    @(0,4,8),@(2,4,6)
+  )
+  $NextPlayWins = 0
+  foreach ($Line in $WinningLines) {
+    $PotentialWin = ($Board[$line] | Sort-Object ) -join ''
+    $Regex = '^[1-9]'+$Player+$Player+'$'
+    if ($PotentialWin -match $Regex) {$NextPlayWins = $NextPlayWins + 1}
+  }
+  if ($NextPlayWins -ge 2) {return $true}
+  else {return $false}
+}
+
 function Get-NextMove {
   Param ([string[]]$Board, [string]$Player, [switch]$ComputersTurn)
+  [int]$MMIndex = 0
   if ($ComputersTurn) {
     $Blanks = Find-BlankCells -Board $Board
     if ($Blanks.NumberOfBlanks -eq 9) {
       $FirstMove =  (0,2,6,8) | Get-Random 
       return $FirstMove
     }
-    else {return $Blanks.BlankIndexes[0] # This should be the minimax logic}
+    else {
+      $MMIndex = Find-MiniMiniMax -Board $Board -Player $Player
+      return $MMIndex
+    } # This should be the minimax logic
   }
   else {
     do {
@@ -127,20 +147,6 @@ function Get-NextMove {
   }
   return $TurnIndex
 } # END function Get-NextMove
-function Submit-Move {
-  Param ([string[]]$Board,[string]$Player,[int]$MoveIndex)
-  if ($Board[$MoveIndex] -notmatch '[XO]') {
-    $Board[$MoveIndex] = $Player
-    return $Board
-  }
-} # END function Submit-Move
-function Revoke-Move {
-  Param ([string[]]$Board,[int]$MoveIndex)
-  if ($Board[$MoveIndex] -match '[XO]') {
-    $Board[$MoveIndex] = $Player
-    return $Board
-  }
-} # END function Submit-Move
 
 function Find-BlankCells {
   Param ([string[]]$Board)
@@ -197,13 +203,13 @@ do {
   $Opponent = $PlayerToken
   $PlayerToken = ('X','O') | Where-Object {$_ -notcontains $PlayerToken}
   if ($PlayerToken -eq 'X') {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken -ComputersTurn}
-  else {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken} 
-  $MainBoard = Submit-Move -Board $MainBoard -Player $PlayerToken -MoveIndex $MoveIndex
+  else {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken -ComputersTurn} 
+  $MainBoard[$MoveIndex] = $PlayerToken
   $WinStatusPlayer = Find-Winner -Board $MainBoard -Player $PlayerToken
   $WinStatusOpponent = Find-Winner -Board $MainBoard -Player $Opponent
   $DrawStatus =  Find-Draw -Board $MainBoard
   Show-Board -Board $MainBoard
-  if ($PlayerToken -eq 'X') {Find-BestMoveMiniMax -Board $MainBoard -Player $PlayerToken}
+  #if ($PlayerToken -eq 'X') {Find-BestMoveMiniMax -Board $MainBoard -Player $PlayerToken}
 } until ($DrawStatus -eq $true -or $WinStatusPlayer.Winner -eq $PlayerToken -or $WinStatusOpponent.Winner -eq $Opponent)
 if ($WinStatusPlayer.Winner -ne 'NoWinner') {'Winner = ' + $WinStatusPlayer.Winner}
 if ($WinStatusOpponent.Winner -ne 'NoWinner') {'Winner = ' + $WinStatusOpponent.Winner}
