@@ -82,22 +82,12 @@ function Find-MiniMiniMax {
       else {$Board[$Index] = (($Index + 1) -as [string])}
     }
   }
-  else {
-    foreach ($Index in $Empties.BlankIndexes) {
-      $Board[$Index] = $Player
-      $WinFound = Find-Winner -Board $Board -Player $Player
-      if ($WinFound.Winner -eq $Player) {return $Index}
-      elseif (Find-DualWin -Board $Board -Player $Player) {return $Index}
-      else {$Board[$Index] = (($Index + 1) -as [string])}
-    }
-    foreach ($Index in $Empties.BlankIndexes) {
-      $Board[$Index] = $Opponent
-      $WinFound = Find-Winner -Board $Board -Player $Opponent
-      if ($WinFound.Winner -eq $Opponent) {return $Index}
-      else {$Board[$Index] = (($Index + 1) -as [string])}
-    }
-  }
+  else {  }
   if ($Empties.BlankIndexes -contains 4) {return 4}
+  elseif (Find-BuildPosition -Board $Board -Player $Player) {
+    $Index = Find-BuildPosition -Board $Board -Player $Player
+    return $Index
+  }
   else {$RandomIndex = $Empties.BlankIndexes | Get-Random}
   return $RandomIndex
 }
@@ -119,14 +109,58 @@ function Find-DualWin {
   else {return $false}
 }
 
+function Find-DiagWin {
+  Param ($Board,$Player)
+  $WinningLines = @(
+    @(0,1,2),@(3,4,5),@(6,7,8),
+    @(0,3,6),@(1,4,7),@(2,5,8),
+    @(0,4,8),@(2,4,6)
+  )
+  $Opponent = ('O','X') | Where-Object {$_ -ne $Player}
+  $NextPlayWins = 0
+  foreach ($Line in $WinningLines) {
+    $PotentialWin = ($Board[$line] | Sort-Object ) -join ''
+    $Regex = '^'+$Player+$Opponent+$Player+'$'
+    if ($PotentialWin -match $Regex) {$NextPlayWins = $NextPlayWins + 1}
+  }
+  if ($NextPlayWins -eq 1) {return $true}
+  else {return $false}
+}
+
+function Find-BuildPosition {
+  Param ($Board, $Player)
+  $WinningLines = @(
+    @(0,1,2),@(3,4,5),@(6,7,8),
+    @(0,3,6),@(1,4,7),@(2,5,8),
+    @(0,4,8),@(2,4,6)
+  )
+  $BuildPos = @()
+  foreach ($Line in $WinningLines) {
+    $PotentialBuild = ($Board[$line] | Sort-Object ) -join ''
+    $Regex = '^[1-9]{2}'+$Player+'$'
+    if ($PotentialBuild -match $Regex) {
+      foreach ($Pos in $Line) {
+        if ($Board[$Pos] -match '[1-9]') {$BuildPos += $Pos}
+      }
+      $RandomBuildIndex = $BuildPos | Get-Random
+      return $RandomBuildIndex
+    }
+  }
+}
+
 function Get-NextMove {
   Param ([string[]]$Board, [string]$Player, [switch]$ComputersTurn)
   [int]$MMIndex = 0
+  $Opponent = ('O','X') | Where-Object {$_ -ne $Player}
   if ($ComputersTurn) {
     $Blanks = Find-BlankCells -Board $Board
     if ($Blanks.NumberOfBlanks -eq 9) {
       $FirstMove =  (0,2,6,8) | Get-Random 
       return $FirstMove
+    }
+    elseif ($Blanks.NumberOfBlanks -eq 8 -and $Board[4] -eq $Opponent) {
+      $RandomCounterAttack = (1,3,5,7) | Get-Random
+      return $RandomCounterAttack
     }
     else {
       $MMIndex = Find-MiniMiniMax -Board $Board -Player $Player
@@ -204,7 +238,7 @@ do {
   $Opponent = $PlayerToken
   $PlayerToken = ('X','O') | Where-Object {$_ -notcontains $PlayerToken}
   if ($PlayerToken -eq 'X') {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken -ComputersTurn}
-  else {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken -ComputersTurn} 
+  else {$MoveIndex = Get-NextMove -Board $MainBoard -Player $PlayerToken } 
   if ($PlayerToken -eq 'X') {$XMoves += $MoveIndex}
   if ($PlayerToken -eq 'O') {$OMoves += $MoveIndex}
   $MainBoard[$MoveIndex] = $PlayerToken
@@ -214,8 +248,9 @@ do {
   Show-Board -Board $MainBoard
   #if ($PlayerToken -eq 'X') {Find-BestMoveMiniMax -Board $MainBoard -Player $PlayerToken}
 } until ($DrawStatus -eq $true -or $WinStatusPlayer.Winner -eq $PlayerToken -or $WinStatusOpponent.Winner -eq $Opponent)
-if ($WinStatusPlayer.Winner -ne 'NoWinner') {'Winner = ' + $WinStatusPlayer.Winner}
-if ($WinStatusOpponent.Winner -ne 'NoWinner') {'Winner = ' + $WinStatusOpponent.Winner}
+if ($WinStatusPlayer.Winner -eq 'O') {$Color = 'Yellow'} else {$Color = 'Red'}
+if ($WinStatusPlayer.Winner -ne 'NoWinner') {Write-Host -ForegroundColor $Color "Winner = $($WinStatusPlayer.Winner)"}
+if ($WinStatusOpponent.Winner -ne 'NoWinner') {Write-Host -ForegroundColor $Color "Winner = $(WinStatusOpponent.Winner)"}
 if ($DrawStatus) {'Game Drawn = ' + $DrawStatus}
 $XMoves -join ','
 $OMoves -join ','
