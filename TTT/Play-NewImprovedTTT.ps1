@@ -182,6 +182,36 @@ function Get-NextMove {
   return $TurnIndex
 } # END function Get-NextMove
 
+function find-MiniMax {
+  Param ([string[]]$Board,[string]$Player,[int]$Tier)
+  $Cells = Find-BlankCells -Board $Board
+  [int[]]$PossibleMoves = @()
+  $OriginalBoard = $Board.psobject.copy()
+  $OtherPlayer = ('O','X') | Where-Object {$_ -ne $Player}
+  foreach ($EmptyCell in $Cells.BlankIndexes) {
+    if ($Tier % 2 ) {
+      $Letter = $Player
+      $MiniMaxType = "Max"
+    } 
+    else {
+      $Letter = $OtherPlayer
+      $MiniMaxType = "Min"
+    }
+    $Board[$EmptyCell] = $Letter
+    $WinStatus = Find-Winner -Board $Board -Player $Letter
+    $Draw = Find-Draw -Board $Board
+    if ($WinStatus.Winner -eq $Letter -or $Draw -eq $true){
+      if ($MiniMaxType -eq 'Max') {$PossibleMoves += 10}
+      elseif ($MiniMaxType -eq 'Min') {$PossibleMoves += -10}
+      elseif ($Draw -eq $true) {$PossibleMoves += 0}
+      $Board = $OriginalBoard.psobject.copy()
+      break
+    }
+    else {
+      $Tier = $Tier + 1
+    }
+  }
+}
 function Find-BlankCells {
   Param ([string[]]$Board)
   $BlankIndexes = @()
