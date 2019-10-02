@@ -52,10 +52,10 @@ class TTTBoard {
     }
   }#End Contructor
 
-  [TTTBoard]Clone ($Board) {
+  [TTTBoard]Clone () {
     $CopyBoard = New-Object -TypeName TTTBoard 
     $Pos = 0
-    foreach ($Cell in $Board.Cells) {
+    foreach ($Cell in $this.Cells) {
       $JsonCell = $Cell | ConvertTo-Json -Depth 5 
       $CopyObj = $JsonCell | ConvertFrom-Json 
       $CopyBoard.Cells[$Pos].Content = $CopyObj.Content
@@ -75,7 +75,8 @@ function Show-Board {
     [string]$GridColor = "Cyan",
     [string]$XColor    = "Red",
     [string]$OColor    = "Yellow",
-    [string]$TitleCol  = "Green"
+    [string]$TitleCol  = "Green",
+    $TermState
   )
   Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
@@ -86,6 +87,7 @@ function Show-Board {
     if ($Board.Cells[$Pos].Content -eq "O") { $EntryColors[$Pos] = $OColor}
     if ($Board.Cells[$Pos].Content -eq " ") { $EntryColors[$Pos] = "darkgray"}
     if ($Board.Cells[$Pos].Content -match "[XO]") {$ShowSqr[$Pos] = $Board.Cells[$Pos].Content}
+    elseif ($TermState.Winner -in @('X','O')) {$ShowSqr[$Pos] = ' '}
     else {$ShowSqr[$Pos] = $Pos + 1}
   }
   Write-Host -ForegroundColor $TitleCol "`n${Padding}Tic Tac Toe`n"
@@ -154,6 +156,38 @@ function Select-BestMove {
   return $EmptyCells[0].Position
 }
 
+function Get-MiniMaxIndex {
+  Param (
+    [TTTBoard]$Board,
+    $GameOutcome,
+    [int]$MMAlpha,
+    [int]$MMBeta,
+    [bool]$Maxing,
+    [string]$InitPlayer
+  )
+  $CloneBoard = $Board.Clone()
+  $OtherPlayer = @('X','O') | Where-Object {$_ -ne $InitPlayer}
+  if ($GameOutcome.Winner -eq $InitPlayer) {return 10}
+  elseif ($GameOutcome.Winner -eq $OtherPlayer) {return -10} 
+  elseif ($GameOutcome.Winner -eq 'D') {return 0}
+  else {
+    if ($Maxing -eq $true) {
+      $MaxEval = -100
+      $Empties = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
+      foreach ($Empty in $Empties) {
+        $Eval = Get-MiniMaxIndex -Board $CloneBoard 
+      }
+    }
+    else {
+      $MinEval = 100
+      $Empties = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
+      foreach ($Empty in $Empties) {
+        
+      }
+    }
+  }
+}
+
 
 #Main Code
 [string]$GridColor = "Cyan"
@@ -182,8 +216,8 @@ do {
       else {$TurnResult = $false}
     } until ($TurnResult -eq $true)
   }
-  Show-Board -Board $Board -GridColor $GridColor -XColor $XColor -OColor $OColor -TitleColor $TitleCol
   $GameState = Test-TerminalState -Board $Board
+  Show-Board -Board $Board -GridColor $GridColor -XColor $XColor -OColor $OColor -TitleColor $TitleCol -TermState $GameState
   $Turn =  @('X','O') | Where-Object {$_ -ne $Turn}
 } until ($Board.Cells.Empty -notcontains $true -or $GameState.Terminal -eq $true)
 if ($GameState.Winner -eq 'X' ) {Write-Host -ForegroundColor $XColor "`nWinner is $($GameState.Winner)"}
