@@ -153,17 +153,19 @@ function Select-BestMove {
     [string]$Player
   )
   $EmptyCells = $Board.Cells | Where-Object {$_.Empty -eq $true}
-  return $EmptyCells[0].Position
+  [hashtable[]]$Scores = @()
+  foreach ($Empty in $EmptyCells) {
+    $MMindex = Get-MiniMaxIndex
+    $Scores = $Scores + @{Index=$Empty.Position;Score=$MMindex}
+  }
+  $Scores 
 }
 
 function Get-MiniMaxIndex {
   Param (
     [TTTBoard]$Board,
-    $GameOutcome,
-    [int]$MMAlpha,
-    [int]$MMBeta,
-    [bool]$Maxing,
-    [string]$InitPlayer
+    [string]$InitPlayer,
+    [string]$CurrentPlayer
   )
   $CloneBoard = $Board.Clone()
   $OtherPlayer = @('X','O') | Where-Object {$_ -ne $InitPlayer}
