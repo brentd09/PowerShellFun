@@ -31,6 +31,12 @@ Class TTTCell {
     $this.Empty = $true
   }
 
+  TTTCell ($Pos,$Content,$Empty) {
+    $this.Position = $Pos
+    $this.Content = $Content
+    $this.Empty = $Empty
+  }#END Constructors
+
   [bool]PlayMove ($XorO) {
     if ($this.Content -match '^[1-9]$') {
       $this.Content = $XorO
@@ -50,20 +56,16 @@ class TTTBoard {
     $this.Cells = 0..8 | ForEach-Object {
       [TTTCell]::New($_)
     }
-  }#End Contructor
+  }
+  
+  TTTBoard ([TTTCell[]]$Cells) {
+      $this.Cells = $Cells
+  }  #End Contructors
 
   [TTTBoard]Clone () {
-    $CopyBoard = New-Object -TypeName TTTBoard 
-    $Pos = 0
-    foreach ($Cell in $this.Cells) {
-      $JsonCell = $Cell | ConvertTo-Json -Depth 5 
-      $CopyObj = $JsonCell | ConvertFrom-Json 
-      $CopyBoard.Cells[$Pos].Content = $CopyObj.Content
-      $CopyBoard.Cells[$Pos].Empty   = $CopyObj.Empty 
-      $CopyBoard.Cells[$Pos].Position   = $CopyObj.Position
-      $Pos = $Pos + 1
-    }
-    return $CopyBoard
+    $CloneCells = 0..8 | ForEach-Object {[TTTCell]::New($this.Cells[$_].Position,$this.Cells[$_].Content,$this.Cells[$_].Empty)}
+    $CloneBoard = [TTTBoard]::New($CloneCells)
+    return $CloneBoard
   }
 }#End TTTBoard
 
@@ -78,7 +80,7 @@ function Show-Board {
     [string]$TitleCol  = "Green",
     $TermState
   )
-  Clear-Host
+  #Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
   $ShowSqr = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
 
@@ -141,11 +143,11 @@ function Test-TerminalState {
       $TermState = $true
     }
   }#END foreach
-  return [PSCustomObject]@{
+  return [PSCustomObject]@{ # Termstate => N - No winner yet, D = Draw, X - X wins, O - O wins 
     Winner   = $Winner
     Terminal = $TermState
   }
-}#END terminaState
+}#END Terminal State
 
 function Select-BestMove {
   Param (
@@ -153,12 +155,19 @@ function Select-BestMove {
     [string]$Player
   )
   $EmptyCells = $Board.Cells | Where-Object {$_.Empty -eq $true}
-  [hashtable[]]$Scores = @()
-  foreach ($Empty in $EmptyCells) {
-    $MMindex = Get-MiniMaxIndex
-    $Scores = $Scores + @{Index=$Empty.Position;Score=$MMindex}
+  foreach ($EmptyCell in $EmptyCells) {
+    $NewBoard = $Board.Clone()
+    $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
+    $TestTermState = Test-TerminalState -Board $NewBoard
+    if ($TestTermState.winner -in @($Player,'D')) {return $EmptyCell.Position}
   }
-  $Scores 
+  return $EmptyCells[0].Position
+  #[hashtable[]]$Scores = @()
+  #foreach ($Empty in $EmptyCells) {
+  #  $MMindex = Get-MiniMaxIndex
+  #  $Scores = $Scores + @{Index=$Empty.Position;Score=$MMindex}
+  #}
+  #$Scores 
 }
 
 function Get-MiniMaxIndex {
