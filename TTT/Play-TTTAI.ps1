@@ -80,7 +80,7 @@ function Show-Board {
     [string]$TitleCol  = "Green",
     $TermState
   )
-  #Clear-Host
+  Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
   $ShowSqr = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
 
