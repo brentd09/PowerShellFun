@@ -154,6 +154,8 @@ function Select-BestMove {
     [TTTBoard]$Board,
     [string]$Player
   )
+  $ScoreObj = @()
+  $OtherPlayer = @('X','O') | Where-Object {$_ -ne $Player}
   $EmptyCells = $Board.Cells | Where-Object {$_.Empty -eq $true}
   foreach ($EmptyCell in $EmptyCells) {
     $NewBoard = $Board.Clone()
@@ -161,43 +163,49 @@ function Select-BestMove {
     $TestTermState = Test-TerminalState -Board $NewBoard
     if ($TestTermState.winner -in @($Player,'D')) {return $EmptyCell.Position}
   }
-  return $EmptyCells[0].Position
-  #[hashtable[]]$Scores = @()
-  #foreach ($Empty in $EmptyCells) {
-  #  $MMindex = Get-MiniMaxIndex
-  #  $Scores = $Scores + @{Index=$Empty.Position;Score=$MMindex}
-  #}
-  #$Scores 
-}
+  foreach ($EmptyCell in $EmptyCells) {
+    $NewBoard = $Board.Clone()
+    $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
+    $TestTermState = Test-TerminalState -Board $NewBoard
+    $ScoreObj += [PSCustomObject]@{
+      Score = Get-MiniMaxIndex -Board $NewBoard -MaxPlayer $Player $CurrentPlayer $OtherPlayer
+      Position = $EmptyCell.Position
+    }
+  }
+  $BestScore = ($ScoreObj | Sort-Object -Property Score -Descending)[0]
+  return $BestScore.Position
+}#END SelectBestMove
 
 function Get-MiniMaxIndex {
   Param (
     [TTTBoard]$Board,
-    [string]$InitPlayer,
+    [string]$MaxPlayer,
     [string]$CurrentPlayer
   )
   $CloneBoard = $Board.Clone()
-  $OtherPlayer = @('X','O') | Where-Object {$_ -ne $InitPlayer}
-  if ($GameOutcome.Winner -eq $InitPlayer) {return 10}
-  elseif ($GameOutcome.Winner -eq $OtherPlayer) {return -10} 
-  elseif ($GameOutcome.Winner -eq 'D') {return 0}
-  else {
-    if ($Maxing -eq $true) {
-      $MaxEval = -100
-      $Empties = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
-      foreach ($Empty in $Empties) {
-        $Eval = Get-MiniMaxIndex -Board $CloneBoard 
-      }
-    }
-    else {
-      $MinEval = 100
-      $Empties = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
-      foreach ($Empty in $Empties) {
-        
-      }
+  $OtherPlayer = @('X','O') | Where-Object {$_ -ne $MaxPlayer}
+  if ($MaxPlayer -eq $CurrentPlayer) {
+    $EmptyCells = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
+    foreach ($EmptyCell in $EmptyCells) {
+      $NewBoard = $CloneBoard.Clone()
+      $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
+      $TestTermState = Test-TerminalState -Board $NewBoard
+      if ($TestTermState.Winner -eq $MaxPlayer) {return 10}
+      if ($TestTermState.Winner -eq 'D') {return 0}
     }
   }
-}
+  else {
+    $EmptyCells = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
+    foreach ($EmptyCell in $EmptyCells) {
+      $NewBoard = $CloneBoard.Clone()
+      $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
+      $TestTermState = Test-TerminalState -Board $NewBoard
+      if ($TestTermState.Winner -in @($CurrentPlayer)) {return -10}
+      if ($TestTermState.Winner -eq 'D') {return 0}      
+    }
+  }
+  Get-MiniMaxIndex -Board $CloneBoard -MaxPlayer $MaxPlayer -CurrentPlayer $OtherPlayer
+}#END MiniMax
 
 
 #Main Code
