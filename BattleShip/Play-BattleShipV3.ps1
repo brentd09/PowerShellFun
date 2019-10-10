@@ -224,9 +224,9 @@ Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
 do {
   $TurnSequence++
   # Player attacks computer's board
-  Select-AttackLocation -GameBoard $Computer -TurnNumber $TurnSequence -Automatic
+  Select-AttackLocation -GameBoard $Player  -TurnNumber $TurnSequence -Automatic
   # Computer attacks Player's board
-  Select-AttackLocation -GameBoard $Player -TurnNumber $TurnSequence 
+  Select-AttackLocation -GameBoard $Computer -TurnNumber $TurnSequence 
   Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
   $ComputerBoardHits = ($Computer | Where-Object {$_.Reveal -eq 'H'}).Count
   $PlayerBoardHits = ($Player | Where-Object {$_.Reveal -eq 'H'}).Count
