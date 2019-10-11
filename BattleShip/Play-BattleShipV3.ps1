@@ -223,9 +223,9 @@ Clear-Host
 Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
 do {
   $TurnSequence++
-  # Player attacks computer's board
+  # Computer attacks Players's board
   Select-AttackLocation -GameBoard $Player  -TurnNumber $TurnSequence -Automatic
-  # Computer attacks Player's board
+  # Player attacks Computer's board
   Select-AttackLocation -GameBoard $Computer -TurnNumber $TurnSequence 
   Show-Boards -ComputerBoard $Computer -PlayerBoard $Player
   $ComputerBoardHits = ($Computer | Where-Object {$_.Reveal -eq 'H'}).Count
