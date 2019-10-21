@@ -184,12 +184,16 @@ function Select-AttackLocation {
     $HitCount = ($GameBoard | Where-Object {$_.Reveal -eq 'H'}).Count
     $CheckNeighbours = $GameBoard | Where-Object {$_.Reveal -eq 'H' -and $_.Neighbours.length -gt 0} 
     $CheckNeighbour = $CheckNeighbours | Get-Random
-    if ($CheckNeighbours.Count -eq 0 -or $HitCount -le 4) {
+    if ($CheckNeighbours.Count -eq 0 -or $HitCount -le 3) {
       $NonAttackedPosses = ($GameBoard | Where-Object {$_.HitByOpponent -eq $false}).Pos | Where-Object {($_%2) -eq ([math]::Truncate($_/10)%2)}
       $NonAttackedPos = $NonAttackedPosses | Get-Random
       $GameBoard[$NonAttackedPos].Attack($TurnNumber)
     }
-    else { #Check Hit neighbours
+    else { 
+      # $CurrentHits = $GameBoard | Where-Object {$_.Reveal -eq 'H'}
+      # $HitsByRow = $CurrentHits | Sort-Object -Property Row
+
+      #Check Hit neighbours
       # Need to look at all of the HITS to see if any are close proximity
       # if they are need to guess on the same line (row or col) until MISS
       # on both ends of the line are found!
