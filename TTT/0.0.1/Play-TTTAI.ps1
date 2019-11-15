@@ -149,65 +149,6 @@ function Test-TerminalState {
   }
 }#END Terminal State
 
-function Select-BestMove {
-  Param (
-    [TTTBoard]$Board,
-    [string]$Player
-  )
-  $ScoreObj = @()
-  $OtherPlayer = @('X','O') | Where-Object {$_ -ne $Player}
-  $EmptyCells = $Board.Cells | Where-Object {$_.Empty -eq $true}
-  foreach ($EmptyCell in $EmptyCells) {
-    $NewBoard = $Board.Clone()
-    $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
-    $TestTermState = Test-TerminalState -Board $NewBoard
-    if ($TestTermState.winner -in @($Player,'D')) {return $EmptyCell.Position}
-  }
-  foreach ($EmptyCell in $EmptyCells) {
-    $NewBoard = $Board.Clone()
-    $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
-    $TestTermState = Test-TerminalState -Board $NewBoard
-    $ScoreObj += [PSCustomObject]@{
-      Score = Get-MiniMaxIndex -Board $NewBoard -MaxPlayer $Player $CurrentPlayer $OtherPlayer
-      Position = $EmptyCell.Position
-    }
-  }
-  $BestScore = ($ScoreObj | Sort-Object -Property Score -Descending)[0]
-  return $BestScore.Position
-}#END SelectBestMove
-
-function Get-MiniMaxIndex {
-  Param (
-    [TTTBoard]$Board,
-    [string]$MaxPlayer,
-    [string]$CurrentPlayer
-  )
-  $CloneBoard = $Board.Clone()
-  $OtherPlayer = @('X','O') | Where-Object {$_ -ne $MaxPlayer}
-  if ($MaxPlayer -eq $CurrentPlayer) {
-    $EmptyCells = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
-    foreach ($EmptyCell in $EmptyCells) {
-      $NewBoard = $CloneBoard.Clone()
-      $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
-      $TestTermState = Test-TerminalState -Board $NewBoard
-      if ($TestTermState.Winner -eq $MaxPlayer) {return 10}
-      if ($TestTermState.Winner -eq 'D') {return 0}
-    }
-  }
-  else {
-    $EmptyCells = $CloneBoard.Cells | Where-Object {$_.Empty -eq $true}
-    foreach ($EmptyCell in $EmptyCells) {
-      $NewBoard = $CloneBoard.Clone()
-      $NewBoard.Cells[$EmptyCell.Position].PlayMove($Player) | Out-Null
-      $TestTermState = Test-TerminalState -Board $NewBoard
-      if ($TestTermState.Winner -in @($CurrentPlayer)) {return -10}
-      if ($TestTermState.Winner -eq 'D') {return 0}      
-    }
-  }
-  Get-MiniMaxIndex -Board $CloneBoard -MaxPlayer $MaxPlayer -CurrentPlayer $OtherPlayer
-}#END MiniMax
-
-
 #Main Code
 [string]$GridColor = "Cyan"
 [string]$XColor    = "Red"
@@ -217,24 +158,18 @@ function Get-MiniMaxIndex {
 Show-Board -Board $Board
 $Turn = @('X','O') | Get-Random
 do {
-  if ($Turn -eq 'X') {
-    $AutoTurnIndex = Select-BestMove -Board $Board -Player $Turn
-    $Board.Cells[$AutoTurnIndex].PlayMove($Turn)
-  }
-  else {
-    do {
-      try {
-        $ErrorActionPreference = 'Stop'
-        Write-Host -NoNewline "Player $Turn, Choose a number as your next choice: "
-        if ($Host.Name -eq 'ConsoleHost') {[int]$Choice = ($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')).Character -as [string]} 
-        else {[int]$Choice = Read-Host}
-      } 
-      catch {if ($Host.Name -eq 'ConsoleHost') {Write-Host}} #to stop [int] coversion errors from showing on screen
-      finally {$ErrorActionPreference = 'Continue'}
-      if ($Choice -in 1..9) {$TurnResult = $Board.Cells[($Choice-1)].PlayMove($Turn)}
-      else {$TurnResult = $false}
-    } until ($TurnResult -eq $true)
-  }
+  do {
+    try {
+      $ErrorActionPreference = 'Stop'
+      Write-Host -NoNewline "Player $Turn, Choose a number as your next choice: "
+      if ($Host.Name -eq 'ConsoleHost') {[int]$Choice = ($Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')).Character -as [string]} 
+      else {[int]$Choice = Read-Host}
+    } 
+    catch {if ($Host.Name -eq 'ConsoleHost') {Write-Host}} #to stop [int] coversion errors from showing on screen
+    finally {$ErrorActionPreference = 'Continue'}
+    if ($Choice -in 1..9) {$TurnResult = $Board.Cells[($Choice-1)].PlayMove($Turn)}
+    else {$TurnResult = $false}
+  } until ($TurnResult -eq $true)
   $GameState = Test-TerminalState -Board $Board
   Show-Board -Board $Board -GridColor $GridColor -XColor $XColor -OColor $OColor -TitleColor $TitleCol -TermState $GameState
   $Turn =  @('X','O') | Where-Object {$_ -ne $Turn}
