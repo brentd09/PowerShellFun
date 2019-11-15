@@ -149,6 +149,7 @@ function Test-TerminalState {
   }
 }#END Terminal State
 
+
 #Main Code
 [string]$GridColor = "Cyan"
 [string]$XColor    = "Red"
