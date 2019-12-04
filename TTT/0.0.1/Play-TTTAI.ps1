@@ -18,7 +18,7 @@
 [CmdletBinding()]
 Param()
 
-#Classes
+#### ------Classes-------
 
 Class TTTCell {
   [int]$Position
@@ -69,7 +69,7 @@ class TTTBoard {
   }
 }#End TTTBoard
 
-#Functions
+#### ------Functions-------
 function Show-Board {
   Param (
     [TTTBoard]$Board,
@@ -116,6 +116,13 @@ function Show-Board {
   Write-Host 
 }#END ShowBoard
 
+function Move-ComputerTurn {
+  Param (
+    [TTTBoard]$Board
+  )
+}
+
+
 function Test-TerminalState {
   Param (
     [TTTBoard]$Board
@@ -150,7 +157,7 @@ function Test-TerminalState {
 }#END Terminal State
 
 
-#Main Code
+#### ------MainCode-------
 [string]$GridColor = "Cyan"
 [string]$XColor    = "Red"
 [string]$OColor    = "Yellow"
