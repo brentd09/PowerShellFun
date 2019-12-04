@@ -30,7 +30,7 @@
 #>
 [CmdletBinding()]
 Param (
-  $PuzzleString = '----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----'
+  $PuzzleString = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------'
 )
 class SudokuCell {
   [string]$Val
@@ -206,7 +206,7 @@ do {
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
   #if ($NumberStillToGuess -eq $PreNumberToGuess) {Get-NakedPair -GameBoard $SudokuGameBoard}
   Start-Sleep -Seconds 2
-  #Show-Board -GameBoard $SudokuGameBoard
-  $SudokuGameBoard  | Sort-Object -Property Box,Pos | ft
+  Show-Board -GameBoard $SudokuGameBoard
+  #$SudokuGameBoard  | Sort-Object -Property Box,Pos | ft
   [int]$NumberStillToGuess = ($SudokuGameBoard | Where-Object {$_.Val -notmatch '[1-9]'}).Count
 } until ($NumberStillToGuess -eq 0)
