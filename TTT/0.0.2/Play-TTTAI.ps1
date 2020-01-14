@@ -27,7 +27,7 @@ Class TTTBoardCell {
     if ($this.Played -eq $true -or $XorO -notin @('X','O')) {return $false}
     else {
       $this.Played = $true
-      $this.Value = $XorO
+      $this.Value = $XorO.ToUpper()
       return $true
     }
   }
@@ -48,10 +48,11 @@ class TTTBoard {
     )
     [string]$Win = 'N'
     foreach ($Line in $WinningLines) {
-      if ($this.Cells[$Line[0]].Value -eq $this.Cells[$Line[1]].Value -and $this.Cells[$Line[0]].Value -eq $this.Cells[$Line[2]].Value) {
-        $Win = $this.Cells[$Line[0]].Value
-        break
-      }
+      [string[]]$XsInLine = ($this.Cells[$Line].Value) -eq 'X'
+      [string[]]$OsInLine = ($this.Cells[$Line].Value) -eq 'O'
+      if ($XsInLine.Count -eq 3) {$Win = 'X'}
+      if ($OsInLine.Count -eq 3) {$Win = 'O'}
+      if ($Win -ne 'N') {break}
     }
     return $Win
   }
@@ -81,6 +82,54 @@ class TTTBoard {
   }
 }
 
+# Functions
+
+function Show-Board {
+  Param (
+    [TTTBoard]$GameBoard,
+    [string]$Padding = "  ",
+    [string]$GridColor = "Cyan",
+    [string]$XColor    = "Red",
+    [string]$OColor    = "Yellow",
+    [string]$TitleCol  = "Green",
+    $TermState
+  )
+  Clear-Host
+  $EntryColors = @('White','White','White','White','White','White','White','White','White')
+  $ShowSqr = @(' ',' ',' ',' ',' ',' ',' ',' ',' ')
+
+  foreach ($Pos in (0..8)){
+    if ($GameBoard.Cells[$Pos].Value -eq "X") { $EntryColors[$Pos] = $XColor}
+    if ($GameBoard.Cells[$Pos].Value -eq "O") { $EntryColors[$Pos] = $OColor}
+    if ($GameBoard.Cells[$Pos].Value -eq " ") { $EntryColors[$Pos] = "darkgray"}
+    if ($GameBoard.Cells[$Pos].Value -match "[XO]") {$ShowSqr[$Pos] = $GameBoard.Cells[$Pos].Value}
+    elseif ($TermState -in @('X','O')) {$ShowSqr[$Pos] = ' '}
+    else {$ShowSqr[$Pos] = $Pos + 1}
+  }
+  Write-Host -ForegroundColor $TitleCol "`n${Padding}Tic Tac Toe`n"
+  Write-Host -NoNewline "$Padding "
+  Write-Host -ForegroundColor $EntryColors[0] -NoNewline $ShowSqr[0]
+  Write-Host -ForegroundColor $GridColor -NoNewline " | "  
+  write-host -ForegroundColor $EntryColors[1] -NoNewline $ShowSqr[1]
+  write-host -ForegroundColor $GridColor -NoNewline " | "
+  Write-Host -ForegroundColor $EntryColors[2] $ShowSqr[2]
+  Write-Host -ForegroundColor $GridColor "${Padding}---+---+---"
+  Write-Host -NoNewline "$Padding "
+  Write-Host -ForegroundColor $EntryColors[3] -NoNewline $ShowSqr[3]
+  Write-Host -ForegroundColor $GridColor -NoNewline " | "  
+  write-host -ForegroundColor $EntryColors[4] -NoNewline $ShowSqr[4]
+  write-host -ForegroundColor $GridColor -NoNewline " | "
+  Write-Host -ForegroundColor $EntryColors[5] $ShowSqr[5]
+  Write-Host -ForegroundColor $GridColor "${Padding}---+---+---"
+  Write-Host -NoNewline "$Padding "
+  Write-Host -ForegroundColor $EntryColors[6] -NoNewline $ShowSqr[6]
+  Write-Host -ForegroundColor $GridColor -NoNewline " | "  
+  write-host -ForegroundColor $EntryColors[7] -NoNewline $ShowSqr[7]
+  write-host -ForegroundColor $GridColor -NoNewline " | "
+  Write-Host -ForegroundColor $EntryColors[8] $ShowSqr[8]
+  Write-Host 
+}#END ShowBoard
+
 Function Test-TerminalState {
   Param (
     [TTTBoard]$GameBoard
@@ -96,5 +145,17 @@ Function Test-TerminalState {
   }
 }
 
+
+#Main code
 $Board = [TTTBoard]::New()
-$Board
+[string]$Turn = 'X'
+do {
+  Show-Board -GameBoard $Board
+  do {
+    $Index = Read-Host 'Please enter a number'
+    $TurnResult = $Board.Cells[$Index-1].PlayCell($Turn)
+  } until ($TurnResult -eq $true)  
+  $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
+  $Winner = $Board.TestWin()
+} until ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')  
+Show-Board -GameBoard $Board -Termstate $Winner
