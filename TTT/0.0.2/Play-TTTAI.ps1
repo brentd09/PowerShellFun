@@ -148,7 +148,7 @@ Function Test-TerminalState {
 
 #Main code
 $Board = [TTTBoard]::New()
-[string]$Turn = 'X'
+[string]$Turn = 'X','O' | Get-Random
 do {
   Show-Board -GameBoard $Board
   do {
@@ -156,6 +156,9 @@ do {
     $TurnResult = $Board.Cells[$Index-1].PlayCell($Turn)
   } until ($TurnResult -eq $true)  
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
+  $Threats = $Board.TestThreat()
   $Winner = $Board.TestWin()
+  # $Threats
+  # Start-Sleep -sec 2
 } until ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')  
 Show-Board -GameBoard $Board -Termstate $Winner
