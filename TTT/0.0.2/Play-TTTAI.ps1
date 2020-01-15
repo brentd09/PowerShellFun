@@ -145,16 +145,36 @@ Function Test-TerminalState {
   }
 }
 
+function Find-BestMove {
+  Param ($GameBoard)
+  $WinningIndexes = ($GameBoard.TestThreat()).XThreats
+  if ($WinningIndexes -ge 1) {
+    $WinIndex = $WinningIndexes | Get-Random
+    $GameBoard.Cells[$WinIndex].PlayCell('X')
+  }
+  else {
+    $OpponentThreats = ($GameBoard.TestThreat()).OThreats
+    If ($OpponentThreats.Count -eq 1) {
+      $BestMoveIndex = $OpponentThreats[0]
+      $GameBoard.Cells[$BestMoveIndex].PlayCell('X')
+    }
+    elseif ($OpponentThreats.Count -gt 1) {}
+    else {}
+  }
+}
 
 #Main code
 $Board = [TTTBoard]::New()
 [string]$Turn = 'X','O' | Get-Random
 do {
   Show-Board -GameBoard $Board
-  do {
-    $Index = Read-Host 'Please enter a number'
-    $TurnResult = $Board.Cells[$Index-1].PlayCell($Turn)
-  } until ($TurnResult -eq $true)  
+  if ($Turn -eq 'X') {Find-BestMove -GameBoard $Board}
+  else {
+    do {
+      $Index = Read-Host 'Please enter a number'
+      $TurnResult = $Board.Cells[$Index-1].PlayCell($Turn)
+    } until ($TurnResult -eq $true) 
+  }   
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
   $Threats = $Board.TestThreat()
   $Winner = $Board.TestWin()
