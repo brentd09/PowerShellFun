@@ -92,7 +92,8 @@ function Show-Board {
     [string]$XColor    = "Red",
     [string]$OColor    = "Yellow",
     [string]$TitleCol  = "Green",
-    $TermState
+    $TermState,
+    [switch]$Final
   )
   Clear-Host
   $EntryColors = @('White','White','White','White','White','White','White','White','White')
@@ -106,7 +107,17 @@ function Show-Board {
     elseif ($TermState -in @('X','O')) {$ShowSqr[$Pos] = ' '}
     else {$ShowSqr[$Pos] = $Pos + 1}
   }
-  Write-Host -ForegroundColor $TitleCol "`n${Padding}Tic Tac Toe`n"
+  if ($Final -eq $false) {Write-Host -ForegroundColor $TitleCol "`n${Padding}Tic Tac Toe`n"}
+  else {
+    Write-Host -NoNewline -ForegroundColor $TitleCol "`n${Padding}Tic Tac Toe    "
+    switch ($Winner) {
+      'N' {Write-Host -ForegroundColor Gray -NoNewline 'Game: '; Write-Host -ForegroundColor Gray   'Draw'}
+      'O' {Write-Host -ForegroundColor Gray -NoNewline 'Game: '; Write-Host -ForegroundColor Yellow 'O'}
+      'X' {Write-Host -ForegroundColor Gray -NoNewline 'Game: '; Write-Host -ForegroundColor Red    'X'}
+      Default {}
+    }
+    Write-Host ""
+  }
   Write-Host -NoNewline "$Padding "
   Write-Host -ForegroundColor $EntryColors[0] -NoNewline $ShowSqr[0]
   Write-Host -ForegroundColor $GridColor -NoNewline " | "  
@@ -148,19 +159,33 @@ Function Test-TerminalState {
 function Find-BestMove {
   Param ($GameBoard)
   $WinningIndexes = ($GameBoard.TestThreat()).XThreats
-  if ($WinningIndexes -ge 1) {
-    $WinIndex = $WinningIndexes | Get-Random
-    $GameBoard.Cells[$WinIndex].PlayCell('X')
-  }
+  $GameTurns = ($GameBoard.Cells | Where-Object {$_.Played -eq $true}).Count
+  if ($GameTurns -eq 0) {$Index = 0,2,6,8 | Get-Random}
+  elseif ($GameTurns -eq 1) {
+    if ($GameBoard.Cells[4].Played -eq $false) {$Index = 4}
+    else {$Index = 0,2,6,8 | Get-Random}
+  } 
   else {
-    $OpponentThreats = ($GameBoard.TestThreat()).OThreats
-    If ($OpponentThreats.Count -eq 1) {
-      $BestMoveIndex = $OpponentThreats[0]
-      $GameBoard.Cells[$BestMoveIndex].PlayCell('X')
+    if ($WinningIndexes -ge 1) {
+      $Index = $WinningIndexes | Get-Random
+      
     }
-    elseif ($OpponentThreats.Count -gt 1) {}
-    else {}
+    else {
+      $OpponentThreats = ($GameBoard.TestThreat()).OThreats
+      If ($OpponentThreats.Count -eq 1) {
+        $Index = $OpponentThreats[0]
+      }
+      elseif ($OpponentThreats.Count -gt 1) {
+        $Index = $OpponentThreats | Get-Random
+      }
+      else {
+        $UnplayedCells = $GameBoard.Cells | Where-Object {$_.Played -eq $false}
+        $RandomPick = $UnplayedCells | Get-Random
+        $Index = $RandomPick.Position
+      }
+    }
   }
+  $GameBoard.Cells[$Index].PlayCell('X')
 }
 
 #Main code
@@ -181,4 +206,4 @@ do {
   # $Threats
   # Start-Sleep -sec 2
 } until ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')  
-Show-Board -GameBoard $Board -Termstate $Winner
+Show-Board -GameBoard $Board -Termstate $Winner -Final
