@@ -178,7 +178,12 @@ function Find-BestMove {
     } 
   }
   elseif ($GameTurns -ge 3) {
-    # complex logic
+    $OPositions = $GameBoard.Cells | Where-Object {$_.Value -eq 'O'}
+    if (($OPositions.Position -contains 0 -and $OPositions.Position -contains 8 -and $GameBoard.Cells[4].Value -eq 'X') -or
+    ($OPositions.Position -contains 2 -and $OPositions.Position -contains 6 -and $GameBoard.Cells[4].Value -eq 'X')) {
+      $Index = 1,3,5,7 | Get-Random
+    }
+    # still need to check for opponent in a corner and side placement 
     if ($WinningIndexes -ge 1) {
       $Index = $WinningIndexes | Get-Random
     }
