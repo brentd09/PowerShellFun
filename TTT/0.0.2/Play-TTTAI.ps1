@@ -165,10 +165,22 @@ function Find-BestMove {
     if ($GameBoard.Cells[4].Played -eq $false) {$Index = 4}
     else {$Index = 0,2,6,8 | Get-Random}
   } 
-  else {
+  elseif ($GameTurns -eq 2) {
+    if ($GameBoard.Cells[4].Played -eq $false) {$Index = 4}
+    else {
+      $FirstX = $GameBoard.Cells | Where-Object {$_.Value -eq 'X'}
+      $NonPlayed = $GameBoard.Cells | Where-Object {$_.Played -eq $false}
+      if ($FirstX.Position -eq 0 -and $NonPlayed.Position -contains 8) {$Index = 8}
+      elseif ($FirstX.Position -eq 8 -and $NonPlayed.Position -contains 0) {$Index = 0}
+      elseif ($FirstX.Position -eq 2 -and $NonPlayed.Position -contains 6) {$Index = 6}
+      elseif ($FirstX.Position -eq 6 -and $NonPlayed.Position -contains 2) {$Index = 2}
+      else {$Index = $NonPlayed.Position | Get-Random}
+    } 
+  }
+  elseif ($GameTurns -ge 3) {
+    # complex logic
     if ($WinningIndexes -ge 1) {
       $Index = $WinningIndexes | Get-Random
-      
     }
     else {
       $OpponentThreats = ($GameBoard.TestThreat()).OThreats
@@ -196,7 +208,7 @@ do {
   if ($Turn -eq 'X') {Find-BestMove -GameBoard $Board}
   else {
     do {
-      $Index = Read-Host 'Please enter a number'
+      $Index = Read-Host "Please enter a number - ${Turn}'s Turn"
       $TurnResult = $Board.Cells[$Index-1].PlayCell($Turn)
     } until ($TurnResult -eq $true) 
   }   
