@@ -1,7 +1,4 @@
-
-
 # Class definitions
-
 Class ThreatList {
   [int[]]$XThreats
   [int[]]$OThreats
@@ -83,7 +80,6 @@ class TTTBoard {
 }
 
 # Functions
-
 function Show-Board {
   Param (
     [TTTBoard]$GameBoard,
@@ -141,21 +137,6 @@ function Show-Board {
   Write-Host 
 }#END ShowBoard
 
-Function Test-TerminalState {
-  Param (
-    [TTTBoard]$GameBoard
-  )
-  [System.Collections.ArrayList]$WinningLines = @(
-    @(0,1,2),@(3,4,5),@(6,7,8),
-    @(0,3,6),@(1,4,7),@(2,5,8),
-    @(0,4,8),@(2,4,6)
-  )
-  foreach ($Line in $WinningLines) {
-    # Check to see if all three places have the same Value (X or O)
-  
-  }
-}
-
 function Find-BestMove {
   Param ($GameBoard)
   $WinningIndexes = ($GameBoard.TestThreat()).XThreats
@@ -179,13 +160,20 @@ function Find-BestMove {
   }
   elseif ($GameTurns -ge 3) {
     $OPositions = $GameBoard.Cells | Where-Object {$_.Value -eq 'O'}
-    if (($OPositions.Position -contains 0 -and $OPositions.Position -contains 8 -and $GameBoard.Cells[4].Value -eq 'X') -or
+    $OpponentThreats = ($GameBoard.TestThreat()).OThreats
+    if ($WinningIndexes -ge 1) {
+      $Index = $WinningIndexes | Get-Random
+    }
+    elseIf ($OpponentThreats.Count -eq 1) {
+      $Index = $OpponentThreats[0]
+    }
+    elseif (($OPositions.Position -contains 0 -and $OPositions.Position -contains 8 -and $GameBoard.Cells[4].Value -eq 'X') -or
     ($OPositions.Position -contains 2 -and $OPositions.Position -contains 6 -and $GameBoard.Cells[4].Value -eq 'X')) {
       $Index = 1,3,5,7 | Get-Random
     }
-    # still need to check for opponent in a corner and side placement 
-    if ($WinningIndexes -ge 1) {
-      $Index = $WinningIndexes | Get-Random
+    elseif ($OPositions.Position -contains 1 -or $OPositions.Position -contains 3 -or $OPositions.Position -contains 5 -or $OPositions.Position -contains 7) {
+      $Index = 0,2,6,8 | Get-Random
+      # this needs to be smater to block a fork
     }
     else {
       $OpponentThreats = ($GameBoard.TestThreat()).OThreats
@@ -220,7 +208,5 @@ do {
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn}
   $Threats = $Board.TestThreat()
   $Winner = $Board.TestWin()
-  # $Threats
-  # Start-Sleep -sec 2
 } until ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')  
 Show-Board -GameBoard $Board -Termstate $Winner -Final
