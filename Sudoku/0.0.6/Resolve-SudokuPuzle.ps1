@@ -28,7 +28,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '--7---28-6-4-25---28---46---9---6---3-------2---1--19---62---75---57-4---7864-3--',
+  [string]$PuzzleString = '-2-6------562-----1------28----2-4-9-914-873-2-8-9----71------3-----217------5-6-',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -191,17 +191,15 @@ function Find-Impossible {
 # Main Code
 Clear-Host
 $Puzzle = [SudokuBoard]::New($PuzzleString)
-if ($ShowRawData) {Show-Sudoku -fnSudoku $Puzzle -RawData}
-else {Show-Sudoku -fnSudoku $Puzzle}
+Show-Sudoku -fnSudoku $Puzzle -RawData:$ShowRawData
 do { 
   $UnsolvedBefore = $Puzzle.UnsolvedElements
   Resolve-NumbersMissing -fnSudoku $Puzzle
   $UnsolvedAfter = $Puzzle.UnsolvedElements
-  if ($ShowRawData) {Show-Sudoku -fnSudoku $Puzzle -RawData}
-  else {Show-Sudoku -fnSudoku $Puzzle}
+  Show-Sudoku -fnSudoku $Puzzle -RawData:$ShowRawData
   if ($UnsolvedBefore -eq $UnsolvedAfter) {
     Resolve-Unique -fnSudoku $Puzzle
   } 
-  # Find-NakedPair -fnSudoku $Puzzle
+  Show-Sudoku -fnSudoku $Puzzle -RawData:$ShowRawData
 } until ($Puzzle.UnsolvedElements -eq 0 )  
 
