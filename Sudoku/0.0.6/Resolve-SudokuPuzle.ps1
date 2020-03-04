@@ -28,7 +28,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59',
+  [string]$PuzzleString = '--7---28-6-4-25---28---46---9---6---3-------2---1--19---62---75---57-4---7864-3--',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -96,12 +96,15 @@ function Compare-Arrays {
     if ($Array2Element -in $Array1) {$A2inA1 += $Array2Element}
     else {$A2notinA1 += $Array2Element}
   }
+  if ($A1notinA2.count -eq 0 -and $A2notinA1.count -eq 0 ) {$ArraysSame = $true}
+  else {$ArraysSame=$false}
   $ObjHash = [ordered]@{
     Array1 = $Array1
     Array2 = $Array2
     ElementsCommon = $A1inA2
     UniqueToArray1 = $A1notinA2
     UniqueToArray2 = $A2notinA1
+    ArraysEqual = $ArraysSame
   }
   New-Object -TypeName psobject -Property $ObjHash
 }
@@ -135,7 +138,7 @@ function Show-Sudoku {
     $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
     $host.UI.RawUI.CursorPosition = $Coords
     $FGColor = 'Yellow'
-    Write-Host -ForegroundColor Green "     Solve Sudoku`n"
+    Write-Host -ForegroundColor Green "    Solve  Sudoku`n"
     foreach ($PosCol in (0..8)) {
       if ($PosCol -eq 2 -or $PosCol -eq 5) {$HBdr = "`n------+-------+------"}
       else {$HBdr = ''}
@@ -167,11 +170,23 @@ function Resolve-Unique {
   }
 }
 
+function Find-NakedPair {
+  Param (
+    [SudokuBoard]$fnSudoku
+  )
+  $TwoPossible = $fnSudoku.Board | Where-Object {$_.PossibleValues.count -eq 2}
+  foreach ($TwoPoss in $TwoPossible) {
+    $TwosLeft = $TwoPossible | Where-Object {$_.Position -ne $TwoPoss.Position}
+    foreach ($CompTwoPoss in $TwosLeft) {
+      #compare possible for a match and then check if the are in the same row or col or sqr
+    }
+  }
+}
 function Find-Impossible {
   Param (
     [SudokuBoard]$fnSudoku
   )
-  
+
 }
 # Main Code
 Clear-Host
@@ -187,5 +202,6 @@ do {
   if ($UnsolvedBefore -eq $UnsolvedAfter) {
     Resolve-Unique -fnSudoku $Puzzle
   } 
+  # Find-NakedPair -fnSudoku $Puzzle
 } until ($Puzzle.UnsolvedElements -eq 0 )  
 
