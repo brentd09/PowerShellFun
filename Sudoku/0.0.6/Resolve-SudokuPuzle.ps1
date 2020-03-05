@@ -177,8 +177,12 @@ function Find-NakedPair {
   $TwoPossible = $fnSudoku.Board | Where-Object {$_.PossibleValues.count -eq 2}
   foreach ($TwoPoss in $TwoPossible) {
     $TwosLeft = $TwoPossible | Where-Object {$_.Position -ne $TwoPoss.Position}
-    foreach ($CompTwoPoss in $TwosLeft) {
-      #compare possible for a match and then check if the are in the same row or col or sqr
+    foreach ($EachTwosLeft in $TwosLeft) {
+      $ArrayCompare = Compare-Arrays $TwoPoss $EachTwosLeft
+      if ($ArrayCompare.ArraysEqual) {
+        # Check if they have any Col,Row,Sqr in common
+      }
+      # compare possible for a match and then check if the are in the same row or col or sqr
     }
   }
 }
