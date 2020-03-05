@@ -178,7 +178,7 @@ function Find-NakedPair {
   foreach ($TwoPoss in $TwoPossible) {
     $TwosLeft = $TwoPossible | Where-Object {$_.Position -ne $TwoPoss.Position}
     foreach ($EachTwosLeft in $TwosLeft) {
-      $ArrayCompare = Compare-Arrays $TwoPoss $EachTwosLeft
+      $ArrayCompare = Compare-Arrays $TwoPoss.PossibleValues $EachTwosLeft.PossibleValues
       if ($ArrayCompare.ArraysEqual) {
         # Check if they have any Col,Row,Sqr in common
       }
