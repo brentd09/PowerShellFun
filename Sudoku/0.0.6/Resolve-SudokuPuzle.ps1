@@ -28,7 +28,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '-2-6------562-----1------28----2-4-9-914-873-2-8-9----71------3-----217------5-6-',
+  [string]$PuzzleString = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -186,6 +186,19 @@ function Find-NakedPair {
     }
   }
 }
+
+function Find-PointingPair {
+  Param ([SudokuBoard]$fnSudoku)
+  # find same number (2-3 instances) on a row or col that is restricted to a sqr and 
+  # eliminate the number from all other cells in the sqr
+  foreach ($RowNum in 0..8) {
+    $RowCells = $fnSudoku.Board | Where-Object {$_.Row -eq $RowNum}
+    $RowCells | Where-Object {$_.possiblevalues.count -gt 1} | Select-Object *,@{n='PV';e={$_.possiblevalues -join ''}} | ft
+    $RowCells.PossibleValues | Group-Object | Where-Object {$_.count -ge 2 -and $_.count -le 3}
+    Start-Sleep -Milliseconds 10
+  } 
+}
+
 function Find-Impossible {
   Param (
     [SudokuBoard]$fnSudoku
@@ -196,6 +209,8 @@ function Find-Impossible {
 Clear-Host
 $Puzzle = [SudokuBoard]::New($PuzzleString)
 Show-Sudoku -fnSudoku $Puzzle -RawData:$ShowRawData
+
+
 do { 
   $UnsolvedBefore = $Puzzle.UnsolvedElements
   Resolve-NumbersMissing -fnSudoku $Puzzle
@@ -203,6 +218,7 @@ do {
   Show-Sudoku -fnSudoku $Puzzle -RawData:$ShowRawData
   if ($UnsolvedBefore -eq $UnsolvedAfter) {
     Resolve-Unique -fnSudoku $Puzzle
+    Find-PointingPair -fnSudoku $Puzzle
   } 
   Show-Sudoku -fnSudoku $Puzzle -RawData:$ShowRawData
 } until ($Puzzle.UnsolvedElements -eq 0 )  
