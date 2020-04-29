@@ -2,20 +2,39 @@
 .SYNOPSIS
   Tries to simulate the spread of a disease
 .DESCRIPTION
-  This will attempt to show the spread of a disease with a 10 cycle life span (10 day)
-  This will show that disease hosts that get too close to each other for too long will 
-  transmit the disease and if the hosts stay away from each other the disease will die out
+  This will attempt to show the spread of a disease with a 14 cycle life span (14 day)
+  This will show that disease hosts that get too close to each will transmit the disease 
+  and if the hosts stay away from each other the disease will die out. Some hosts may die 
+  if they have comprimised health.
+.PARAMETER InfectedPercent
+  This declares how much of the population is infected
+.PARAMETER PopulationPercent
+  This tells the simulation how many hosts are walking around
+.PARAMETER InfectionCycle
+  This is how long does the infection last
+.PARAMETER BadHealthPrecent  
+  This is the percent of the population that are in poor health, if these get the infection
+  they will die after 5 cycles
 .EXAMPLE
   Show-Spread 
   this will show a grid of infected and un-infected hosts and how the disease interacts
+.EXAMPLE
+  Show-Spread -InfectedPercent 3 -PopulationPercent 30 -InfectionCycle 14 -BadHealthPrecent 4 
+  This will show a grid of infected and un-infected hosts and how the disease interacts . 
+  The simulation will have 30% probability of hosts with about 3% infected which will take 14 
+  cycles to recover unless you are the 4% that have bad health because these will die.
 .NOTES
   General notes
+  Created By: Brent Denny
+  Created On: 22 Apr 2020
+  Modified:   24 Apr 2020 
 #>
 [CmdletBinding()]
 Param(
   [int]$InfectedPercent = 2,
   [int]$PopulationPercent = 30,
-  [int]$InfectionCycle = 15
+  [int]$InfectionCycle = 14,
+  [int]$BadHealthPrecent = 3
 )
 # Classes
 class WorldCell {
@@ -25,26 +44,32 @@ class WorldCell {
   [string]$Value
   [bool]$BeenInfected
   [int]$InfectionCycles
+  [bool]$ComprimisedHealth
+  [int]$EndOfHostCycles
 
-  WorldCell ([int]$Position,[int]$InfectPercent,[int]$PopPercent,[int]$InfectCycle) {
+  WorldCell ([int]$Position,[int]$InfectPercent,[int]$PopPercent,[int]$InfectCycle,[int]$BadHealthPrecent) {
     $this.Index = $Position
-    $this.Col = $Position % 20
-    $this.Row = [math]::Truncate($Position / 20)
+    $this.Col = $Position % 40
+    $this.Row = [math]::Truncate($Position / 40)
     $RandomNum = 1..100 | Get-Random
+    $HealthNum = 1..100 | Get-Random
     if ($RandomNum -le $InfectPercent) {
       $this.Value = 'I'
       $this.BeenInfected = $true
       $this.InfectionCycles = $InfectCycle
+      if ($HealthNum -le $BadHealthPrecent) {$this.ComprimisedHealth = $true}
+      else {$this.ComprimisedHealth = $false}
     }
     elseif ($RandomNum -le $PopPercent) {
       $this.Value = 'U'
       $this.BeenInfected = $false
       $this.InfectionCycles = 0
+      if ($HealthNum -le $BadHealthPrecent) {$this.ComprimisedHealth = $true}
+      else {$this.ComprimisedHealth = $false}
     }
     else {$this.Value = '.'}
+    if ($this.ComprimisedHealth -eq $true) {$this.EndOfHostCycles = 5}
   }
-
-
 }
 
 class WorldBoard {
@@ -79,16 +104,19 @@ function Show-World {
   )
   $coord = [System.Management.Automation.Host.Coordinates]::New(0,0)
   $host.UI.RawUI.CursorPosition = $coord
-  foreach ($RowNum in (0..19)) {
+  foreach ($RowNum in (0..39)) {
     $WorldRow = $World | Where-Object {$_.Row -eq $RowNum}
     $WorldRow.Value -join " "
   } 
   $Infected = $World | Where-Object {$_.Value -eq 'I'}
   $Uninfected = $World | Where-Object {$_.Value -eq 'U' -and $_.BeenInfected -eq $false}
   $Recovered = $World | Where-Object {$_.Value -eq 'U' -and $_.BeenInfected -eq $true}
-  Write-Host -ForegroundColor Green "Uninfected $($Uninfected.Count)   " 
+  $Dead = $World | Where-Object {$_.Value -eq 'D' -and $_.BeenInfected -eq $true}
+  $CompHealth = $World | Where-Object {$_.ComprimisedHealth -eq $true}
+  Write-Host -ForegroundColor Green "Never Infected $($Uninfected.Count)   " 
   Write-Host -ForegroundColor Cyan "Recovered $($Recovered.Count)   " 
-  Write-Host -ForegroundColor Red "Infected $($Infected.Count)  "
+  Write-Host -ForegroundColor Yellow "Infected $($Infected.Count)  "
+  Write-Host -ForegroundColor Red "Dead $($Dead.Count) (from $($CompHealth.Count) in danger)"  
   Write-Host "Count $Count  "
 }
 
@@ -118,6 +146,10 @@ function Test-Infected {
   foreach ($InfectedHost in $InfectedHosts) {
     if ($InfectedHost.InfectionCycles -eq 0) {$InfectedHost.Value = 'U'}
     else {$InfectedHost.InfectionCycles = $InfectedHost.InfectionCycles - 1}
+    if ($InfectedHost.ComprimisedHealth -eq $true) {
+      if ($InfectedHost.EndOfHostCycles -eq 0 -and $InfectedHost.BeenInfected -eq $true) {$InfectedHost.Value = 'D'}
+      else {$InfectedHost.EndOfHostCycles = $InfectedHost.EndOfHostCycles - 1}
+    }
   }
 }
 
@@ -125,7 +157,7 @@ function Move-CurrentHost {
   param ([WorldBoard]$World)
   $UpDown = @(-20,20)
   $LeftRight = @(-1,1)
-  $CurrentHosts =  $World.WorldCells | Where-Object {$_.Value -ne '.'}
+  $CurrentHosts =  $World.WorldCells | Where-Object {$_.Value -in @('I','U')}
   foreach ($CurrentHost in $CurrentHosts) {
     $TryForNewIndex = 0
     do {
@@ -149,8 +181,11 @@ function Move-CurrentHost {
     } 
   }
 }
+
+# MAIN CODE 
+
 Clear-Host
-$Spots = 0..399 | ForEach-Object {[WorldCell]::New($_,$InfectedPercent,$PopulationPercent,$InfectionCycle)}
+$Spots = 0..1599 | ForEach-Object {[WorldCell]::New($_,$InfectedPercent,$PopulationPercent,$InfectionCycle,$BadHealthPrecent)}
 $WorldBoard = [WorldBoard]::New($Spots) 
 Show-World -World $WorldBoard.WorldCells
 $DiseaseCycleCount = 0
@@ -160,5 +195,5 @@ do {
   Test-DiseaseNeighbour -World $WorldBoard.WorldCells -InfectCycle $InfectionCycle
   Test-Infected -World $WorldBoard.WorldCells
   Show-World -World $WorldBoard.WorldCells -Count $DiseaseCycleCount
-  Start-Sleep -Milliseconds 200
+
 } until ($WorldBoard.WorldCells.Value -notcontains 'I') 
