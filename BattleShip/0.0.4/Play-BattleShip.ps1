@@ -27,9 +27,7 @@
 .NOTES
   General notes
     Created By: Brent Deny
-    Created On: 11 May 2020
-  The game does not include the computers automatic moves yet this logic will be  
-  added soon   
+    Created On: 11 May 2020  
 #>
 [CmdletBinding()]
 param ()
@@ -145,6 +143,21 @@ Class BattleShipBoard {
      } while ($Conflict -eq $true)
     } # foreach ship
   } # Method PlaceShips
+
+  [void]AutomaticAttack () {
+    if ($this.Layout.Attacked -notcontains $true) {
+      $FirstAttackPos = 0..99 | Get-Random
+      $this.Layout[$FirstAttackPos].Attack() 
+    }
+    else {
+      do {
+        $ValidMove = $true      
+        $AttackPos = 0..99 | Get-Random
+        if ($this.Layout[$AttackPos].Attacked -eq $false) {$this.Layout[$AttackPos].Attack()}
+        else {$ValidMove = $false}
+      } until ($ValidMove -eq $true)
+    }
+  }
 } # Class BattleShipBoard
 
 
@@ -157,8 +170,8 @@ function ShowBoard {
   )
   if ($Title -eq 'user') {
     Clear-Host
-    Write-Host -ForegroundColor Cyan "              B  A  T  T  L  E  S  H  I  P"
-    Write-Host -ForegroundColor Cyan "              ----------------------------"
+    Write-Host -ForegroundColor Cyan "        B  A  T  T  L  E  S  H  I  P"
+    Write-Host -ForegroundColor Cyan "        ----------------------------"
   }
   Write-Host -ForegroundColor Red "$($Title.ToUpper()) BOARD"
   Write-Host -Foreground Yellow "   A  B  C  D  E  F  G  H  I  J"
@@ -203,8 +216,8 @@ function ShowBoard {
 # MAIN CODE
 
 Clear-Host
-Write-Host -ForegroundColor Cyan "              B  A  T  T  L  E  S  H  I  P"
-Write-Host -ForegroundColor Cyan "              ----------------------------`n"
+Write-Host -ForegroundColor Cyan "        B  A  T  T  L  E  S  H  I  P"
+Write-Host -ForegroundColor Cyan "        ----------------------------`n"
 
 # Setup Game Boards
 do {
@@ -231,8 +244,13 @@ do {
     [int]$RowChosen = $Coords.substring(1,1)
     $Pos = $RowChosen * 10 + $ColChosen
     $AttackResult = $ComputerBoard.Layout[$Pos].Attack()
-  } until ($Coords -match '^[a-j][0-9]$' -and $AttackResult -eq $true)
-  $NumberOfHits = ($ComputerBoard.Layout | Where-Object {$_.AttackResult -eq 'Hit'}).count
-} until ($NumberOfHits -eq 17)
+  } until ($AttackResult -eq $true)
+  $PlayerBoard.AutomaticAttack()
+  $NumberOfComputerHits = ($ComputerBoard.Layout | Where-Object {$_.AttackResult -eq 'Hit'}).count
+  $NumberOfPlayerHits = ($PlayerBoard.Layout | Where-Object {$_.AttackResult -eq 'Hit'}).count
+} until ($NumberOfComputerHits -eq 17 -or $NumberOfPlayerHits -eq 17)
 ShowBoard -Board $PlayerBoard -Title 'user' -ShowShips 
 ShowBoard -Board $ComputerBoard -Title 'Computer' 
+if ($NumberOfComputerHits -eq 17 -and $NumberOfPlayerHits -lt 17) {Write-Host -ForegroundColor Green "User Wins"}
+elseif ($NumberOfComputerHits -lt 17 -and $NumberOfPlayerHits -eq 17) {Write-Host -ForegroundColor Red "Computer Wins"}
+else {Write-Host -ForegroundColor Gray "There are no winners in a war that sinks both fleets"}
