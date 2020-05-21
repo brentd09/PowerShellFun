@@ -17,8 +17,9 @@
   Destroyer              3
   Submarine              2
   The computers logic includes: 
-  - randomly choosing locations that are two steps away from each other in a 
-    diamond pattern
+  - randomly choosing locations that are three steps away from each other in a 
+    staggered pattern when the 3 steps are all attacked it switches to two steps
+    this also happens if it detects that the submarine is the only ship left to find
   - when a single hit occurs it checks around that hit for the ship line
   - when two hit are in a row or column it follows that line until it find the end of the ship  
 .EXAMPLE
@@ -28,7 +29,7 @@
   General notes
     Created By: Brent Deny
     Created On: 11 May 2020  
-    Last Modified : 21 May 2020
+    Last Modified : 22 May 2020
 #>
 [CmdletBinding()]
 param ()
