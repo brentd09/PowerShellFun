@@ -157,7 +157,9 @@ function AutomaticAttack  {
   $RandomPositionsToCheck3Steps = @(2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59,62,65,68,71,74,77,80,83,86,89,92,95,98)
   $RandomPositionsToCheck2Steps = @(1,3,5,7,9,10,12,14,16,18,21,23,25,27,29,30,32,34,36,38,41,43,45,47,49,50,52,54,56,58,61,63,65,67,69,70,72,74,76,78,81,83,85,87,89,90,92,94,96,98)
   do {
-    if ($Board.Layout[$RandomPositionsToCheck3Steps].Attacked -notcontains $false) {$CheckList = $RandomPositionsToCheck2Steps}
+    if ($Board.Layout[$RandomPositionsToCheck3Steps].Attacked -notcontains $false -or $Board.Layout.AttackResult.count -eq 15) {
+      $CheckList = $RandomPositionsToCheck2Steps
+    }
     else {$CheckList = $RandomPositionsToCheck3Steps}
     $AttackPos = $UnattackedElements.Position | Get-Random
   } until ($AttackPos -in $CheckList)
