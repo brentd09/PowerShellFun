@@ -16,11 +16,11 @@
   Cruiser                3
   Destroyer              3
   Submarine              2
-  The computers logic includes: (This has not been implemented yet)
-  randomly choosing locations that are two steps away from each other in a 
-  diamond pattern, when the Sub is sunk it will then choose spots that are 
-  three steps away from others, when it hits a ship it will the find 
-  neighbouring spots that make up the rest of the ship. 
+  The computers logic includes: 
+  - randomly choosing locations that are two steps away from each other in a 
+    diamond pattern
+  - when a single hit occurs it checks around that hit for the ship line
+  - when two hit are in a row or column it follows that line until it find the end of the ship  
 .EXAMPLE
   Play-BattleShip.ps1
   This starts the game
@@ -28,6 +28,7 @@
   General notes
     Created By: Brent Deny
     Created On: 11 May 2020  
+    Last Modified : 21 May 2020
 #>
 [CmdletBinding()]
 param ()
