@@ -144,24 +144,63 @@ Class BattleShipBoard {
     } # foreach ship
   } # Method PlaceShips
 
-  [void]AutomaticAttack () {
-    if ($this.Layout.Attacked -notcontains $true) {
-      $FirstAttackPos = 0..99 | Get-Random
-      $this.Layout[$FirstAttackPos].Attack() 
-    }
-    else {
-      do {
-        $ValidMove = $true      
-        $AttackPos = 0..99 | Get-Random
-        if ($this.Layout[$AttackPos].Attacked -eq $false) {$this.Layout[$AttackPos].Attack()}
-        else {$ValidMove = $false}
-      } until ($ValidMove -eq $true)
-    }
-  }
+
 } # Class BattleShipBoard
 
 
 # FUNCTIONS
+function AutomaticAttack  {
+  Param ($Board)
+  $BoardElementsHit = $Board.Layout | Where-Object {$_.AttackResult -eq 'Hit'}
+  $UnattackedElements = $Board.Layout | Where-Object {$_.AttackResult -eq 'Unattacked'}
+  $RandomPositionsToCheck = @(1,3,5,7,9,10,12,14,16,18,21,23,25,27,29,30,32,34,36,38,41,43,45,47,49,50,52,54,56,58,61,63,65,67,69,70,72,74,76,78,81,83,85,87,89,90,92,94,96,98)
+  do {
+    $AttackPos = $UnattackedElements.Position | Get-Random
+  } until ($AttackPos -in $RandomPositionsToCheck)
+
+  if ($BoardElementsHit.count -eq 1) {
+    $CurrentPos = $BoardElementsHit.Position
+    $NeighbourPositions = $BoardElementsHit.NeighbourValues.foreach({$_ + $CurrentPos})
+    $NeighbourElementsToHit = $Board.Layout[$NeighbourPositions] | Where-Object {$_.AttackResult -in 'Unattacked'}
+    $NeighbourToHit = $NeighbourElementsToHit | Get-Random
+    $AttackPos = $NeighbourToHit.Position
+  }
+  else {
+    foreach ($BoardElementHit in $BoardElementsHit) {
+      $CurrentPos = $BoardElementHit.Position
+      $NeighbourValues = $BoardElementHit.NeighbourValues
+      $NeighbourPositions = $NeighbourValues.foreach({$_+$CurrentPos})
+      if ($NeighbourValues -contains 1 -and $NeighbourValues -contains -1 -and $Board.Layout[$CurrentPos-1].AttackResult -eq 'Hit' -and $Board.Layout[$CurrentPos+1].AttackResult -eq 'Unattacked') {
+        $AttackPos = $CurrentPos + 1
+        break
+      }
+      elseif ($NeighbourValues -contains 1 -and $NeighbourValues -contains -1 -and $Board.Layout[$CurrentPos+1].AttackResult -eq 'Hit' -and $Board.Layout[$CurrentPos-1].AttackResult -eq 'Unattacked'){
+        $AttackPos = $CurrentPos - 1
+        break
+      }
+      elseif ($NeighbourValues -contains 10 -and $NeighbourValues -contains -10 -and $Board.Layout[$CurrentPos-10].AttackResult -eq 'Hit' -and $Board.Layout[$CurrentPos+10].AttackResult -eq 'Unattacked') {
+        $AttackPos = $CurrentPos + 10
+        break
+      }
+      elseif ($NeighbourValues -contains 10 -and $NeighbourValues -contains -10 -and $Board.Layout[$CurrentPos+10].AttackResult -eq 'Hit' -and $Board.Layout[$CurrentPos-10].AttackResult -eq 'Unattacked'){
+        $AttackPos = $CurrentPos - 10
+        break
+      }
+    }
+    foreach ($BoardElementHit in $BoardElementsHit) {
+      $CurrentPos = $BoardElementHit.Position
+      $NeighbourValues = $BoardElementHit.NeighbourValues
+      $NeighbourPositions = $NeighbourValues.foreach({$_+$CurrentPos})
+      if ($Board.Layout[$NeighbourPositions].AttackResult -notcontains "Hit") {
+        $NonAttackedNeighbours = $Board.Layout[$NeighbourPositions] | Where-Object {$_.AttackResult -eq "Unattacked"}
+        $NeighbourToHit = $NonAttackedNeighbours | Get-Random
+        $AttackPos = $NeighbourToHit.Position
+      }
+    }
+  }
+  $Board.Layout[$AttackPos].Attack() 
+}
+
 function ShowBoard {
   Param (
     [BattleShipBoard]$Board,
@@ -227,29 +266,30 @@ do {
   $ComputerBoard = [BattleShipBoard]::new($ComputerBoardElements)
   $PlayerBoard.PlaceShips()
   $ComputerBoard.PlaceShips() 
-  ShowBoard -Board $PlayerBoard -Title 'user' -ShowShips 
+  ShowBoard -Board $PlayerBoard -Title 'User' -ShowShips 
   ShowBoard -Board $ComputerBoard -Title 'Computer'  
   $HappyWithShips = Read-Host -Prompt 'Are you happy with the ship placement'
 } Until ($HappyWithShips -like 'y*' -and $HappyWithShips -ne '')
 
-#Play game
+# Play game
 do {
-  ShowBoard -Board $PlayerBoard -Title 'user' -ShowShips 
+  ShowBoard -Board $PlayerBoard -Title 'User' -ShowShips 
   ShowBoard -Board $ComputerBoard -Title 'Computer' 
   do {
-    $Coords = Read-Host -Prompt 'Enter Coordinates'
-    if ($Coords -notmatch '^[a-j][0-9]$' -and $Coords -notmatch '^[0-9][a-j]$' ) {continue}
+    do {
+      $Coords = Read-Host -Prompt 'Enter Coordinates'
+    } until ($Coords -match '^[a-j][0-9]$' -or $Coords -match '^[0-9][a-j]$' )
     $Coords = $Coords -replace '[^0-9a-j]','' -replace '([0-9])([a-j])','$2$1'
     [int]$ColChosen = [byte][char]($Coords.substring(0,1)) - 97
     [int]$RowChosen = $Coords.substring(1,1)
     $Pos = $RowChosen * 10 + $ColChosen
     $AttackResult = $ComputerBoard.Layout[$Pos].Attack()
   } until ($AttackResult -eq $true)
-  $PlayerBoard.AutomaticAttack()
+  AutomaticAttack -Board $PlayerBoard
   $NumberOfComputerHits = ($ComputerBoard.Layout | Where-Object {$_.AttackResult -eq 'Hit'}).count
   $NumberOfPlayerHits = ($PlayerBoard.Layout | Where-Object {$_.AttackResult -eq 'Hit'}).count
 } until ($NumberOfComputerHits -eq 17 -or $NumberOfPlayerHits -eq 17)
-ShowBoard -Board $PlayerBoard -Title 'user' -ShowShips 
+ShowBoard -Board $PlayerBoard -Title 'User' -ShowShips 
 ShowBoard -Board $ComputerBoard -Title 'Computer' 
 if ($NumberOfComputerHits -eq 17 -and $NumberOfPlayerHits -lt 17) {Write-Host -ForegroundColor Green "User Wins"}
 elseif ($NumberOfComputerHits -lt 17 -and $NumberOfPlayerHits -eq 17) {Write-Host -ForegroundColor Red "Computer Wins"}
