@@ -8,6 +8,8 @@
   Each turn you choose a coordinate to hit on the computers board to see if
   you can sink all of the computers ships before the computer sinks yours.
   Grey X means your attempt was a miss, a red X means you hit a ship.
+  After the game is over, if the computer wins the board will show the 
+  computer ships you did not sink.
   The sizes of the different ships are:
   Type                 Size
   -----                ----   
@@ -21,7 +23,12 @@
     staggered pattern when the 3 steps are all attacked it switches to two steps
     this also happens if it detects that the submarine is the only ship left to find
   - when a single hit occurs it checks around that hit for the ship line
-  - when two hit are in a row or column it follows that line until it find the end of the ship  
+  - when two hit are in a row or column it follows that line until it find the end of the ship
+  New logic to be added (future add-ons to the code)
+  - when the computer see a ship line of unusual length it will attack the neighbour 
+    postions from each end of the ship line
+  - when the computer sees that there are multiple hits in different directions from a
+    single shipline, it will attack neighbours in all directions from the block of hits    
 .EXAMPLE
   Play-BattleShip.ps1
   This starts the game
@@ -29,7 +36,7 @@
   General notes
     Created By: Brent Deny
     Created On: 11 May 2020  
-    Last Modified : 22 May 2020
+    Last Modified : 23 May 2020
 #>
 [CmdletBinding()]
 param ()
