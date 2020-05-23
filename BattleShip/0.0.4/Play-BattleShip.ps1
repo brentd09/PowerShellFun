@@ -297,7 +297,7 @@ do {
   $NumberOfPlayerHits = ($PlayerBoard.Layout | Where-Object {$_.AttackResult -eq 'Hit'}).count
 } until ($NumberOfComputerHits -eq 17 -or $NumberOfPlayerHits -eq 17)
 ShowBoard -Board $PlayerBoard -Title 'User' -ShowShips 
-ShowBoard -Board $ComputerBoard -Title 'Computer' 
+ShowBoard -Board $ComputerBoard -Title 'Computer' -ShowShips
 if ($NumberOfComputerHits -eq 17 -and $NumberOfPlayerHits -lt 17) {Write-Host -ForegroundColor Green "User Wins"}
 elseif ($NumberOfComputerHits -lt 17 -and $NumberOfPlayerHits -eq 17) {Write-Host -ForegroundColor Red "Computer Wins"}
 else {Write-Host -ForegroundColor Gray "There are no winners in a war that sinks both fleets"}
