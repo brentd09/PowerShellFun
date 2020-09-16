@@ -42,7 +42,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59',
+  [string]$PuzzleString = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -58,7 +58,7 @@ class SudokuElement {
     $this.Position = $Pos
     $this.Value = $Val
     if ($Val -match '\D') {$this.PossibleValues = 1..9}
-    else {$this.PossibleValues = 0} # Zero means it has been solved
+    else {$this.PossibleValues = 0} # Zero means it has been solved for this element
     $PosCol = $Pos % 9
     $PosRow = [math]::Truncate($Pos/9)
     $this.Col = $PosCol
@@ -67,6 +67,11 @@ class SudokuElement {
     $SqrRow = [math]::Truncate($PosRow/3)
     $this.Sqr = (3 * $SqrRow) + $SqrCol
   }
+
+  [void]SolveElement ($SolvedValue) {
+    $this.Value = $SolvedValue
+    $this.PossibleValues = @(0)
+  } 
 }
 
 class SudokuBoard {
@@ -120,29 +125,6 @@ function Compare-Arrays {
   }
   New-Object -TypeName psobject -Property $ObjHash
 }
-function Resolve-NumbersMissing {
-  Param (
-    [SudokuBoard]$FnSudoku
-  )
-  foreach ($Index in (0..80)) {
-    if ($FnSudoku.Board[$index].Value -match '\D') {
-      $ColNumber = $FnSudoku.Board[$index].Col
-      $RowNumber = $FnSudoku.Board[$index].Row
-      $SqrNumber = $FnSudoku.Board[$index].Sqr
-      $AllRelatedPositions = $FnSudoku.board | 
-       Where-Object {$_.Value -match '\d' -and ($_.Row -eq $RowNumber -or $_.Col -eq $ColNumber -or $_.Sqr -eq $SqrNumber)}
-      $UniqueRelatedValues = $AllRelatedPositions.Value | Select-Object -Unique | Sort-Object 
-      $NumbersMissing = (Compare-Arrays -Array1 (1..9) -Array2 $UniqueRelatedValues).UniqueToArray1
-      if ($NumbersMissing.count -eq 1) {
-        $FnSudoku.Board[$Index].Value = $NumbersMissing[0]
-        $FnSudoku.Board[$Index].PossibleValues = @(0)
-      } # Sole Candidate
-      $FnSudoku.Board[$index].PossibleValues = $NumbersMissing
-    }
-    $FnSudoku.ResolveNumberOfUnsolvedElements()
-  }
-}
-
 function Show-Sudoku {
   Param (
     [SudokuBoard]$fnSudoku,
@@ -166,59 +148,64 @@ function Show-Sudoku {
       Write-Host -ForegroundColor $FGColor $HBdr
     }
     Write-Host
-    #Start-Sleep -Seconds 1
+    Start-Sleep -Seconds 1
   }
 }
-
-function Resolve-Unique {
-  param (
-    [SudokuBoard]$fnSudoku
-  )
-  foreach ($Index in (0..8)) {
-    $SqrCells = $fnSudoku.Board | Where-Object {$_.Sqr -eq $Index -and $_.Value -eq '-'}
-    if ($SqrCells.PossibleValues -notcontains 0) {$SqrCellsValues =  $SqrCells.PossibleValues }
-    $UniqueValues = ($SqrCellsValues | Sort-Object | Group-Object | Where-Object {$_.count -eq 1}).Name
-    foreach ($UniqueValue in $UniqueValues) {
-      $WhichCell = $SqrCells | Where-Object {$_.PossibleValues -contains $UniqueValue}
-      $fnSudoku.Board[$WhichCell.Position].Value = $UniqueValue
-    } # Unique Candidate
-  }
-}
-
-function Find-NakedPair {
+function Find-Possible {
   Param (
     [SudokuBoard]$fnSudoku
   )
-  $TwoPossible = $fnSudoku.Board | Where-Object {$_.PossibleValues.count -eq 2}
-  foreach ($TwoPoss in $TwoPossible) {
-    $TwosLeft = $TwoPossible | Where-Object {$_.Position -ne $TwoPoss.Position}
-    foreach ($EachTwosLeft in $TwosLeft) {
-      $ArrayCompare = Compare-Arrays $TwoPoss.PossibleValues $EachTwosLeft.PossibleValues
-      if ($ArrayCompare.ArraysEqual) {
-        # Check if they have any Col,Row,Sqr in common
+  foreach ($Pos in (0..80)) {
+    if ($fnSudoku.Board[$Pos].Value -match '\D') {
+      $CurrentCell = $fnSudoku.Board[$Pos]
+      $Row = $CurrentCell.Row
+      $Col = $CurrentCell.Col
+      $Sqr = $CurrentCell.Sqr
+      $RelatedSolvedCells = $fnSudoku.Board | Where-Object {($_.Col -eq $Col -or $_.Row -eq $Row -or $_.Sqr -eq $sqr) -and $_.Value -match '\d'}
+      $RelatedSortedUnique = $RelatedSolvedCells.Value  | Select-Object -Unique | Sort-Object
+      $AllPossibleNumbers = 1..9
+      $MissingNumbers = foreach ($EachPossibleNumber in $AllPossibleNumbers) {
+        if ($EachPossibleNumber -notin $RelatedSortedUnique) {$EachPossibleNumber}
       }
-      # compare possible for a match and then check if the are in the same row or col or sqr
+      $CurrentCell.PossibleValues = $MissingNumbers
     }
   }
 }
 
-function Find-PointingPair {
-  Param ([SudokuBoard]$fnSudoku)
-  # find same number (2-3 instances) on a row or col that is restricted to a sqr and 
-  # eliminate the number from all other cells in the sqr
-  foreach ($RowNum in 0..8) {
-    $RowCells = $fnSudoku.Board | Where-Object {$_.Row -eq $RowNum}
-    $RowCells | Where-Object {$_.possiblevalues.count -gt 1} | Select-Object *,@{n='PV';e={$_.possiblevalues -join ''}} | ft
-    $RowCells.PossibleValues | Group-Object | Where-Object {$_.count -ge 2 -and $_.count -le 3}
-    Start-Sleep -Milliseconds 10
-  } 
-}
 
-function Find-Impossible {
+function Find-Unique {
   Param (
     [SudokuBoard]$fnSudoku
   )
+  foreach ($Pos in (0..80)) {
+    if ($fnSudoku.Board[$Pos].PossibleValues.Count -eq 1 -and $fnSudoku.Board[$Pos].PossibleValues -ne 0) {
+      $CurrentCell = $fnSudoku.Board[$Pos]
+      $CurrentCell.SolveElement($CurrentCell.PossibleValues[0])
+    }
+  }
+}
 
+function Find-HiddenPair {
+  Param (
+    [SudokuBoard]$fnSudoku
+  )
+  $Rows = 0..8
+  $Cols = 0..8
+  $Sqrs = 0..8
+  foreach ($Row in $Rows) {
+    $HiddenPairs = $fnSudoku.Board | Where-Object {$_.Row -eq $Row -and $_.Value -match '\D' -and $_.PossibleValues.Count -eq 2}
+    $PairsJoined = foreach ($Pair in $HiddenPairs) {$Pair -join ','}
+    $HiddenPairsValues = $PairsJoined | Group-Object | Where-Object {$_.Count -eq 2}
+    foreach ($HiddenPairValues in $HiddenPairsValues) {
+      [int[]]$Values = $HiddenPairValues.Name -split ','
+    }
+  }
+}
+
+function Find-SinglePossible {
+  Param (
+    [SudokuBoard]$fnSudoku
+  )
 }
 # Main Code
 Clear-Host
@@ -227,14 +214,8 @@ Show-Sudoku -fnSudoku $Puzzle  -RawData:$ShowRawData
 
 
 do { 
-  $UnsolvedBefore = $Puzzle.NumberOfUnsolvedElements
-  Resolve-NumbersMissing -fnSudoku $Puzzle
-  $UnsolvedAfter = $Puzzle.NumberOfUnsolvedElements
-  Show-Sudoku -fnSudoku $Puzzle  -RawData:$ShowRawData
-  if ($UnsolvedBefore -eq $UnsolvedAfter) {
-    Resolve-Unique -fnSudoku $Puzzle
-    Find-PointingPair -fnSudoku $Puzzle
-  } 
-  Show-Sudoku -fnSudoku $Puzzle  -RawData:$ShowRawData
-} until ($Puzzle.NumberOfUnsolvedElements -eq 0 )  
+  Find-Possible -fnSudoku $Puzzle
+  Find-Unique -fnSudoku $Puzzle
+  Show-Sudoku -fnSudoku $Puzzle
+} until (($Puzzle.Board | Where-Object {$_.PossibleValues -contains 0}).count -eq 81 )  
 
