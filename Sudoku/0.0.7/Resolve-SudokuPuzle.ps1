@@ -42,7 +42,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '-2-6------562-----1------28----2-4-9-914-873-2-8-9----71------3-----217------5-6-',
+  [string]$PuzzleString = '-------1-5-----9----96-2--51-8--573---67-4---2-5--689---18-7--33-----2---------4-',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -80,6 +80,16 @@ class SudokuElement {
     $this.PossibleValues = @(0)
     $this.Solved = $true
   } 
+
+  [void]RemoveFromPossibleValues ([string[]]$ValuesToBeRemoved) {
+    $CurrentPossibleValues = $this.PossibleValues
+    $NewPossibleValues = foreach ($CurrentPossibleValue in $CurrentPossibleValues) {
+      $CurrentPossibleValue | Where-Object {
+        $_ -notin $ValuesToBeRemoved
+      }
+    }
+    $this.PossibleValues = $NewPossibleValues
+  }
 }
 
 class SudokuBoard {
@@ -159,7 +169,7 @@ function Show-Sudoku {
     Start-Sleep -Seconds 1
   }
 }
-function Find-Possible {
+function Find-InitialPossible {
   Param (
     [SudokuBoard]$fnSudoku
   )
@@ -180,90 +190,35 @@ function Find-Possible {
   }
 }
 
+function Clear-RelatedPossibleValues {
+  Param (
+    [SudokuElement]$ReferenceElement,
+    [SudokuBoard]$fnSudoku
+  )
+  $RelatedElements = $fnSudoku.Board | Where-Object {$_.Row -eq $ReferenceElement.Row -or $_.Col -eq $ReferenceElement.Col -or $_.Sqr -eq $ReferenceElement.Sqr }
+  $UnsolvedRelatedElements = $RelatedElements | Where-Object {$_.Solved -eq $false}
+  foreach ($UnsolvedRelatedElement in $UnsolvedRelatedElements) {$_.RemoveFromPossibleValues($UnsolvedRelatedElement.PossibleValues[0])}
 
-function Find-Unique {
+}
+
+function Resolve-Unique {
   Param (
     [SudokuBoard]$fnSudoku
   )
-  foreach ($Pos in (0..80)) {
-    if ($fnSudoku.Board[$Pos].PossibleValues.Count -eq 1 -and $fnSudoku.Board[$Pos].Solved -eq $false) {
-      $CurrentCell = $fnSudoku.Board[$Pos]
-      $CurrentCell.SolveElement($CurrentCell.PossibleValues[0])
-      Find-Possible -fnSudoku $fnSudoku
-    }
-  }
+  $UniqueValueElements = $fnSudoku.board | Where-Object {$_.PossibleValues.Count -eq 1 -and $_.Solved -eq $false}
+  $UniqueValueElement =  $UniqueValueElements | Get-Random
+  $UniqueValueElement.SolveElement($UniqueValueElement.Value)
+  Clear-RelatedPossibleValues -ReferenceElement $UniqueValueElement -fnSudoku $fnSudoku
 }
 
-function Find-HiddenPair {
-  Param (
-    [SudokuBoard]$fnSudoku
-  )
-  $Rows = 0..8
-  $Cols = 0..8
-  $Sqrs = 0..8
-  foreach ($Row in $Rows) {
-    $HiddenPairs = $fnSudoku.Board | Where-Object {$_.Row -eq $Row -and $_.Value -match '\D' -and $_.PossibleValues.Count -eq 2}
-    $PairsJoined = foreach ($Pair in $HiddenPairs) {$Pair -join ','}
-    $HiddenPairsValues = $PairsJoined | Group-Object | Where-Object {$_.Count -eq 2}
-    foreach ($HiddenPairValues in $HiddenPairsValues) {
-      [int[]]$Values = $HiddenPairValues.Name -split ','
-    }
-  }
-}
 
-function Find-SinglePossible {
-  Param (
-    [SudokuBoard]$fnSudoku
-  )
-  $Rows = 0..8
-  $Cols = 0..8
-  $Sqrs = 0..8
-  foreach ($Row in $Rows) {
-    $UnSolvedInRow = $fnSudoku.Board | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
-    $SingleUnsolvedNumbers = ($UnSolvedInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}).Name
-    foreach ($SingleUnsolvedNumber in $SingleUnsolvedNumbers) {
-      $ElementToSolve = $UnSolvedInRow | Where-Object {$_.PossibleValues -contains $SingleUnsolvedNumber}
-      if ($ElementToSolve.Count -eq 1) {
-        $ElementToSolve.SolveElement($SingleUnsolvedNumber)
-        Find-Possible -fnSudoku $fnSudoku
-      }
-    }
-  } 
-  foreach ($Col in $Cols) {
-    $UnSolvedInCol = $fnSudoku.Board | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
-    $SingleUnsolvedNumbers = ($UnSolvedInCol.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}).Name
-    foreach ($SingleUnsolvedNumber in $SingleUnsolvedNumbers) {
-      $ElementToSolve = $UnSolvedInCol | Where-Object {$_.PossibleValues -contains $SingleUnsolvedNumber}
-      if ($ElementToSolve.Count -eq 1) {
-        $ElementToSolve.SolveElement($SingleUnsolvedNumber)
-        Find-Possible -fnSudoku $fnSudoku
-      }
-    }
-  } 
-  foreach ($Sqr in $Sqrs) {
-    $UnSolvedInSqr = $fnSudoku.Board | Where-Object {$_.Sqr -eq $Sqr -and $_.Solved -eq $false}
-    $SingleUnsolvedNumbers = ($UnSolvedInSqr.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}).Name
-    foreach ($SingleUnsolvedNumber in $SingleUnsolvedNumbers) {
-      $ElementToSolve = $UnSolvedInSqr | Where-Object {$_.PossibleValues -contains $SingleUnsolvedNumber}
-      if ($ElementToSolve.Count -eq 1) {
-        $ElementToSolve.SolveElement($SingleUnsolvedNumber)
-        Find-Possible -fnSudoku $fnSudoku
-      }
-    }
-  }      
-}
 # Main Code
 Clear-Host
 $Puzzle = [SudokuBoard]::New($PuzzleString)
 Show-Sudoku -fnSudoku $Puzzle  -RawData:$ShowRawData
 
-
+Find-InitialPossible -fnSudoku $Puzzle
 do { 
-  Find-Possible -fnSudoku $Puzzle
-  Find-Unique -fnSudoku $Puzzle
-  Find-Possible -fnSudoku $Puzzle  
-  Find-SinglePossible -fnSudoku $Puzzle
-  Find-Possible -fnSudoku $Puzzle
-  Show-Sudoku -fnSudoku $Puzzle
+  Resolve-Unique -fnSudoku $Puzzle
 } until (($Puzzle.Board | Where-Object {$_.PossibleValues -contains 0}).count -eq 81 )  
 
