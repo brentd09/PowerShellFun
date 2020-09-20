@@ -81,6 +81,10 @@ class SudokuElement {
     $this.Solved = $true
   } 
 
+  [void]RemoveValuesFromPossible ([string[]]$ValuesToRemove){
+    $NewPossibles = $this.PossibleValues | Where-Object {$_ -notin $ValuesToRemove}
+    if ($NewPossibles.Count -lt $this.PossibleValues.Count) {$this.PossibleValues = $NewPossibles}
+  }
 
 }
 
@@ -197,6 +201,8 @@ function Clear-RelatedPossibleValues {
   }
 }
 
+
+
 function Resolve-NakedSingle {
   Param (
     [SudokuBoard]$fnSudoku
@@ -227,6 +233,7 @@ function Resolve-HiddenSingle {
         $HiddenSingleElement.SolveElement($HiddenSingleValue)
         Clear-RelatedPossibleValues -ReferenceElement $HiddenSingleElement -fnSudoku $fnSudoku
         $RowFlag = $true
+        return $true
       }
     }
   }
@@ -241,11 +248,12 @@ function Resolve-HiddenSingle {
           $HiddenSingleElement.SolveElement($HiddenSingleValue)
           Clear-RelatedPossibleValues -ReferenceElement $HiddenSingleElement -fnSudoku $fnSudoku
           $ColFlag = $true
+          return $true
         }
       }
     }
   }
-  if ($RowFlag -eq $false -and $ColFlag -eq $false) {    
+  elseif ($RowFlag -eq $false -and $ColFlag -eq $false) {    
     foreach ($Sqr in @(0..8)) {
       $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Sqr -eq $Sqr -and $_.Solved -eq $false}
       if ($ElementGroup.Count -ge 1) { 
@@ -255,10 +263,73 @@ function Resolve-HiddenSingle {
           $HiddenSingleElement = $ElementGroup | Where-Object {$_.PossibleValues -contains $HiddenSingleValue}
           $HiddenSingleElement.SolveElement($HiddenSingleValue)
           Clear-RelatedPossibleValues -ReferenceElement $HiddenSingleElement -fnSudoku $fnSudoku
+          return $true
         }
       }
     }
   }
+  else {
+    return $false
+  }
+}
+
+function Resolve-NakedPair {
+  Param (
+    [SudokuBoard]$fnSudoku
+  )
+  $RowFlag = $false
+  $ColFlag = $false
+  foreach ($Row in @(0..8)) {
+    $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
+    $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
+    if ($PairedValueElements.Count -ge 2) {
+      $GroupedPairValues = $PairedValueElements.Value | Group-Object 
+      $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -eq 2}
+      foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
+        $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
+        foreach ($ElementToChange in $ElementsToChange) {
+          $ElementToChange.RemoveValuesFromPossible($NakedPairValueGroup.Name)
+          $RowFlag = $true
+        }
+      }
+    }
+  }
+  if ($RowFlag -eq $false) {
+    foreach ($Col in @(0..8)) {
+      $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
+      $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
+      if ($PairedValueElements.Count -ge 2) {
+        $GroupedPairValues = $PairedValueElements.Value | Group-Object 
+        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -eq 2}
+        foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
+          $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
+          foreach ($ElementToChange in $ElementsToChange) {
+            $ElementToChange.RemoveValuesFromPossible($NakedPairValueGroup.Name)
+            $ColFlag = $true
+          }
+        }
+      }
+    }
+  }
+  elseif ($RowFlag -eq $false -and $ColFlag -eq $false) {
+    foreach ($Sqr in @(0..8)) {
+      $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Sqr -eq $Sqr -and $_.Solved -eq $false}
+      $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
+      if ($PairedValueElements.Count -ge 2) {
+        $GroupedPairValues = $PairedValueElements.Value | Group-Object 
+        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -eq 2}
+        foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
+          $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
+          foreach ($ElementToChange in $ElementsToChange) {
+            $ElementToChange.RemoveValuesFromPossible($NakedPairValueGroup.Name)
+          }
+        }
+      }
+    }
+  }   
+  else {
+    return $false
+  } 
 }
 
 # Main Code
@@ -269,11 +340,13 @@ Show-Sudoku -fnSudoku $Puzzle  -RawData:$ShowRawData
 Find-InitialPossible -fnSudoku $Puzzle
 do { 
   do {
-    $a = Resolve-NakedSingle -fnSudoku $Puzzle
+    $NSResult = Resolve-NakedSingle -fnSudoku $Puzzle
     Show-Sudoku -fnSudoku $Puzzle
-  } until ($a -eq $false)
-
-  Resolve-HiddenSingle -fnSudoku $Puzzle
+  } until ($NSResult -eq $false)
+do {
+  $HSResult = Resolve-HiddenSingle -fnSudoku $Puzzle
   Show-Sudoku -fnSudoku $Puzzle
+} until ($HSResult -eq $false)
+Resolve-NakedPair -fnSudoku $Puzzle  
 } while ($Puzzle.Board.Solved -contains $false )
 
