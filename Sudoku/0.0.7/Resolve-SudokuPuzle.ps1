@@ -283,8 +283,8 @@ function Resolve-NakedPair {
     $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
     $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
     if ($PairedValueElements.Count -ge 2) {
-      $GroupedPairValues = $PairedValueElements.Value | Group-Object 
-      $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -eq 2}
+      $GroupedPairValues = $PairedValueElements.PossibleValues | Group-Object 
+      $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -ge 2}
       foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
         $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
         foreach ($ElementToChange in $ElementsToChange) {
@@ -299,8 +299,8 @@ function Resolve-NakedPair {
       $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
       $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
       if ($PairedValueElements.Count -ge 2) {
-        $GroupedPairValues = $PairedValueElements.Value | Group-Object 
-        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -eq 2}
+        $GroupedPairValues = $PairedValueElements.PossibleValues | Group-Object 
+        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -ge 2}
         foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
           $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
           foreach ($ElementToChange in $ElementsToChange) {
@@ -316,8 +316,8 @@ function Resolve-NakedPair {
       $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Sqr -eq $Sqr -and $_.Solved -eq $false}
       $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
       if ($PairedValueElements.Count -ge 2) {
-        $GroupedPairValues = $PairedValueElements.Value | Group-Object 
-        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -eq 2}
+        $GroupedPairValues = $PairedValueElements.PossibleValues | Group-Object 
+        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -ge 2}
         foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
           $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
           foreach ($ElementToChange in $ElementsToChange) {
@@ -343,10 +343,9 @@ do {
     $NSResult = Resolve-NakedSingle -fnSudoku $Puzzle
     Show-Sudoku -fnSudoku $Puzzle
   } until ($NSResult -eq $false)
-do {
   $HSResult = Resolve-HiddenSingle -fnSudoku $Puzzle
   Show-Sudoku -fnSudoku $Puzzle
-} until ($HSResult -eq $false)
-Resolve-NakedPair -fnSudoku $Puzzle  
+  Resolve-NakedPair -fnSudoku $Puzzle  
+  Show-Sudoku -fnSudoku $Puzzle
 } while ($Puzzle.Board.Solved -contains $false )
 
