@@ -162,7 +162,7 @@ function Show-Sudoku {
       Write-Host -ForegroundColor $FGColor $HBdr
     }
     Write-Host
-    Start-Sleep -Seconds 1
+    Start-Sleep -Seconds .3
   }
 }
 function Find-InitialPossible {
@@ -277,59 +277,48 @@ function Resolve-NakedPair {
   Param (
     [SudokuBoard]$fnSudoku
   )
-  $RowFlag = $false
-  $ColFlag = $false
   foreach ($Row in @(0..8)) {
     $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
-    $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
-    if ($PairedValueElements.Count -ge 2) {
-      $GroupedPairValues = $PairedValueElements.PossibleValues | Group-Object 
-      $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -ge 2}
-      foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
-        $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
-        foreach ($ElementToChange in $ElementsToChange) {
-          $ElementToChange.RemoveValuesFromPossible($NakedPairValueGroup.Name)
-          $RowFlag = $true
+    $TwoValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
+    $GroupTwoValElements = $TwoValueElements | Select-Object -Property  @{n='PairJoined';e={$_.PossibleValues -join ','}} | Group-Object -Property PairJoined
+    $NakedPairValues = $GroupTwoValElements | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
+    if ($NakedPairValues.Count -gt 1 ) {
+      foreach ($Element in $ElementGroup ) {
+        $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
+        if ($CompareArrays.ArraysEqual -ne $true) {
+          $Element.RemoveValuesFromPossible($NakedPairValues)
         }
       }
     }
   }
-  if ($RowFlag -eq $false) {
-    foreach ($Col in @(0..8)) {
-      $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
-      $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
-      if ($PairedValueElements.Count -ge 2) {
-        $GroupedPairValues = $PairedValueElements.PossibleValues | Group-Object 
-        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -ge 2}
-        foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
-          $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
-          foreach ($ElementToChange in $ElementsToChange) {
-            $ElementToChange.RemoveValuesFromPossible($NakedPairValueGroup.Name)
-            $ColFlag = $true
-          }
+  foreach ($Col in @(0..8)) {
+    $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
+    $TwoValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
+    $GroupTwoValElements = $TwoValueElements | Select-Object -Property  @{n='PairJoined';e={$_.PossibleValues -join ','}} | Group-Object -Property PairJoined
+    $NakedPairValues = $GroupTwoValElements | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
+    if ($NakedPairValues.Count -gt 1) {
+      foreach ($Element in $ElementGroup ) {
+        $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
+        if ($CompareArrays.ArraysEqual -ne $true) {
+          $Element.RemoveValuesFromPossible($NakedPairValues)
         }
       }
     }
   }
-  elseif ($RowFlag -eq $false -and $ColFlag -eq $false) {
-    foreach ($Sqr in @(0..8)) {
-      $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Sqr -eq $Sqr -and $_.Solved -eq $false}
-      $PairedValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
-      if ($PairedValueElements.Count -ge 2) {
-        $GroupedPairValues = $PairedValueElements.PossibleValues | Group-Object 
-        $NakedPairValueGroups = $GroupedPairValues | Where-Object {$_.Count -ge 2}
-        foreach ($NakedPairValueGroup in $NakedPairValueGroups) {
-          $ElementsToChange = $ElementGroup | Where-Object {(Compare-Arrays -Array1 $_.PossibleValues -Array2 $NakedPairValueGroup.Name).ArraysEqual -ne $true}
-          foreach ($ElementToChange in $ElementsToChange) {
-            $ElementToChange.RemoveValuesFromPossible($NakedPairValueGroup.Name)
-          }
+  foreach ($Sqr in @(0..8)) {
+    $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Sqr -eq $Sqr -and $_.Solved -eq $false}
+    $TwoValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
+    $GroupTwoValElements = $TwoValueElements | Select-Object -Property  @{n='PairJoined';e={$_.PossibleValues -join ','}} | Group-Object -Property PairJoined
+    $NakedPairValues = $GroupTwoValElements | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
+    if ($NakedPairValues.Count -gt 1) {
+      foreach ($Element in $ElementGroup ) {
+        $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
+        if ($CompareArrays.ArraysEqual -ne $true) {
+          $Element.RemoveValuesFromPossible($NakedPairValues)
         }
       }
     }
-  }   
-  else {
-    return $false
-  } 
+  }
 }
 
 # Main Code
