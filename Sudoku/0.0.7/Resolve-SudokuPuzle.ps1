@@ -42,7 +42,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59',
+  [string]$PuzzleString = '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -373,7 +373,9 @@ $Puzzle = [SudokuBoard]::New($PuzzleString)
 Show-Sudoku -fnSudoku $Puzzle  -RawData:$ShowRawData
 
 Find-InitialPossible -fnSudoku $Puzzle
+$Guess = $false
 do { 
+  $AllPossibleStart = $Puzzle.Board.PossibleValues -join ','
   do {
     $NSResult = Resolve-NakedSingle -fnSudoku $Puzzle
     Show-Sudoku -fnSudoku $Puzzle
@@ -382,5 +384,6 @@ do {
   Resolve-NakedPair -fnSudoku $Puzzle
   Resolve-PointingPair -fnSudoku $Puzzle
   Show-Sudoku -fnSudoku $Puzzle
+  $AllPossibleEnd = $Puzzle.Board.PossibleValues -join ','
 } while ($Puzzle.Board.Solved -contains $false )
 
