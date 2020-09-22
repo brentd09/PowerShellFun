@@ -42,7 +42,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '-------1-5-----9----96-2--51-8--573---67-4---2-5--689---18-7--33-----2---------4-',
+  [string]$PuzzleString = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -82,7 +82,7 @@ class SudokuElement {
   } 
 
   [void]RemoveValuesFromPossible ([string[]]$ValuesToRemove){
-    $NewPossibles = $this.PossibleValues | Where-Object {$_ -notin $ValuesToRemove}
+    [string[]]$NewPossibles = $this.PossibleValues | Where-Object {$_ -notin $ValuesToRemove}
     if ($NewPossibles.Count -lt $this.PossibleValues.Count) {$this.PossibleValues = $NewPossibles}
   }
 
@@ -162,7 +162,6 @@ function Show-Sudoku {
       Write-Host -ForegroundColor $FGColor $HBdr
     }
     Write-Host
-    Start-Sleep -Seconds .3
   }
 }
 function Find-InitialPossible {
@@ -233,7 +232,6 @@ function Resolve-HiddenSingle {
         $HiddenSingleElement.SolveElement($HiddenSingleValue)
         Clear-RelatedPossibleValues -ReferenceElement $HiddenSingleElement -fnSudoku $fnSudoku
         $RowFlag = $true
-        return $true
       }
     }
   }
@@ -248,7 +246,6 @@ function Resolve-HiddenSingle {
           $HiddenSingleElement.SolveElement($HiddenSingleValue)
           Clear-RelatedPossibleValues -ReferenceElement $HiddenSingleElement -fnSudoku $fnSudoku
           $ColFlag = $true
-          return $true
         }
       }
     }
@@ -263,13 +260,9 @@ function Resolve-HiddenSingle {
           $HiddenSingleElement = $ElementGroup | Where-Object {$_.PossibleValues -contains $HiddenSingleValue}
           $HiddenSingleElement.SolveElement($HiddenSingleValue)
           Clear-RelatedPossibleValues -ReferenceElement $HiddenSingleElement -fnSudoku $fnSudoku
-          return $true
         }
       }
     }
-  }
-  else {
-    return $false
   }
 }
 
@@ -281,12 +274,14 @@ function Resolve-NakedPair {
     $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
     $TwoValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
     $GroupTwoValElements = $TwoValueElements | Select-Object -Property  @{n='PairJoined';e={$_.PossibleValues -join ','}} | Group-Object -Property PairJoined
-    $NakedPairValues = $GroupTwoValElements | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
-    if ($NakedPairValues.Count -gt 1 ) {
-      foreach ($Element in $ElementGroup ) {
-        $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
-        if ($CompareArrays.ArraysEqual -ne $true) {
-          $Element.RemoveValuesFromPossible($NakedPairValues)
+    foreach ($GroupTwoValElement in $GroupTwoValElements) {
+      $NakedPairValues = $GroupTwoValElement | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
+      if ($NakedPairValues.Count -gt 1) {
+        foreach ($Element in $ElementGroup ) {
+          $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
+          if ($CompareArrays.ArraysEqual -ne $true) {
+            $Element.RemoveValuesFromPossible($NakedPairValues)
+          }
         }
       }
     }
@@ -295,12 +290,14 @@ function Resolve-NakedPair {
     $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
     $TwoValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
     $GroupTwoValElements = $TwoValueElements | Select-Object -Property  @{n='PairJoined';e={$_.PossibleValues -join ','}} | Group-Object -Property PairJoined
-    $NakedPairValues = $GroupTwoValElements | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
-    if ($NakedPairValues.Count -gt 1) {
-      foreach ($Element in $ElementGroup ) {
-        $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
-        if ($CompareArrays.ArraysEqual -ne $true) {
-          $Element.RemoveValuesFromPossible($NakedPairValues)
+    foreach ($GroupTwoValElement in $GroupTwoValElements) {
+      $NakedPairValues = $GroupTwoValElement | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
+      if ($NakedPairValues.Count -gt 1) {
+        foreach ($Element in $ElementGroup ) {
+          $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
+          if ($CompareArrays.ArraysEqual -ne $true) {
+            $Element.RemoveValuesFromPossible($NakedPairValues)
+          }
         }
       }
     }
@@ -309,17 +306,66 @@ function Resolve-NakedPair {
     $ElementGroup = $fnSudoku.Board  | Where-Object {$_.Sqr -eq $Sqr -and $_.Solved -eq $false}
     $TwoValueElements = $ElementGroup | Where-Object {$_.PossibleValues.Count -eq 2}
     $GroupTwoValElements = $TwoValueElements | Select-Object -Property  @{n='PairJoined';e={$_.PossibleValues -join ','}} | Group-Object -Property PairJoined
-    $NakedPairValues = $GroupTwoValElements | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
-    if ($NakedPairValues.Count -gt 1) {
-      foreach ($Element in $ElementGroup ) {
-        $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
-        if ($CompareArrays.ArraysEqual -ne $true) {
-          $Element.RemoveValuesFromPossible($NakedPairValues)
+    foreach ($GroupTwoValElement in $GroupTwoValElements) {
+      $NakedPairValues = $GroupTwoValElement | Where-Object {$_.Count -eq 2} | ForEach-Object { $_.Name -split ','}
+      if ($NakedPairValues.Count -gt 1) {
+        foreach ($Element in $ElementGroup ) {
+          $CompareArrays = Compare-Arrays -Array1 $NakedPairValues -Array2 $Element.PossibleValues
+          if ($CompareArrays.ArraysEqual -ne $true) {
+            $Element.RemoveValuesFromPossible($NakedPairValues)
+          }
         }
       }
     }
   }
 }
+
+function Resolve-PointingPair {
+  Param (
+    [SudokuBoard]$fnSudoku
+  )
+  foreach ($Row in @(0..8)) {
+    $ElementsInRow = $fnSudoku.Board | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
+    $RelatedSqrs = $ElementsInRow.Sqr | Select-Object -Unique 
+    foreach ($RelatedSqr in $RelatedSqrs) {
+      $MultipleNumbersInElementGroup = ($ElementsInRow | Where-Object {$_.Sqr -eq $RelatedSqr} ).PossibleValues | 
+        Group-Object | Where-Object {$_.Count -ge 2}
+      $UnsolvedElementsInSqr = $fnSudoku.Board | Where-Object {$_.Solved -eq $false -and $_.Sqr -eq $RelatedSqr}
+      foreach ($EachMultiple in $MultipleNumbersInElementGroup) {
+        $MultipleCount = $EachMultiple.Count
+        $UnsolvedInSqrCount = ($UnsolvedElementsInSqr | Where-Object {$_.PossibleValues -contains $EachMultiple.Name}).Count
+        if ($MultipleCount -eq $UnsolvedInSqrCount) {
+          $OtherSqrs = $RelatedSqrs | Where-Object {$_ -notin $RelatedSqr}
+          $ElementsToModify = $ElementsInRow | Where-Object {$_.Row -eq $Row -and $_.Sqr -in $OtherSqrs}
+          foreach ($ElementToModify in $ElementsToModify) {
+            $ElementToModify.RemoveValuesFromPossible($EachMultiple.Name)
+          }
+        } 
+      } 
+    }
+  }  
+  foreach ($Col in @(0..8)) {
+    $ElementsInCol = $fnSudoku.Board | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
+    $RelatedSqrs = $ElementsInCol.Sqr | Select-Object -Unique 
+    foreach ($RelatedSqr in $RelatedSqrs) {
+      $MultipleNumbersInElementGroup = ($ElementsInCol | Where-Object {$_.Sqr -eq $RelatedSqr} ).PossibleValues | 
+        Group-Object | Where-Object {$_.Count -ge 2}
+      $UnsolvedElementsInSqr = $fnSudoku.Board | Where-Object {$_.Solved -eq $false -and $_.Sqr -eq $RelatedSqr}
+      foreach ($EachMultiple in $MultipleNumbersInElementGroup) {
+        $MultipleCount = $EachMultiple.Count
+        $UnsolvedInSqrCount = ($UnsolvedElementsInSqr | Where-Object {$_.PossibleValues -contains $EachMultiple.Name}).Count
+        if ($MultipleCount -eq $UnsolvedInSqrCount) {
+          $OtherSqrs = $RelatedSqrs | Where-Object {$_ -notin $RelatedSqr}
+          $ElementsToModify = $ElementsInCol | Where-Object {$_.Col -eq $Col -and $_.Sqr -in $OtherSqrs}
+          foreach ($ElementToModify in $ElementsToModify) {
+            $ElementToModify.RemoveValuesFromPossible($EachMultiple.Name)
+          }
+        } 
+      } 
+    }
+  }
+}
+
 
 # Main Code
 Clear-Host
@@ -332,9 +378,9 @@ do {
     $NSResult = Resolve-NakedSingle -fnSudoku $Puzzle
     Show-Sudoku -fnSudoku $Puzzle
   } until ($NSResult -eq $false)
-  $HSResult = Resolve-HiddenSingle -fnSudoku $Puzzle
-  Show-Sudoku -fnSudoku $Puzzle
-  Resolve-NakedPair -fnSudoku $Puzzle  
+  Resolve-HiddenSingle -fnSudoku $Puzzle
+  Resolve-NakedPair -fnSudoku $Puzzle
+  Resolve-PointingPair -fnSudoku $Puzzle
   Show-Sudoku -fnSudoku $Puzzle
 } while ($Puzzle.Board.Solved -contains $false )
 
