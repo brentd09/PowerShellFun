@@ -40,7 +40,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [string]$PuzzleString = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59',
+  [string]$PuzzleString = '--7---28---4-25---28---46---9---6---3-------2---1---9---62---75---57-4---78---3--',
   [switch]$ShowRawData
 )
 # Class Definitions
@@ -397,11 +397,13 @@ function Resolve-XWing {
     $ElementsHoldingXWingVal = ($fnSudoku.Board | Where-Object {$_.PossibleValues -Contains $XWingVal -and $_.Solved -eq $false} | Group-Object -Property Row | Where-Object count -eq 2).Group
     $UniqueCol = ($ElementsHoldingXWingVal).Col | Select-Object -Unique
     $UniqueColCount = $UniqueCol.Count
-    $UniqueRowCount = (($ElementsHoldingXWingVal).Row | Select-Object -Unique ).Count
-    if ($ElementsHoldingXWingVal.Count -eq 4 -and $UniqueColCount -eq $UniqueRowCount) {
-      $ElementsToChange = $fnSudoku.Board | Where-Object {$_.Col -in $UniqueCol -and $_.Solved -eq $false -and $_.Position -notin $ElementsHoldingXWingVal.Position}
-      foreach ($ElementToChange in $ElementsToChange) {
-        $ElementToChange.RemoveValuesFromPossible($XWingVal)
+    if ($UniqueColCount -eq 2) {
+      $UniqueRowCount = (($ElementsHoldingXWingVal).Row | Select-Object -Unique ).Count
+      if ($ElementsHoldingXWingVal.Count -eq 4 -and $UniqueColCount -eq $UniqueRowCount) {
+        $ElementsToChange = $fnSudoku.Board | Where-Object {$_.Col -in $UniqueCol -and $_.Solved -eq $false -and $_.Position -notin $ElementsHoldingXWingVal.Position}
+        foreach ($ElementToChange in $ElementsToChange) {
+          $ElementToChange.RemoveValuesFromPossible($XWingVal)
+        }
       }
     }
   }
@@ -409,32 +411,26 @@ function Resolve-XWing {
     $ElementsHoldingXWingVal = ($fnSudoku.Board | Where-Object {$_.PossibleValues -Contains $XWingVal -and $_.Solved -eq $false} | Group-Object -Property Col | Where-Object count -eq 2).Group
     $UniqueRow = ($ElementsHoldingXWingVal).Row | Select-Object -Unique
     $UniqueRowCount = $UniqueRow.Count
-    $UniqueRowCount = (($ElementsHoldingXWingVal).Row | Select-Object -Unique ).Count
-    if ($ElementsHoldingXWingVal.Count -eq 4 -and $UniqueRowCount -eq $UniqueRowCount) {
-      $ElementsToChange = $fnSudoku.Board | Where-Object {$_.Row -in $UniqueRow -and $_.Solved -eq $false -and $_.Position -notin $ElementsHoldingXWingVal.Position}
-      foreach ($ElementToChange in $ElementsToChange) {
-        $ElementToChange.RemoveValuesFromPossible($XWingVal)
+    if ($UniqueRowCount -eq 2) {
+      $UniqueRowCount = (($ElementsHoldingXWingVal).Row | Select-Object -Unique ).Count
+      if ($ElementsHoldingXWingVal.Count -eq 4 -and $UniqueRowCount -eq $UniqueRowCount) {
+        $ElementsToChange = $fnSudoku.Board | Where-Object {$_.Row -in $UniqueRow -and $_.Solved -eq $false -and $_.Position -notin $ElementsHoldingXWingVal.Position}
+        foreach ($ElementToChange in $ElementsToChange) {
+          $ElementToChange.RemoveValuesFromPossible($XWingVal)
+        }
       }
     }
   }
 }
 
-#clonecode
-#$pp = [sudokuboard]::New($puzzle.Board.Value -join '')
-#0..80 | foreach { 
-#  $Poss = $Puzzle.Board[$_].PossibleValues
-#  $Solv = $Puzzle.Board[$_].Solved     
-#  $pp.Board[$_].Solved = $Solv
-#  $pp.Board[$_].PossibleValues = $Poss
-#}
-
 # Main Code
 Clear-Host
 $Puzzle = [SudokuBoard]::New($PuzzleString)
 Show-Sudoku -fnSudoku $Puzzle  -RawData:$ShowRawData
-
+$Guess = $false
 Find-InitialPossible -fnSudoku $Puzzle
 do { 
+  $StartPossibleMap = $Puzzle.Board.PossibleValues -join ','
   do {
     $BeforePossibleMap = $Puzzle.Board.PossibleValues -join ','
     Resolve-NakedSingle -fnSudoku $Puzzle
@@ -459,15 +455,20 @@ do {
     Show-Sudoku -fnSudoku $Puzzle
     $AfterPossibleMap = $Puzzle.Board.PossibleValues -join ','
   } until ($BeforePossibleMap -eq $AfterPossibleMap)
-#  do {
-#    $BeforePossibleMap = $Puzzle.Board.PossibleValues -join ','  
-#    Resolve-XWing -fnSudoku $Puzzle
-#    Show-Sudoku -fnSudoku $Puzzle
-#    $AfterPossibleMap = $Puzzle.Board.PossibleValues -join ','
-#  } until ($BeforePossibleMap -eq $AfterPossibleMap)
-  #$UnsolvedPuzzleSqrs = $Puzzle.Board | Where-Object {$_.Solved -eq $false} 
-  #foreach ($UnsolvedPuzzleSqr in $UnsolvedPuzzleSqrs) {
-  #    if ($UnsolvedPuzzleSqr.PossibleValues.Count -eq 0) {Repair-Element -fnSudoku $Puzzle -Position $UnsolvedPuzzleSqr.Position}
-  #}
+  do {
+    $BeforePossibleMap = $Puzzle.Board.PossibleValues -join ','  
+    Resolve-XWing -fnSudoku $Puzzle
+    Show-Sudoku -fnSudoku $Puzzle
+    $AfterPossibleMap = $Puzzle.Board.PossibleValues -join ','
+  } until ($BeforePossibleMap -eq $AfterPossibleMap)
+  $EndPossibleMap = $Puzzle.Board.PossibleValues -join ','
+  # if ($StartPossibleMap -eq $EndPossibleMap -and $Guess -eq $false) {
+  #   $Guess = $true
+  #   $BackupPuzzle = $Puzzle.Clone()
+  #   $TwoPossible = $Puzzle.Board | Where-Object {$_.PossibleValues.Count -eq 2}
+  #   $RandomTwoPossible = $TwoPossible | Get-Random
+  #   $RandomValue = $RandomValue.PossibleValues | Get-Random
+  #   $RandomTwoPossible.PossibleValues = @($RandomValue)
+  # }
 } while ($Puzzle.Board.Solved -contains $false )
 
