@@ -1,3 +1,19 @@
+<#
+.SYNOPSIS
+  Play Tic Tac Toe against the computer 
+.DESCRIPTION
+  This Tic Tac Toe game employs the minimax game play code, which
+  goes through each play and determines what is the best move to make 
+  as an AI player. I am not 100% sure the minimax code had been 
+  implemented correctly, but for now it works sufficiently.. 
+.EXAMPLE
+  Play-TTTAI
+.NOTES
+  General notes
+    Created by:   Brent Denny
+    Created on:   01 Oct 2020
+    Last Modified 13 Oct 2020
+#>
 # Class definitions
 Class ThreatList {
   [int[]]$XThreats
