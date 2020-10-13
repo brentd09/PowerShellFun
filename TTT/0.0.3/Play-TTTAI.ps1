@@ -5,7 +5,8 @@
   This Tic Tac Toe game employs the minimax game play code, which
   goes through each play and determines what is the best move to make 
   as an AI player. I am not 100% sure the minimax code had been 
-  implemented correctly, but for now it works sufficiently.. 
+  implemented correctly, but for now it works sufficiently in that I
+  do not believe it can be beaten.. 
 .EXAMPLE
   Play-TTTAI
 .NOTES
@@ -186,7 +187,9 @@ function Find-MiniMax {
       $CopyBoard = $Board.Clone()
       $TryCell = $CopyBoard.Cells | Where-Object { $_.Position -eq $UnplayedCell.Position}
       $PlayResult = $TryCell.PlayCell('X')
-      $Score = Find-Minimax -Board $CopyBoard -Depth ($Depth + 1) -Max $false
+      $Xthreats = ($CopyBoard.TestThreat()).XThreats
+      $BumpScore = $Xthreats.Count
+      $Score = (Find-Minimax -Board $CopyBoard -Depth ($Depth + 1) -Max $false ) - $BumpScore
       $BestScore = [math]::Max($Score, $BestScore)
     }
     return $BestScore  
@@ -198,7 +201,9 @@ function Find-MiniMax {
       $CopyBoard = $Board.Clone()
       $TryCell = $CopyBoard.Cells | Where-Object { $_.Position -eq $UnplayedCell.Position}
       $PlayResult = $TryCell.PlayCell('O')
-      $Score = Find-Minimax -Board $CopyBoard -Depth ($Depth + 1) -Max $true
+      $Xthreats = ($CopyBoard.TestThreat()).XThreats
+      $BumpScore = $Xthreats.Count
+      $Score = (Find-Minimax -Board $CopyBoard -Depth ($Depth + 1) -Max $true ) + $BumpScore      
       $BestScore = [math]::Min($Score, $BestScore)
     }
     return $BestScore  
@@ -207,6 +212,7 @@ function Find-MiniMax {
 
 #Main code
 $Board = [TTTBoard]::New()
+Show-Board -GameBoard $Board
 [string]$Turn = 'X'
 do  {
   if ($Turn -eq 'X') {
