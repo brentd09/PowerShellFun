@@ -64,13 +64,10 @@ class TTTBoard {
       [string[]]$OsInLine = ($this.Cells[$Line].Value) -eq 'O'
       if ($XsInLine.Count -eq 3) {$Win = 'X'}
       if ($OsInLine.Count -eq 3) {$Win = 'O'}
-      $NumberOfMovesPlayed = ($this.Cells | Where-Object {$_.Played -eq $true}).Count
-      if ($Win -ne 'N' -and $NumberOfMovesPlayed -eq 9) {
-        $Win = 'D'
-        break
-      }
-      elseif ($Win -ne 'N') {break}
+      if ($Win -in @('X','O')) {break}
     }
+    $NumberOfMovesPlayed = ($this.Cells | Where-Object {$_.Played -eq $true}).Count
+    if ($Win -eq 'N' -and $NumberOfMovesPlayed -eq 9) {$Win = 'D'}
     return $Win
   }
 
@@ -137,7 +134,7 @@ function Show-Board {
   else {
     Write-Host -NoNewline -ForegroundColor $TitleCol "`n${Padding}Tic Tac Toe    "
     switch ($Winner) {
-      'N' {Write-Host -ForegroundColor Gray -NoNewline 'Game: '; Write-Host -ForegroundColor Gray   'Draw'}
+      'D' {Write-Host -ForegroundColor Gray -NoNewline 'Game: '; Write-Host -ForegroundColor Gray   'Draw'}
       'O' {Write-Host -ForegroundColor Gray -NoNewline 'Game: '; Write-Host -ForegroundColor Yellow 'O'}
       'X' {Write-Host -ForegroundColor Gray -NoNewline 'Game: '; Write-Host -ForegroundColor Red    'X'}
       Default {}
@@ -255,7 +252,7 @@ function Get-MiniMax {
 #Main code
 $Board = [TTTBoard]::New()
 Show-Board -GameBoard $Board
-[string]$Turn = 'X'
+[string]$Turn = 'O','X' | Get-Random
 do  {
   $TurnCount = 10 - ($Board.Cells | Where-Object {$_.Played -eq $false}).Count
   if ($Turn -eq 'X') {  
@@ -296,5 +293,6 @@ do  {
     Show-Board -GameBoard $Board
   }
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn} 
-} until  ($Winner -in ('D','X','O'))   
+} until  ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')   
+$Winner = $Board.TestWin()
 Show-Board -GameBoard $Board -Termstate $Winner -Final
