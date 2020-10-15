@@ -37,12 +37,10 @@ Class TTTBoardCell {
     $this.Played = $false
   }
 
-  [bool]PlayCell ([string]$XorO) {
-    if ($this.Played -eq $true -or $XorO -notin @('X','O')) {return $false}
-    else {
+  [void]PlayCell ([string]$XorO) {
+    if ($this.Played -eq $false -and $XorO -in @('X','O')) {
       $this.Played = $true
       $this.Value = $XorO.ToUpper()
-      return $true
     }
   }
 }
@@ -66,7 +64,12 @@ class TTTBoard {
       [string[]]$OsInLine = ($this.Cells[$Line].Value) -eq 'O'
       if ($XsInLine.Count -eq 3) {$Win = 'X'}
       if ($OsInLine.Count -eq 3) {$Win = 'O'}
-      if ($Win -ne 'N') {break}
+      $NumberOfMovesPlayed = ($this.Cells | Where-Object {$_.Played -eq $true}).Count
+      if ($Win -ne 'N' -and $NumberOfMovesPlayed -eq 9) {
+        $Win = 'D'
+        break
+      }
+      elseif ($Win -ne 'N') {break}
     }
     return $Win
   }
@@ -164,95 +167,104 @@ function Show-Board {
   Write-Host 
 }#END ShowBoard
 
-function Find-MiniMax {
+function Get-MaxValue {
   Param (
-    [TTTBoard]$Board,
+    [TTTBoard]$FnBoard,
+    [int]$Alpha,
+    [int]$Beta
+  )
+  $CheckGameState = $FnBoard.TestWin()
+  if ($CheckGameState -in @('X','O','D')) {return 1}
+  else {
+    $BestVal = -100
+    $UnplayedCells = $FnBoard.Cells | Where-Object {$_.Played -eq $false}
+    $CopyBoard = $FnBoard.Clone()
+    foreach ($UnPlayedCell in $UnplayedCells) {
+      $CopyBoard.Cells[$UnPlayedCell.Position].PlayCell('X')
+      $BestVal = [math]::Max($BestVal,(Get-MinValue -FnBoard $CopyBoard -Alpha $Alpha -Beta $Beta))
+      if ($BestVal -ge $Beta) {return $BestVal}
+      $Alpha = [math]::Max($Alpha,$BestVal)
+    }
+    return $BestVal
+  }
+}
+
+function Get-MinValue {
+  Param (
+    [TTTBoard]$FnBoard,
+    [int]$Alpha,
+    [int]$Beta
+  )
+  $CheckGameState = $FnBoard.TestWin()
+  if ($CheckGameState -in @('X','O','D')) {return -1}
+  else {
+    $BestVal = 100
+    $UnplayedCells = $FnBoard.Cells | Where-Object {$_.Played -eq $false}
+    $CopyBoard = $FnBoard.Clone()
+    foreach ($UnPlayedCell in $UnplayedCells) {
+      $CopyBoard.Cells[$UnPlayedCell.Position].PlayCell('O')
+      $BestVal = [math]::Min($BestVal,(Get-MaxValue -FnBoard $CopyBoard -Alpha $Alpha -Beta $Beta))
+      if ($BestVal -le $Alpha) {return $BestVal}
+      $Beta = [math]::Max($Beta,$BestVal)
+    }
+    return $BestVal
+  }
+}
+
+function Get-MiniMax {
+  Param (
+    [TTTBoard]$fnBoard,
     [int]$Depth,
     [bool]$Max
   )
   $ScoreHashTable = @{
     X = 1
     O = -1
-    N = 0
+    D = 0
   }
-  $Winner = $Board.TestWin()
+  $Winner = $fnBoard.TestWin()
   if ($Winner -ne 'n') {
     $Score = $ScoreHashTable[$Winner]
     return $Score
   }
   if ($Max -eq $true) {
-    $BestScore = -10
-    $UnplayedCells = $Board.Cells | Where-Object {$_.Played -eq $false }
+    $BestScore = -100
+    $UnplayedCells = $fnBoard.Cells | Where-Object {$_.Played -eq $false }
     foreach ($UnplayedCell in $UnplayedCells) {
-      $CopyBoard = $Board.Clone()
-      $TryCell = $CopyBoard.Cells | Where-Object { $_.Position -eq $UnplayedCell.Position}
-      $PlayResult = $TryCell.PlayCell('X')
-      $Xthreats = ($CopyBoard.TestThreat()).XThreats
-      $BumpScore = $Xthreats.Count
-      $Score = (Find-Minimax -Board $CopyBoard -Depth ($Depth + 1) -Max $false ) - $BumpScore
-      $BestScore = [math]::Max($Score, $BestScore)
+      $CopyBoard = $fnBoard.Clone()
+      $CopyBoard.Cells[$UnplayedCell.Position].PlayCell('X')
+      $ResultingVal = Get-MaxValue -FnBoard $CopyBoard -Alpha -100 -Beta 100
+      if ($ResultingVal -eq 1) {
+        $PlayCell = $UnplayedCell
+        break
+      }
     }
-    return $BestScore  
-  }
-  else {
-    $BestScore = 10
-    $UnplayedCells = $Board.Cells | Where-Object {$_.Played -eq $false }
-    foreach ($UnplayedCell in $UnplayedCells) {
-      $CopyBoard = $Board.Clone()
-      $TryCell = $CopyBoard.Cells | Where-Object { $_.Position -eq $UnplayedCell.Position}
-      $PlayResult = $TryCell.PlayCell('O')
-      $Xthreats = ($CopyBoard.TestThreat()).XThreats
-      $BumpScore = $Xthreats.Count
-      $Score = (Find-Minimax -Board $CopyBoard -Depth ($Depth + 1) -Max $true ) + $BumpScore      
-      $BestScore = [math]::Min($Score, $BestScore)
-    }
-    return $BestScore  
+    return $PlayCell.Position
   }
 }
 
 #Main code
 $Board = [TTTBoard]::New()
 Show-Board -GameBoard $Board
-[string]$Turn = 'X'
+[string]$Turn = 'O'
 do  {
   if ($Turn -eq 'X') {
-    $TurnCounter = 10 - ($Board.Cells | Where-Object {$_.Played -eq $false}).Count
-    if ($TurnCounter -eq 1) {$PlayCell = $Board.Cells | Where-Object {$_.Played -eq $False -and $_.Position -in @(0,2,6,8) } | Get-Random}
-    #    else {$PlayCell = $Board.Cells | Where-Object {$_.Played -eq $False } | Get-Random <#replace with minimax type function call#>}
-    else {
-      $BestScore = -10
-      $BestMoveIndex = 0
-      $UnplayedCells = $Board.Cells | Where-Object {$_.Played -eq $False }
-      $XThreats = ($Board.TestThreat()).XThreats
-      if ($XThreats.Count -ge 1) {
-        $PlayCell = $Board.Cells[($XThreats|Get-Random)]
-      }
-      else {
-        foreach ($UnplayedCell in $UnplayedCells) {
-          $CopyBoard = $Board.Clone()
-          $TryCell = $CopyBoard.Cells | Where-Object { $_.Position -eq $UnplayedCell.Position}
-          $PlayResult = $TryCell.PlayCell('X')
-          $Score = Find-Minimax -Board $CopyBoard -Depth 0 -Max $false
-          if ($score -gt $BestScore) {
-            $BestScore = $Score
-            $BestMoveIndex = $TryCell.Position
-          } 
-        } 
-        $PlayCell = $Board.Cells[$BestMoveIndex]
-      }  
+    $UnplayedCells = $Board.Cells | Where-Object { $_.Played -eq $false}
+    foreach ($UnplayedCell in $UnplayedCells) {
+      $ResultingPos = Get-MiniMax -FnBoard $Board -Depth 0 -Max $true
     }
-    $PlayCell.PlayCell($Turn)
-    $Winner = $Board.TestWin()  
-    if ($Winner -ne 'N') {Break}
+    $Board.Cells[$ResultingPos].PlayCell('X')
     Show-Board -GameBoard $Board
   }
   else {
     do {
-      do {
-        $ChoseLocation = Read-Host -Prompt 'Enter a position'
-      } until ($ChoseLocation -match '^[1-9]$')
-      $ChosenIndex = ($ChoseLocation -as [int]) - 1
-    } until ($Board.Cells[$ChosenIndex].Played -eq $false)  
+      $ChoseLocation = Read-Host -Prompt 'Enter a position'
+      $LegalChoice = $false
+      if ($ChoseLocation -match '^[1-9]$') {
+        $ChosenIndex = ($ChoseLocation -as [int]) - 1
+        if ($Board.Cells[$ChosenIndex].Played -eq $false) {$LegalChoice = $true}
+      }
+    } until ($LegalChoice -eq $true)
     $Board.Cells[$ChosenIndex].PlayCell('O')
     $Winner = $Board.TestWin()
     if ($Winner -ne 'N') {Break}
