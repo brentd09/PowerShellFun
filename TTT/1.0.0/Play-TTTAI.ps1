@@ -4,14 +4,16 @@
 .DESCRIPTION
   This Tic Tac Toe game employs the minimax game play code, which
   goes through each play and determines what is the best move to make 
-  as an AI player. It also has A 
+  as an AI player. It also has Alpha Beta pruning which disregards 
+  potential plays have no effect on the minimax outcome. The best 
+  you can hope for is a draw if each player plays optimally.
 .EXAMPLE
   Play-TTTAI
 .NOTES
   General notes
     Created by:   Brent Denny
     Created on:   01 Oct 2020
-    Last Modified 13 Oct 2020
+    Last Modified 16 Oct 2020
 #>
 # Class definitions
 Class ThreatList {
@@ -113,7 +115,7 @@ function Show-Board {
     [string]$XColor    = "Red",
     [string]$OColor    = "Yellow",
     [string]$TitleCol  = "Green",
-    $TermState,
+    [string]$TermState,
     [switch]$Final
   )
   Clear-Host
@@ -161,50 +163,6 @@ function Show-Board {
   Write-Host -ForegroundColor $EntryColors[8] $ShowSqr[8]
   Write-Host 
 }#END ShowBoard
-
-function Get-MaxValue {
-  Param (
-    [TTTBoard]$FnBoard,
-    [int]$Alpha,
-    [int]$Beta
-  )
-  $CheckGameState = $FnBoard.TestWin()
-  if ($CheckGameState -in @('X','O','D')) {return 1}
-  else {
-    $BestVal = -100
-    $UnplayedCells = $FnBoard.Cells | Where-Object {$_.Played -eq $false}
-    $CopyBoard = $FnBoard.Clone()
-    foreach ($UnPlayedCell in $UnplayedCells) {
-      $CopyBoard.Cells[$UnPlayedCell.Position].PlayCell('X')
-      $BestVal = [math]::Max($BestVal,(Get-MinValue -FnBoard $CopyBoard -Alpha $Alpha -Beta $Beta))
-      if ($BestVal -ge $Beta) {return $BestVal}
-      $Alpha = [math]::Max($Alpha,$BestVal)
-    }
-    return $BestVal
-  }
-}
-
-function Get-MinValue {
-  Param (
-    [TTTBoard]$FnBoard,
-    [int]$Alpha,
-    [int]$Beta
-  )
-  $CheckGameState = $FnBoard.TestWin()
-  if ($CheckGameState -in @('X','O','D')) {return -1}
-  else {
-    $BestVal = 100
-    $UnplayedCells = $FnBoard.Cells | Where-Object {$_.Played -eq $false}
-    $CopyBoard = $FnBoard.Clone()
-    foreach ($UnPlayedCell in $UnplayedCells) {
-      $CopyBoard.Cells[$UnPlayedCell.Position].PlayCell('O')
-      $BestVal = [math]::Min($BestVal,(Get-MaxValue -FnBoard $CopyBoard -Alpha $Alpha -Beta $Beta))
-      if ($BestVal -le $Alpha) {return $BestVal}
-      $Beta = [math]::Max($Beta,$BestVal)
-    }
-    return $BestVal
-  }
-}
 
 function Get-MiniMax {
   Param (
@@ -296,6 +254,6 @@ do  {
     Show-Board -GameBoard $Board
   }
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn} 
-} until  ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')   
+} until  ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')
 $Winner = $Board.TestWin()
 Show-Board -GameBoard $Board -Termstate $Winner -Final
