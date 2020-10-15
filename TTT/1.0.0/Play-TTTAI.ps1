@@ -16,15 +16,6 @@
     Last Modified 16 Oct 2020
 #>
 # Class definitions
-Class ThreatList {
-  [int[]]$XThreats
-  [int[]]$OThreats
-
-  ThreatList () {
-    $this.XThreats = @()
-    $this.OThreats = @()
-  }
-}
 
 Class TTTBoardCell {
   [int]$Position
@@ -69,30 +60,6 @@ class TTTBoard {
     $NumberOfMovesPlayed = ($this.Cells | Where-Object {$_.Played -eq $true}).Count
     if ($Win -eq 'N' -and $NumberOfMovesPlayed -eq 9) {$Win = 'D'}
     return $Win
-  }
-
-  [ThreatList]TestThreat () {
-    [System.Collections.ArrayList]$WinningLines = @(
-      @(0,1,2),@(3,4,5),@(6,7,8),
-      @(0,3,6),@(1,4,7),@(2,5,8),
-      @(0,4,8),@(2,4,6)
-    )
-    $Threats = [ThreatList]::new()
-    foreach ($Line in $WinningLines) {
-      [string[]]$XsInLine = ($this.Cells[$Line].Value) -eq 'X'
-      [string[]]$OsInLine = ($this.Cells[$Line].Value) -eq 'O'
-      if ($XsInLine.count -eq 2 -and $OsInLine.Count -eq 0) {
-        $ThreatPosString = ($this.Cells[$Line].Value) -ne 'X'
-        $ThreatPos = ($ThreatPosString[0] -as [int]) -1
-        $Threats.XThreats += $ThreatPos
-      }
-      if ($OsInLine.Count -eq 2 -and $XsInLine.Count -eq 0) {
-        $ThreatPosString = ($this.Cells[$Line].Value) -ne 'O'
-        $ThreatPos = ($ThreatPosString[0] -as [int]) -1
-        $Threats.OThreats += $ThreatPos
-      }
-    }
-    return $Threats
   }
 
   [TTTBoard]Clone () {
