@@ -212,7 +212,9 @@ function Get-MiniMax {
   Param (
     [TTTBoard]$fnBoard,
     [int]$Depth,
-    [bool]$Max
+    [bool]$Max,
+    [int]$Alpha,
+    [int]$Beta
   )
 
   $ReturnCodes = @{
@@ -220,7 +222,6 @@ function Get-MiniMax {
     O = -1
     D = 0
   }
-
   $CheckForWin = $fnBoard.TestWin()
   if ($CheckForWin -ne 'N') {return $ReturnCodes[$CheckForWin]}
 
@@ -230,8 +231,10 @@ function Get-MiniMax {
     foreach ($UnplayedCell in $UnplayedCells) {
       $CopyBoard = $fnBoard.Clone()
       $CopyBoard.Cells[$UnplayedCell.Position].PlayCell('X')
-      $Score = Get-MiniMax -FnBoard $CopyBoard -Depth ($Depth + 1) -Max $false
+      $Score = Get-MiniMax -FnBoard $CopyBoard -Depth ($Depth + 1) -Max $false -Alpha $Alpha -Beta $Beta
       $XBestScore = [math]::max($Score,$XBestScore)
+      if ($XBestScore -ge $Beta) {return $XBestScore}
+      $Alpha = [math]::Max($Alpha,$XBestScore)
     }
     return $XBestScore
   }
@@ -241,8 +244,10 @@ function Get-MiniMax {
     foreach ($UnplayedCell in $UnplayedCells) {
       $CopyBoard = $fnBoard.Clone()
       $CopyBoard.Cells[$UnplayedCell.Position].PlayCell('O')
-      $Score = Get-MiniMax -FnBoard $CopyBoard -Depth ($Depth + 1) -Max $true
+      $Score = Get-MiniMax -FnBoard $CopyBoard -Depth ($Depth + 1) -Max $true -Alpha $Alpha -Beta $Beta
       $OBestScore = [math]::min($Score,$OBestScore)
+      if ($OBestScore -le $Alpha) {return $OBestScore}
+      $Beta = [math]::Max($Beta,$OBestScore)
     }
     return $OBestScore
   }
@@ -266,7 +271,7 @@ do  {
       foreach ($UnplayedCell in $UnplayedCells) {
         $CopyBoard = $Board.Clone()
         $CopyBoard.Cells[$UnplayedCell.Position].PlayCell('X')
-        $Score = Get-MiniMax -FnBoard $CopyBoard -Depth 0 -Max $false
+        $Score = Get-MiniMax -FnBoard $CopyBoard -Depth 0 -Max $false -Alpha -100 -Beta 100
         if ($Score -gt $BestScore) {
           $BestScore = $Score
           $BestMoveIndex = $UnplayedCell.Position
