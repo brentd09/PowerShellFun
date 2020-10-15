@@ -228,26 +228,26 @@ function Get-MiniMax {
   if ($CheckForWin -ne 'N') {return $ReturnCodes[$CheckForWin]}
 
   if ($Max -eq $true) {
-    $BestScore = -100
+    $XBestScore = -100
     $UnplayedCells = $fnBoard.Cells | Where-Object {$_.Played -eq $false}
     foreach ($UnplayedCell in $UnplayedCells) {
       $CopyBoard = $fnBoard.Clone()
       $CopyBoard.Cells[$UnplayedCell.Position].PlayCell('X')
       $Score = Get-MiniMax -FnBoard $CopyBoard -Depth ($Depth + 1) -Max $false
-      $BestScore = [math]::max($Score,$BestScore)
+      $XBestScore = [math]::max($Score,$XBestScore)
     }
-    return $BestScore
+    return $XBestScore
   }
   else {
-    $BestScore = 100
+    $OBestScore = 100
     $UnplayedCells = $fnBoard.Cells | Where-Object {$_.Played -eq $false}
     foreach ($UnplayedCell in $UnplayedCells) {
       $CopyBoard = $fnBoard.Clone()
       $CopyBoard.Cells[$UnplayedCell.Position].PlayCell('O')
       $Score = Get-MiniMax -FnBoard $CopyBoard -Depth ($Depth + 1) -Max $true
-      $BestScore = [math]::min($Score,$BestScore)
+      $OBestScore = [math]::min($Score,$OBestScore)
     }
-    return $BestScore
+    return $OBestScore
   }
   
 }
@@ -269,7 +269,7 @@ do  {
       foreach ($UnplayedCell in $UnplayedCells) {
         $CopyBoard = $Board.Clone()
         $CopyBoard.Cells[$UnplayedCell.Position].PlayCell('X')
-        $Score = Get-MiniMax -FnBoard $CopyBoard -Depth ($Depth + 1) -Max $false
+        $Score = Get-MiniMax -FnBoard $CopyBoard -Depth 0 -Max $false
         if ($Score -gt $BestScore) {
           $BestScore = $Score
           $BestMoveIndex = $UnplayedCell.Position
@@ -296,5 +296,5 @@ do  {
     Show-Board -GameBoard $Board
   }
   $Turn = @('X','O') | Where-Object {$_ -ne $Turn} 
-} until  ($Board.Cells.Played -notcontains $false -or $Winner -ne 'N')   
+} until  ($Winner -in ('D','X','O'))   
 Show-Board -GameBoard $Board -Termstate $Winner -Final
