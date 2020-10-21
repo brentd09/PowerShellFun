@@ -43,6 +43,10 @@ class TTTBoard {
     $this.Cells = foreach ($Pos in (0..8)) { [TTTBoardCell]::New($Pos)}
   }
 
+  TTTBoard ([int]$Pos) {
+    $this.Cells = foreach ($Pos in (0..$Pos)) { [TTTBoardCell]::New($Pos)}
+  } 
+
   [string]TestWin () {
     [System.Collections.ArrayList]$WinningLines = @(
       @(0,1,2),@(3,4,5),@(6,7,8),
