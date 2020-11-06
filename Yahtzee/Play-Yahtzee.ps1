@@ -146,6 +146,7 @@ function Show-ScoreCard {
     [YahtzeeCard]$ScoreCard
   )
   Clear-Host
+  $Underline = ' ----------------------------'
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
   $UpTotal = ($ScoreCard.Scores[0..5].Value | Measure-Object -Sum).Sum
@@ -154,42 +155,64 @@ function Show-ScoreCard {
   else {$Bonus = 0}
   $UpTotalWithBonus = $UpTotal + $Bonus
   $GTScore = $UpTotalWithBonus + $LowScore
-  Write-Host 'YAHTZEE'
+  Write-Host -ForegroundColor Yellow '          YAHTZEE'
+  Write-Host -ForegroundColor Yellow '          -------'
   Write-Host 
-  Write-Host 'UPPER SECTION'
+  Write-Host  -ForegroundColor Yellow '               UPPER SECTION'
+  Write-Host $Underline
   foreach ($Index in @(0..5)) {
-    Write-Host -ForegroundColor Green $MyScoreCard.Scores[$Index].Label -NoNewline
+    Write-Host -ForegroundColor Green " $($MyScoreCard.Scores[$Index].Label)" -NoNewline
     if ($ScoreCard.Scores[$Index].PlayCount -eq 0) {Write-host "$($ScoreCard.Scores[$Index].Name)"}
     else {
-      Write-Host "$($ScoreCard.Scores[$Index].Name) " -NoNewline
+      if ($ScoreCard.Scores[$Index].Value -lt 10) {$Spc = '  '}
+      else {$Spc = ' '}
+      $Dots = 23 - $ScoreCard.Scores[$Index].Name.Length
+      $Name = $ScoreCard.Scores[$Index].Name + "." * $dots
+      Write-Host "$Name$Spc" -NoNewline
       Write-Host  -ForegroundColor Yellow "$($ScoreCard.Scores[$Index].Value)"
     }
   }
-  Write-Host '-------------------------------'
-  Write-Host "Total Score " -NoNewline
+  Write-Host $Underline
+  if ($UpTotal -lt 10) {$UTSpc = ' '}
+  else {$UTSpc = ''}
+  if ($Bonus -lt 10) {$BSpc = ' '}
+  else {$BSpc = ''}
+  if ($UpTotalWithBonus -lt 10) {$UTBSpc = ' '}
+  else {$UTBSpc = ''}
+  Write-Host " Total Score.............. $UTSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$UpTotal"  
-  Write-Host "BONUS " -NoNewline
+  Write-Host " BONUS.................... $BSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$Bonus"
-  Write-Host "Upper Score " -NoNewline
+  Write-Host " Upper Score.............. $UTBSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$UPTotalWithBonus"
-  Write-Host '-------------------------------'
-  Write-Host "LOWER SECTION"
+  Write-Host $Underline
+  Write-Host
+  Write-Host  -ForegroundColor Yellow "                LOWER SECTION"
+  Write-Host $Underline
   foreach ($Index in @(6..12)) {
-    Write-Host -ForegroundColor Green $MyScoreCard.Scores[$Index].Label -NoNewline
+    Write-Host -ForegroundColor Green " $($MyScoreCard.Scores[$Index].Label)"-NoNewline
     if ($ScoreCard.Scores[$Index].PlayCount -eq 0) {Write-host "$($ScoreCard.Scores[$Index].Name)"}
     else {
-      Write-Host "$($ScoreCard.Scores[$Index].Name) " -NoNewline
+      if ($ScoreCard.Scores[$Index].Value -lt 10) {$Spc = '  '}
+      else {$Spc = ' '}      
+      $Dots = 23 - $ScoreCard.Scores[$Index].Name.Length
+      $Name = $ScoreCard.Scores[$Index].Name + "." * $dots
+      Write-Host "$Name$Spc" -NoNewline
       Write-Host  -ForegroundColor Yellow "$($ScoreCard.Scores[$Index].Value)"
     }
   }
-  Write-Host '-------------------------------'
-  Write-Host "Lower Total Score " -NoNewline
+  Write-Host $Underline
+  if ($LowScore -lt 10) {$LSSpc = ' '}
+  else {$LSSpc = ''}
+  if ($GTScore -lt 10) {$GTSpc = ' '}
+  else {$GTSpc = ''}
+  Write-Host " Lower Total Score........ $LSSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$LowScore"
-  Write-Host "Upper Score " -NoNewline
+  Write-Host " Upper Score.............. $UTBSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$UpTotalWithBonus"
-  Write-Host "Grand Total Score " -NoNewline
+  Write-Host " Grand Total Score........ $GTSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$GTScore"
-  Write-Host '-------------------------------'
+  Write-Host $Underline
   Write-Host
 }
 
@@ -197,12 +220,16 @@ function Show-Dice (
   [int[]]$DiceFaces,
   [int]$RollNumber
   ) {
-  Write-Host -ForegroundColor DarkGreen  -BackgroundColor Gray 'Dice   ' -NoNewline
-  Write-Host -ForegroundColor DarkGreen -BackgroundColor Gray "Roll Attempt: $RollNumber"
-  Write-Host -ForegroundColor Cyan ' A    B    C    D    E'
-  Write-Host -ForegroundColor Yellow -NoNewline '['
-  Write-Host -ForegroundColor Yellow  ($DiceFaces -join "]  [") -NoNewline 
-  Write-Host -ForegroundColor Yellow  "]"
+  Write-Host -ForegroundColor DarkGreen  -BackgroundColor Black ' Dice     ' -NoNewline
+  Write-Host -ForegroundColor DarkGreen -BackgroundColor Black "Roll Attempt:" -NoNewline 
+  Write-Host -ForegroundColor Yellow -BackgroundColor Black "$RollNumber "
+  Write-Host -BackgroundColor Black '                         '
+  Write-Host -ForegroundColor Cyan  -BackgroundColor Black '  A    B    C    D    E  '
+  Write-Host -ForegroundColor Yellow  -BackgroundColor Black -NoNewline ' ['
+  Write-Host -ForegroundColor Yellow  -BackgroundColor Black  ($DiceFaces -join "]  [") -NoNewline 
+  Write-Host -ForegroundColor Yellow  -BackgroundColor Black  "] "
+  Write-Host -BackgroundColor Black '                         '
+
 }
 
 
@@ -217,13 +244,15 @@ do {
   $DiceRollAttempts=0
   do {
     $DiceRollAttempts++
-    Write-Debug 'Change Dice here $DiceValues'
     Show-ScoreCard -ScoreCard $MyScoreCard
     Show-Dice -DiceFaces $DiceValues -RollNumber $DiceRollAttempts
     if ($DiceRollAttempts -le 2) {
-      Write-Host "Re-Roll which dice? " -NoNewline
-      [Char[]]$DiceToReRoll = ((Read-Host) -replace '[^a-e]','').Trim().ToCharArray() | Select-Object -Unique | Sort-Object
-      #Write-Debug 'after dice to reroll'
+      do {
+        Write-Host -ForegroundColor Cyan  -BackgroundColor Black "     Re-Roll which dice? " -NoNewline
+        $DiceToReRoll = Read-Host
+      }
+      while ($DiceToReRoll -match '[^a-e]')
+      [Char[]]$DiceToReRoll = ($DiceToReRoll -replace '[^a-e]','').ToCharArray() | Select-Object -Unique | Sort-Object
       if ($DiceToReRoll.Count -eq 0) {
         $Script:DiceRollAttempts = 2
         continue
@@ -237,10 +266,12 @@ do {
     }
     elseif ($DiceRollAttempts -eq 3) {
       do {
-        Write-Host -ForegroundColor Green 'Which scoring category are you going to choose ' -NoNewline
-        $ScoreCategory = ((Read-host).Trim().ToLower())  -replace '[^a-m]',''
+        do {
+          Write-Host -ForegroundColor Green  -BackgroundColor Black ' Which scoring category? ' -NoNewline
+          $ScoreCategory = ((Read-host).Trim().ToLower().substring(0,1))  -replace '[^a-m]','' 
+        } until ($ScoreCategory -match '^[a-m]$')
         $ScoreIndex = ([byte][char]$ScoreCategory) - 97
-      } until ($ScoreCategory -match '^[a-m]$' -and $MyScoreCard.Scores[$ScoreIndex].PlayCount -lt $MyScoreCard.Scores[$ScoreIndex].LegalPlayCount)
+      } until ($MyScoreCard.Scores[$ScoreIndex].PlayCount -lt $MyScoreCard.Scores[$ScoreIndex].LegalPlayCount)
       $MyScoreCard.SetScore($ScoreIndex,$DiceValues)
       Write-Debug -Message 'After score set'
       $DiceValues = Get-DiceRoll
