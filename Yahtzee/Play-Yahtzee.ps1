@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
-  Short description
+  Yahtzee Solitare
 .DESCRIPTION
-  Long description
+  This currently allows one player to play the traditional 
+  game of Yahtzee
 .EXAMPLE
-  PS C:\> <example usage>
-  Explanation of what the example does
-.INPUTS
-  Inputs (if any)
-.OUTPUTS
-  Output (if any)
+  Play-Yahtzee.ps1
+  This will show a tradtional Yahtzee score board and at the
+  bottom show the current dice faces
 .NOTES
   General notes
+    Created by: Brent Denny
+    Created on: 6 Nov 2020
 #>
 [CmdletBinding()]
 Param ()
@@ -110,7 +110,10 @@ Class YahtzeeCard {
         $UniqueDiceCount = ($DiceValues | Select-Object -Unique).Count 
         if ($UniqueDiceCount -eq 1) {
           if ($this.Scores[$Position].PlayCount -eq 0) {$YahtzeeScore = 50}
-          else {$YahtzeeScore = 100}
+          else {
+            $YahtzeeScore = 100
+            $Script:GameTurns--
+          }
           $this.Scores[$Position].Value = $this.Scores[$Position].Value + $YahtzeeScore
           $this.Scores[$Position].PlayCount++ 
         }
@@ -137,11 +140,12 @@ function Get-DiceRoll {
   1..$DiceCount | ForEach-Object {1..6 | Get-Random }
 }
 
+
 function Show-ScoreCard {
   Param(
     [YahtzeeCard]$ScoreCard
   )
-  #Clear-Host
+  Clear-Host
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
   $UpTotal = ($ScoreCard.Scores[0..5].Value | Measure-Object -Sum).Sum
@@ -162,7 +166,7 @@ function Show-ScoreCard {
     }
   }
   Write-Host '-------------------------------'
-  Write-Host "Total Score $UpTotal" 
+  Write-Host "Total Score $UpTotal"  
   Write-Host "BONUS $Bonus"
   Write-Host "Upper Score $UPTotalWithBonus"
   Write-Host '-------------------------------'
@@ -207,20 +211,30 @@ do {
   $DiceRollAttempts=0
   do {
     $DiceRollAttempts++
+    Write-Debug 'Change Dice here $DiceValues'
     Show-ScoreCard -ScoreCard $MyScoreCard
     Show-Dice -DiceFaces $DiceValues -RollNumber $DiceRollAttempts
     if ($DiceRollAttempts -le 2) {
       Write-Host "Re-Roll which dice? " -NoNewline
       [Char[]]$DiceToReRoll = ((Read-Host) -replace '[^a-e]','').Trim().ToCharArray() | Select-Object -Unique | Sort-Object
-      foreach ($ReRoll in $DiceToReRoll) {
-        $Index = ([byte][char]$ReRoll) - 97
-        $DiceValues[$Index] = Get-DiceRoll -DiceCount 1
+      #Write-Debug 'after dice to reroll'
+      if ($DiceToReRoll.Count -eq 0) {
+        $Script:DiceRollAttempts = 2
+        continue
+      }
+      else {
+        foreach ($ReRoll in $DiceToReRoll) {
+          $Index = ([byte][char]$ReRoll) - 97
+          $DiceValues[$Index] = Get-DiceRoll -DiceCount 1
+        }
       }
     }
     elseif ($DiceRollAttempts -eq 3) {
-      Write-Host -ForegroundColor Green 'Which scoring category are you going to choose' -NoNewline
-      $ScoreCategory = ((Read-host).Trim().ToLower())  -replace '[^a-m]',''
-      $ScoreIndex = ([byte][char]$ScoreCategory) - 97
+      do {
+        Write-Host -ForegroundColor Green 'Which scoring category are you going to choose ' -NoNewline
+        $ScoreCategory = ((Read-host).Trim().ToLower())  -replace '[^a-m]',''
+        $ScoreIndex = ([byte][char]$ScoreCategory) - 97
+      } until ($ScoreCategory -match '^[a-m]$' -and $MyScoreCard.Scores[$ScoreIndex].PlayCount -lt $MyScoreCard.Scores[$ScoreIndex].LegalPlayCount)
       $MyScoreCard.SetScore($ScoreIndex,$DiceValues)
       Write-Debug -Message 'After score set'
       $DiceValues = Get-DiceRoll
