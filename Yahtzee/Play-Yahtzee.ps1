@@ -166,9 +166,12 @@ function Show-ScoreCard {
     }
   }
   Write-Host '-------------------------------'
-  Write-Host "Total Score $UpTotal"  
-  Write-Host "BONUS $Bonus"
-  Write-Host "Upper Score $UPTotalWithBonus"
+  Write-Host "Total Score " -NoNewline
+  Write-Host -ForegroundColor Cyan "$UpTotal"  
+  Write-Host "BONUS " -NoNewline
+  Write-Host -ForegroundColor Cyan "$Bonus"
+  Write-Host "Upper Score " -NoNewline
+  Write-Host -ForegroundColor Cyan "$UPTotalWithBonus"
   Write-Host '-------------------------------'
   Write-Host "LOWER SECTION"
   foreach ($Index in @(6..12)) {
@@ -180,9 +183,12 @@ function Show-ScoreCard {
     }
   }
   Write-Host '-------------------------------'
-  Write-Host "Lower Total Score $LowScore"
-  Write-Host "Upper Score $UpTotalWithBonus"
-  Write-Host "Grand Total Score $GTScore"
+  Write-Host "Lower Total Score " -NoNewline
+  Write-Host -ForegroundColor Cyan "$LowScore"
+  Write-Host "Upper Score " -NoNewline
+  Write-Host -ForegroundColor Cyan "$UpTotalWithBonus"
+  Write-Host "Grand Total Score " -NoNewline
+  Write-Host -ForegroundColor Cyan "$GTScore"
   Write-Host '-------------------------------'
   Write-Host
 }
