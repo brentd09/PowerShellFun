@@ -171,19 +171,22 @@ function Show-ScoreCard {
       Write-Host "$Name$Spc" -NoNewline
       Write-Host  -ForegroundColor Yellow "$($ScoreCard.Scores[$Index].Value)"
     }
-  }
+  } 
   Write-Host $Underline
-  if ($UpTotal -lt 10) {$UTSpc = ' '}
+  if ($UpTotal -lt 10) {$UTSpc = '  '}
+  elseif ($UpTotal -lt 100) {$UTSpc = ' '}
   else {$UTSpc = ''}
-  if ($Bonus -lt 10) {$BSpc = ' '}
+  if ($Bonus -lt 10) {$BSpc = '  '}
+  elseif ($Bonus -lt 100) {$BSpc = ' '}
   else {$BSpc = ''}
-  if ($UpTotalWithBonus -lt 10) {$UTBSpc = ' '}
+  if ($UpTotalWithBonus -lt 10) {$UTBSpc = '  '}
+  elseif ($UpTotalWithBonus -lt 100) {$UTBSpc = ' '}
   else {$UTBSpc = ''}
-  Write-Host " Total Score.............. $UTSpc" -NoNewline
+  Write-Host " Total Score............. $UTSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$UpTotal"  
-  Write-Host " BONUS.................... $BSpc" -NoNewline
+  Write-Host " BONUS................... $BSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$Bonus"
-  Write-Host " Upper Score.............. $UTBSpc" -NoNewline
+  Write-Host " Upper Score............. $UTBSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$UPTotalWithBonus"
   Write-Host $Underline
   Write-Host
@@ -202,15 +205,17 @@ function Show-ScoreCard {
     }
   }
   Write-Host $Underline
-  if ($LowScore -lt 10) {$LSSpc = ' '}
+  if ($LowScore -lt 10) {$LSSpc = '  '}
+  elseif ($LowScore -lt 100) {$LSSpc = ' '}
   else {$LSSpc = ''}
-  if ($GTScore -lt 10) {$GTSpc = ' '}
+  if ($GTScore -lt 10) {$GTSpc = '  '}
+  elseif ($GTScore -lt 100) {$LSSpc = ' '}
   else {$GTSpc = ''}
-  Write-Host " Lower Total Score........ $LSSpc" -NoNewline
+  Write-Host " Lower Total Score....... $LSSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$LowScore"
-  Write-Host " Upper Score.............. $UTBSpc" -NoNewline
+  Write-Host " Upper Score............. $UTBSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$UpTotalWithBonus"
-  Write-Host " Grand Total Score........ $GTSpc" -NoNewline
+  Write-Host " Grand Total Score....... $GTSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$GTScore"
   Write-Host $Underline
   Write-Host
