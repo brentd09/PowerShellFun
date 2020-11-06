@@ -64,7 +64,7 @@ Class YahtzeeCard {
       elseif ($Position -in @(6,7)) {
         $Kind = $Position - 3
         $DiceGroup = $DiceValues | Group-Object | Where-Object {$_.Count -ge $Kind}
-        $RelevantDice = $DiceGroup.Count
+        $RelevantDice = $DiceGroup.Name.Count
         if ($RelevantDice -eq 1) {
           $PositionScore = ($DiceValues | Measure-Object -Sum).Sum
           $this.Scores[$Position].Value = $PositionScore
@@ -90,14 +90,14 @@ Class YahtzeeCard {
         }
       }
       elseif ($Position -in @(9,10)) {
-        $ValuesInRow = $Position - 5
+        $ValuesInRow = $Position - 6
         $UniqueDiceSorted = $DiceValues |  Select-Object -Unique | Sort-Object 
         $UniqueDiceSortedCount = $UniqueDiceSorted.Count
         if ($UniqueDiceSortedCount -lt 4) {$PositionScore = 0}
         else {
           $SeqCount = 0
-          foreach ($Index in @(0..$UniqueDiceSortedCount-2)) {
-            if ($DiceValues[$Index] -eq $DiceValues[$Index+1] - 1) {$SeqCount++}
+          foreach ($Index in @(0..($UniqueDiceSortedCount-2))) {
+            if ($UniqueDiceSorted[$Index] -eq $UniqueDiceSorted[$Index+1] - 1) {$SeqCount++}
             else {$SeqCount = 0}
           }
           if ($SeqCount -ge $ValuesInRow) {$PositionScore = ($ValuesInRow - 1) * 10} 
@@ -111,9 +111,12 @@ Class YahtzeeCard {
         if ($UniqueDiceCount -eq 1) {
           if ($this.Scores[$Position].PlayCount -eq 0) {$YahtzeeScore = 50}
           else {$YahtzeeScore = 100}
-          $PositionScore = $YahtzeeScore
-          $this.Scores[$Position].Value = $this.Scores[$Position].Value + $PositionScore
+          $this.Scores[$Position].Value = $this.Scores[$Position].Value + $YahtzeeScore
           $this.Scores[$Position].PlayCount++ 
+        }
+        else {
+          $this.Scores[$Position].Value = 0
+          $this.Scores[$Position].PlayCount = 4
         }
       }
       elseif ($Position -eq 12) {
@@ -136,9 +139,7 @@ function Get-DiceRoll {
 
 function Show-ScoreCard {
   Param(
-    [YahtzeeCard]$ScoreCard,
-    [int[]]$DiceValues,
-    [int]$RollAttempt
+    [YahtzeeCard]$ScoreCard
   )
   #Clear-Host
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
@@ -151,11 +152,14 @@ function Show-ScoreCard {
   $GTScore = $UpTotalWithBonus + $LowScore
   Write-Host 'YAHTZEE'
   Write-Host 
-  Write-host 'UPPER SECTION'
+  Write-Host 'UPPER SECTION'
   foreach ($Index in @(0..5)) {
     Write-Host -ForegroundColor Green $MyScoreCard.Scores[$Index].Label -NoNewline
     if ($ScoreCard.Scores[$Index].PlayCount -eq 0) {Write-host "$($ScoreCard.Scores[$Index].Name)"}
-    else {Write-host "$($ScoreCard.Scores[$Index].Name) $($ScoreCard.Scores[$Index].Value)"}
+    else {
+      Write-Host "$($ScoreCard.Scores[$Index].Name) " -NoNewline
+      Write-Host  -ForegroundColor Yellow "$($ScoreCard.Scores[$Index].Value)"
+    }
   }
   Write-Host '-------------------------------'
   Write-Host "Total Score $UpTotal" 
@@ -166,7 +170,10 @@ function Show-ScoreCard {
   foreach ($Index in @(6..12)) {
     Write-Host -ForegroundColor Green $MyScoreCard.Scores[$Index].Label -NoNewline
     if ($ScoreCard.Scores[$Index].PlayCount -eq 0) {Write-host "$($ScoreCard.Scores[$Index].Name)"}
-    else {Write-host "$($ScoreCard.Scores[$Index].Name) $($ScoreCard.Scores[$Index].Value)"}
+    else {
+      Write-Host "$($ScoreCard.Scores[$Index].Name) " -NoNewline
+      Write-Host  -ForegroundColor Yellow "$($ScoreCard.Scores[$Index].Value)"
+    }
   }
   Write-Host '-------------------------------'
   Write-Host "Lower Total Score $LowScore"
@@ -174,14 +181,18 @@ function Show-ScoreCard {
   Write-Host "Grand Total Score $GTScore"
   Write-Host '-------------------------------'
   Write-Host
-  Write-Host -ForegroundColor Gray 'Dice   ' -NoNewline
-  Write-Host -ForegroundColor Cyan "Roll Attempt: $RollAttempt"
+}
+
+function Show-Dice (
+  [int[]]$DiceFaces,
+  [int]$RollNumber
+  ) {
+  Write-Host -ForegroundColor DarkGreen  -BackgroundColor Gray 'Dice   ' -NoNewline
+  Write-Host -ForegroundColor DarkGreen -BackgroundColor Gray "Roll Attempt: $RollNumber"
   Write-Host -ForegroundColor Cyan ' A    B    C    D    E'
   Write-Host -ForegroundColor Yellow -NoNewline '['
-  Write-Host -ForegroundColor Yellow  ($DiceValues -join "]  [") -NoNewline 
+  Write-Host -ForegroundColor Yellow  ($DiceFaces -join "]  [") -NoNewline 
   Write-Host -ForegroundColor Yellow  "]"
-
-
 }
 
 
@@ -190,7 +201,30 @@ Clear-Host
 $NewScoreObjects = 0..12 | ForEach-Object {[YahtzeeScore]::New($_)}
 [YahtzeeCard]$MyScoreCard = [YahtzeeCard]::New($NewScoreObjects)
 $DiceValues = Get-DiceRoll
+$GameTurns = 0
 do {
-  Show-ScoreCard -ScoreCard $MyScoreCard -DiceValues $DiceValues
-  Read-Host "wow"
-} until ($false)
+  $GameTurns++
+  $DiceRollAttempts=0
+  do {
+    $DiceRollAttempts++
+    Show-ScoreCard -ScoreCard $MyScoreCard
+    Show-Dice -DiceFaces $DiceValues -RollNumber $DiceRollAttempts
+    if ($DiceRollAttempts -le 2) {
+      Write-Host "Re-Roll which dice? " -NoNewline
+      [Char[]]$DiceToReRoll = ((Read-Host) -replace '[^a-e]','').Trim().ToCharArray() | Select-Object -Unique | Sort-Object
+      foreach ($ReRoll in $DiceToReRoll) {
+        $Index = ([byte][char]$ReRoll) - 97
+        $DiceValues[$Index] = Get-DiceRoll -DiceCount 1
+      }
+    }
+    elseif ($DiceRollAttempts -eq 3) {
+      Write-Host -ForegroundColor Green 'Which scoring category are you going to choose' -NoNewline
+      $ScoreCategory = ((Read-host).Trim().ToLower())  -replace '[^a-m]',''
+      $ScoreIndex = ([byte][char]$ScoreCategory) - 97
+      $MyScoreCard.SetScore($ScoreIndex,$DiceValues)
+      Write-Debug -Message 'After score set'
+      $DiceValues = Get-DiceRoll
+    }
+  } until ($DiceRollAttempts -eq 3)
+} until ($GameTurns -eq 13 )
+Show-ScoreCard -ScoreCard $MyScoreCard
