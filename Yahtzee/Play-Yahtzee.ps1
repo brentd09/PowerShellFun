@@ -209,7 +209,7 @@ function Show-ScoreCard {
   elseif ($LowScore -lt 100) {$LSSpc = ' '}
   else {$LSSpc = ''}
   if ($GTScore -lt 10) {$GTSpc = '  '}
-  elseif ($GTScore -lt 100) {$LSSpc = ' '}
+  elseif ($GTScore -lt 100) {$GTSpc = ' '}
   else {$GTSpc = ''}
   Write-Host " Lower Total Score....... $LSSpc" -NoNewline
   Write-Host -ForegroundColor Cyan "$LowScore"
