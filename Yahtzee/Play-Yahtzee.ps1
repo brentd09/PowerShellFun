@@ -3,7 +3,8 @@
   Yahtzee Solitare
 .DESCRIPTION
   This currently allows one player to play the traditional 
-  game of Yahtzee
+  game of Yahtzee, the game will simulate the rolling of the 
+  dice that you have chosen to discard.
 .EXAMPLE
   Play-Yahtzee.ps1
   This will show a tradtional Yahtzee score board and at the
