@@ -230,7 +230,12 @@ function Show-Dice {
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $Coords.X = 25;$Coords.Y = 36 
   $host.UI.RawUI.CursorPosition = $Coords
-  Write-Host '                     ' -NoNewline
+  Write-Host '                                                          ' -NoNewline
+  $Coords.X = 0;$Coords.Y = 37
+  $host.UI.RawUI.CursorPosition = $Coords
+  Write-Host '                                                          ' -NoNewline
+  Write-Host '                                                          ' -NoNewline
+  Write-Host '                                                          ' -NoNewline
   $Coords.X = 0 ;$Coords.Y = 31
   $host.UI.RawUI.CursorPosition = $Coords
   0..20 | ForEach-Object {
