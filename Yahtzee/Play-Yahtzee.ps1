@@ -145,7 +145,7 @@ function Show-ScoreCard {
   Param(
     [YahtzeeCard]$ScoreCard
   )
-  Clear-Host
+  # Clear-Host
   $Underline = ' ----------------------------'
   $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
   $host.UI.RawUI.CursorPosition = $Coords
@@ -157,8 +157,7 @@ function Show-ScoreCard {
   $GTScore = $UpTotalWithBonus + $LowScore
   Write-Host -ForegroundColor Yellow '          YAHTZEE'
   Write-Host -ForegroundColor Yellow '          -------'
-  Write-Host 
-  Write-Host  -ForegroundColor Yellow '               UPPER SECTION'
+  Write-Host  -ForegroundColor Yellow '                UPPER SECTION'
   Write-Host $Underline
   foreach ($Index in @(0..5)) {
     Write-Host -ForegroundColor Green " $($MyScoreCard.Scores[$Index].Label)" -NoNewline
@@ -221,20 +220,47 @@ function Show-ScoreCard {
   Write-Host
 }
 
-function Show-Dice (
-  [int[]]$DiceFaces,
-  [int]$RollNumber
-  ) {
+function Show-Dice {
+  Param (
+    [int[]]$DiceFaces,
+    [int]$RollNumber,
+    [int[]]$ReRollIndexes = $null
+  )
+  $BackupFaces = $DiceFaces.Clone()
+  $Coords = New-Object -TypeName System.Management.Automation.Host.Coordinates
+  $Coords.X = 25;$Coords.Y = 36 
+  $host.UI.RawUI.CursorPosition = $Coords
+  Write-Host '                     ' -NoNewline
+  $Coords.X = 0 ;$Coords.Y = 31
+  $host.UI.RawUI.CursorPosition = $Coords
+  0..20 | ForEach-Object {
+    if ($ReRollIndexes.Count -gt 0) {
+      foreach ($Index in $ReRollIndexes) {
+        $DiceFaces[$index] = (1..6) | get-random
+      }
+      $host.UI.RawUI.CursorPosition = $Coords
+      Write-Host -ForegroundColor DarkGreen  -BackgroundColor Black ' Dice     ' -NoNewline
+      Write-Host -ForegroundColor DarkGreen -BackgroundColor Black "Roll Attempt:" -NoNewline 
+      Write-Host -ForegroundColor Yellow -BackgroundColor Black "$RollNumber "
+      Write-Host -BackgroundColor Black '                         '
+      Write-Host -ForegroundColor Cyan  -BackgroundColor Black '  A    B    C    D    E  '
+      Write-Host -ForegroundColor Yellow  -BackgroundColor Black -NoNewline ' ['
+      Write-Host -ForegroundColor Yellow  -BackgroundColor Black  ($DiceFaces -join "]  [") -NoNewline 
+      Write-Host -ForegroundColor Yellow  -BackgroundColor Black  "] "
+      Write-Host -BackgroundColor Black '                         '
+      Start-Sleep -Milliseconds 30
+    }
+  }
+  $host.UI.RawUI.CursorPosition = $Coords
   Write-Host -ForegroundColor DarkGreen  -BackgroundColor Black ' Dice     ' -NoNewline
   Write-Host -ForegroundColor DarkGreen -BackgroundColor Black "Roll Attempt:" -NoNewline 
   Write-Host -ForegroundColor Yellow -BackgroundColor Black "$RollNumber "
   Write-Host -BackgroundColor Black '                         '
   Write-Host -ForegroundColor Cyan  -BackgroundColor Black '  A    B    C    D    E  '
   Write-Host -ForegroundColor Yellow  -BackgroundColor Black -NoNewline ' ['
-  Write-Host -ForegroundColor Yellow  -BackgroundColor Black  ($DiceFaces -join "]  [") -NoNewline 
+  Write-Host -ForegroundColor Yellow  -BackgroundColor Black  ($BackupFaces -join "]  [") -NoNewline 
   Write-Host -ForegroundColor Yellow  -BackgroundColor Black  "] "
   Write-Host -BackgroundColor Black '                         '
-
 }
 
 
@@ -247,24 +273,27 @@ $GameTurns = 0
 do {
   $GameTurns++
   $DiceRollAttempts=0
+  [int[]]$NewDiceIndexes = @()
   do {
     $DiceRollAttempts++
     Show-ScoreCard -ScoreCard $MyScoreCard
-    Show-Dice -DiceFaces $DiceValues -RollNumber $DiceRollAttempts
+    Show-Dice -DiceFaces $DiceValues -RollNumber $DiceRollAttempts -ReRollIndexes $NewDiceIndexes
     if ($DiceRollAttempts -le 2) {
       do {
         Write-Host -ForegroundColor Cyan  -BackgroundColor Black "     Re-Roll which dice? " -NoNewline
         $DiceToReRoll = Read-Host
-      }
-      while ($DiceToReRoll -match '[^a-e]')
-      [Char[]]$DiceToReRoll = ($DiceToReRoll -replace '[^a-e]','').ToCharArray() | Select-Object -Unique | Sort-Object
-      if ($DiceToReRoll.Count -eq 0) {
+      } while ($DiceToReRoll -match '[^a-e]')
+      if ($DiceToReRoll -match "[a-e]") {[Char[]]$DiceToReRoll = ($DiceToReRoll -replace '[^a-e]','').ToCharArray() | Select-Object -Unique | Sort-Object}
+      if ($DiceToReRoll -notmatch '[a-e]') {
         $Script:DiceRollAttempts = 2
+        $NewDiceIndexes = @()
         continue
       }
       else {
+        [int[]]$NewDiceIndexes = @()
         foreach ($ReRoll in $DiceToReRoll) {
           $Index = ([byte][char]$ReRoll) - 97
+          $NewDiceIndexes += $Index
           $DiceValues[$Index] = Get-DiceRoll -DiceCount 1
         }
       }
@@ -283,4 +312,5 @@ do {
     }
   } until ($DiceRollAttempts -eq 3)
 } until ($GameTurns -eq 13 )
+Clear-Host
 Show-ScoreCard -ScoreCard $MyScoreCard
