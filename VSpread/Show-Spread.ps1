@@ -32,7 +32,7 @@
 [CmdletBinding()]
 Param(
   [int]$InfectedPercent = 2,
-  [int]$PopulationPercent = 30,
+  [int]$PopulationPercent = 60,
   [int]$InfectionCycle = 14,
   [int]$BadHealthPrecent = 3
 )
