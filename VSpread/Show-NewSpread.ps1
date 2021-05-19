@@ -138,7 +138,7 @@ Function Test-InfectedNeighbours {
 # Setup the world size
 
 $WorldSideSize = 10
-$WorldSize = $WorldSideSize * $WorldSideSize
+$WorldSize = [math]::Pow($WorldSideSize,2)
 $LastPos = $WorldSize - 1
 $World = foreach ($Pos in (0..$LastPos)) {[Location]::New($Pos, $WorldSideSize)}
 # Setup the hosts
