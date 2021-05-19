@@ -4,12 +4,22 @@ Class Location {
   [int]$LocationRow
   [int]$LocationCol
   [int]$HostID
+  [int[]]$Neighbours
 
   Location ($LocNum,$BoardSize) {
     $this.LocationNumber = $LocNum
     $this.LocationRow = [math]::Truncate($LocNum/$BoardSize)
     $this.LocationCol = $LocNum % $BoardSize
     $this.HostID = -1
+    if ($LocNum -eq 0) {$this.Neighbours = 1,$BoardSize}
+    elseif ($LocNum -eq ($BoardSize-1)) {$this.Neighbours = ($BoardSize - 2),($BoardSize - 1 + $BoardSize)}
+    elseif ($LocNum -eq ($BoardSize*($BoardSize-1))) {$this.Neighbours = ($BoardSize*($BoardSize-1)-$BoardSize),($BoardSize*($BoardSize-1)+1)}
+    elseif ($LocNum -eq ($BoardSize*$BoardSize-1)) {$this.Neighbours = ($BoardSize*$BoardSize-2),($BoardSize*$BoardSize-2-$BoardSize)}
+    elseif (($LocNum % $BoardSize) -eq 0) {$this.Neighbours = ($LocNum-$BoardSize),($LocNum+$BoardSize),($LocNum+1)}
+    elseif (($LocNum % $BoardSize) -eq ($BoardSize-1)) {$this.Neighbours = ($LocNum-$BoardSize),($LocNum+$BoardSize),($LocNum-1)}
+    elseif ([math]::Truncate($LocNum / $BoardSize) -eq 0) {$this.Neighbours = ($LocNum+$BoardSize),($LocNum-1),($LocNum+1)}
+    elseif ([math]::Truncate($LocNum / $BoardSize) -eq ($BoardSize-1)) {$this.Neighbours = ($LocNum-$BoardSize),($LocNum-1),($LocNum+1)}
+    else {$this.Neighbours = ($LocNum-$BoardSize),($LocNum+$BoardSize),($LocNum-1),($LocNum+1)}
   }
 
   [void]PlaceHost ($ID) {
@@ -89,7 +99,6 @@ Class HumanHost {
 }
 
 # Funtions
-
 function Show-World {
   Param (
     $World,
@@ -118,11 +127,17 @@ function Show-World {
   Write-Host $DayNumber
 }
 
-
+Function Test-InfectedNeighbours {
+  Param (
+    $World,
+    $HumanHosts
+  )
+  
+}
 ### Main CODE ###
 # Setup the world size
 
-$WorldSideSize = 20
+$WorldSideSize = 10
 $WorldSize = $WorldSideSize * $WorldSideSize
 $LastPos = $WorldSize - 1
 $World = foreach ($Pos in (0..$LastPos)) {[Location]::New($Pos, $WorldSideSize)}
@@ -146,7 +161,7 @@ $HumanHosts = 0..$TotalHostsIndex | ForEach-Object {
 }
 
 Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber 0
-
+<#
 do {
   foreach ($Position in $World) {
     if ($Position.HostID -eq -1 ) {continue}
@@ -163,3 +178,4 @@ do {
   # Show World
   
 } Until ($false)
+#>
