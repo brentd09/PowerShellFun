@@ -1,4 +1,8 @@
-﻿
+﻿[CmdletBinding()]
+Param(
+  [int]$WorldSideSize = 10
+)
+
 Class Location {
   [int]$LocationNumber
   [int]$LocationRow
@@ -63,7 +67,7 @@ Class HumanHost {
   [void]Infect () {
     $this.Infected = $true
     $this.DisplayChar = 'I'
-    if ($this.Age -ge 70) {$Jump = 4}
+    if ($this.Age -ge 70) {$Jump = 2}
     else {$Jump = 1}
     $this.Health -= $Jump
     if ($this.Health -le 0) {
@@ -106,7 +110,7 @@ function Show-World {
     $WorldSideSize,
     $DayNumber
   )
-  Clear-Host
+  #Clear-Host
   $LastWorldPos = [math]::Pow($WorldSideSize,2) - 1 
   0..$LastWorldPos | ForEach-Object {
     if (($_ % $WorldSideSize) -eq 0) {Write-Host}
@@ -132,18 +136,26 @@ Function Test-InfectedNeighbours {
     $World,
     $HumanHosts
   )
-  
+  [int[]]$HostIDToInfect = @()
+  foreach ($WorldPos in $World) {
+    if ($WorldPos.HostID -eq -1) {continue}
+    [int[]]$Neighbours = foreach ($Neighbour in $WorldPos.Neighbours) {if ($World[$Neighbour].HostID -ne -1) {$Neighbour}}
+    if ($Neighbours.Count -gt 0 -and $HumanHosts[$World[$Neighbours].HostID].Infected -contains $true) {$HostIDToInfect += $WorldPos.HostID}
+  }
+  foreach ($HostID in $HostIDToInfect) {
+    $HumanHosts[$HostID].Infect()
+  }
 }
 ### Main CODE ###
 # Setup the world size
 
-$WorldSideSize = 10
+
 $WorldSize = [math]::Pow($WorldSideSize,2)
 $LastPos = $WorldSize - 1
 $World = foreach ($Pos in (0..$LastPos)) {[Location]::New($Pos, $WorldSideSize)}
 # Setup the hosts
-$MostHosts = [math]::Truncate($WorldSize / 2)
-$LeastHosts = [math]::Truncate($WorldSize / 5)
+$MostHosts = [math]::Truncate($WorldSize / 4)
+$LeastHosts = [math]::Truncate($WorldSize / 10)
 $TotalHosts = $LeastHosts..$MostHosts | Get-Random
 $TotalHostsIndex = $TotalHosts - 1
 $InitialHostPositions = 0..$LastPos | Get-Random -Count $TotalHosts
@@ -161,6 +173,9 @@ $HumanHosts = 0..$TotalHostsIndex | ForEach-Object {
 }
 
 Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber 0
+Start-Sleep -Seconds 2
+Test-InfectedNeighbours -World $World -HumanHosts $HumanHosts
+Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber 1
 <#
 do {
   foreach ($Position in $World) {
