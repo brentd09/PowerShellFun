@@ -18,7 +18,7 @@ Class Location {
     if ($LocNum -eq 0) {$this.Neighbours = 1,$BoardSize}
     elseif ($LocNum -eq ($BoardSize-1)) {$this.Neighbours = ($BoardSize - 2),($BoardSize - 1 + $BoardSize)}
     elseif ($LocNum -eq ($BoardSize*($BoardSize-1))) {$this.Neighbours = ($BoardSize*($BoardSize-1)-$BoardSize),($BoardSize*($BoardSize-1)+1)}
-    elseif ($LocNum -eq ($BoardSize*$BoardSize-1)) {$this.Neighbours = ($BoardSize*$BoardSize-2),($BoardSize*$BoardSize-2-$BoardSize)}
+    elseif ($LocNum -eq ($BoardSize*$BoardSize-1)) {$this.Neighbours = ($BoardSize*$BoardSize-2),($BoardSize*$BoardSize-1-$BoardSize)}
     elseif (($LocNum % $BoardSize) -eq 0) {$this.Neighbours = ($LocNum-$BoardSize),($LocNum+$BoardSize),($LocNum+1)}
     elseif (($LocNum % $BoardSize) -eq ($BoardSize-1)) {$this.Neighbours = ($LocNum-$BoardSize),($LocNum+$BoardSize),($LocNum-1)}
     elseif ([math]::Truncate($LocNum / $BoardSize) -eq 0) {$this.Neighbours = ($LocNum+$BoardSize),($LocNum-1),($LocNum+1)}
