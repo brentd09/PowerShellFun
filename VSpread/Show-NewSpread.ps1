@@ -173,7 +173,7 @@ $HumanHosts = 0..$TotalHostsIndex | ForEach-Object {
 }
 
 Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber 0
-Start-Sleep -Seconds 2
+#Start-Sleep -Seconds 2
 Test-InfectedNeighbours -World $World -HumanHosts $HumanHosts
 Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber 1
 <#
