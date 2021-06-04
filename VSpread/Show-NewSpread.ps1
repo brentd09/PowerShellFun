@@ -81,6 +81,15 @@ Class HumanHost {
     }
   }
 
+  [void]Incubate () {
+    If ($this.Infected -eq $true) {
+      $this.DaysInfected++
+      $Chance = (1..100 | Get-Random)
+      if ($Chance -le 30) {$this.Health--}
+      if ($this.Health -eq 0) {$this.Died()}
+    }
+  }
+
   [void]Died () {
     $this.Alive = $false
     $this.Infected = $false
@@ -110,7 +119,7 @@ function Show-World {
     $WorldSideSize,
     $DayNumber
   )
-  #Clear-Host
+  Clear-Host
   $LastWorldPos = [math]::Pow($WorldSideSize,2) - 1 
   0..$LastWorldPos | ForEach-Object {
     if (($_ % $WorldSideSize) -eq 0) {Write-Host}
@@ -129,9 +138,35 @@ function Show-World {
   }
   Write-Host -ForegroundColor Yellow -NoNewline "`n`nDay: " 
   Write-Host $DayNumber
+  Write-Host
+  $Stats = @{
+    UninfectedCount = ($HumanHosts | Where-Object {$_.Infected -eq $false -and $_.Alive -eq $true -and $_.Recovered -eq $false}).Count
+    InfectedCount = ($HumanHosts | Where-Object {$_.Infected -eq $true}).Count
+    RecoveredCount = ($HumanHosts | Where-Object {$_.Recovered -eq $true}).Count
+    DeathToll = ($HumanHosts | Where-Object {$_.Alive -eq $false}).Count
+  }
+  Write-Host -ForegroundColor Yellow -NoNewline  "Uninfected % :"
+  "{0,3}" -f "$([math]::Round($Stats.UninfectedCount/$HumanHosts.count * 100,0))"
+  Write-Host -ForegroundColor Yellow -NoNewline  "Infected % :"
+  "{0,5}" -f "$([math]::Round($Stats.InfectedCount/$HumanHosts.count * 100,0))"
+  Write-Host -ForegroundColor Yellow -NoNewline  "Recovered % :"
+  "{0,4}" -f "$([math]::Round($Stats.RecoveredCount/$HumanHosts.count * 100,0))"
+  Write-Host -ForegroundColor Yellow -NoNewline  "Dead % :"
+  "{0,9}" -f "$([math]::Round($Stats.DeathToll/$HumanHosts.count * 100,0))"
 }
 
-Function Test-InfectedNeighbours {
+function Test-HostHealth {
+  Param (
+    $HumanHosts,
+    $VirusLife
+  )
+  foreach ($Human in $HumanHosts) {
+    $Human.Incubate()
+    if ($Human.DaysInfected -gt $VirusLife) {$Human.Recover()}
+  }
+}
+
+function Test-InfectedNeighbours {
   Param (
     $World,
     $HumanHosts
@@ -145,6 +180,20 @@ Function Test-InfectedNeighbours {
   foreach ($HostID in $HostIDToInfect) {
     $HumanHosts[$HostID].Infect()
   }
+}
+function Move-Host {
+  Param (
+    $World,
+    $HumanHost
+  )
+  if ($HumanHost.Alive -eq $false) {return}
+  $HostPosition = $World | Where-Object {$_.HostID -eq $HumanHost.hostID}
+  $ValidNeighbours = $HostPosition.Neighbours | ForEach-Object {if ($World[$_].HostID -eq -1) {$_}}
+  if ($ValidNeighbours.Count -gt 0) {
+    $RandomValNeibr = $ValidNeighbours | Get-Random
+    $World[$RandomValNeibr].PlaceHost($HumanHost.HostID)
+    $World[$HostPosition.LocationNumber].RemoveHost()
+  }  
 }
 ### Main CODE ###
 # Setup the world size
@@ -171,26 +220,16 @@ $HumanHosts = 0..$TotalHostsIndex | ForEach-Object {
   $HostPos = $InitialHostPositions[$_]
   $World[$HostPos].PlaceHost($HumanHosts[$_].HostID)
 }
-
-Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber 0
-#Start-Sleep -Seconds 2
-Test-InfectedNeighbours -World $World -HumanHosts $HumanHosts
-Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber 1
-<#
+$Day = 0  
+Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber $Day
 do {
-  foreach ($Position in $World) {
-    if ($Position.HostID -eq -1 ) {continue}
-
+  Test-InfectedNeighbours -World $World -HumanHosts $HumanHosts
+  Test-HostHealth -HumanHosts $HumanHosts -VirusLife 14
+  # Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber $Day
+  foreach ($Human in $HumanHosts) {
+    Move-Host -World $World -HumanHost $Human
   }
-  # Check if neighbours are infected
-  
-  # Spread Virus and check for death
-
-  # Show World
-  
-  # Move Hosts
-
-  # Show World
-  
-} Until ($false)
-#>
+  Show-World -World $World -HumanHosts $HumanHosts -WorldSideSize $WorldSideSize -DayNumber $Day
+  Start-Sleep -Milliseconds 30
+  $Day++
+} until ($HumanHosts.Infected -notcontains $true )
