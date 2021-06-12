@@ -34,7 +34,7 @@ Class GOLCell {
     $this.CurrentState = ($true,$false) | Get-Random
     $this.NextGenState = $true
     if ($this.CurrentState -eq $true) {$this.DisplayChar = '#'}
-    else {$this.DisplayChar = ' '}
+    else {$this.DisplayChar = '.'}
     if ($Location -eq 0) {$this.Neighbours = ($Location+1),($Location+$GameSquareLength),($Location+$GameSquareLength+1)}
     elseif ($Location -eq ($GameSquareLength-1)) {$this.Neighbours = ($Location-1),($Location+$GameSquareLength),($Location+$GameSquareLength-1)}
     elseif ($Location -eq ($GameSquareLength*($GameSquareLength-1))) {$this.Neighbours = ($Location+1),($Location-$GameSquareLength),($Location-$GameSquareLength+1)}
@@ -42,8 +42,8 @@ Class GOLCell {
     elseif ($this.Row -eq 0) {$this.Neighbours = ($Location-1),($Location+1),($Location+$GameSquareLength),($Location+$GameSquareLength-1),($Location+$GameSquareLength+1)}
     elseif ($this.Col -eq 0) {$this.Neighbours = ($Location-$GameSquareLength),($Location+$GameSquareLength),($Location+1),($Location-$GameSquareLength+1),($Location+$GameSquareLength+1)}
     elseif ($this.Row -eq $GameSquareLength-1) {$this.Neighbours = ($Location-1),($Location+1),($Location-$GameSquareLength),($Location-$GameSquareLength-1),($Location-$GameSquareLength+1)}
-    elseif ($this.Col -eq $GameSquareLength-1) {$this.Neighbours = ($Location-1),($Location+1),($Location+$GameSquareLength),($Location+$GameSquareLength-1),($Location+$GameSquareLength+1)}
-    else {$this.Neighbours = ($Location+1),($Location-1),($Location-$GameSquareLength),($Location-$GameSquareLength-1),($Location-$GameSquareLength+1),($Location+$GameSquareLength-1),($Location+$GameSquareLength+1)}
+    elseif ($this.Col -eq $GameSquareLength-1) {$this.Neighbours = ($Location-$GameSquareLength),($Location+$GameSquareLength),($Location-1),($Location-$GameSquareLength-1),($Location+$GameSquareLength-1)}
+    else {$this.Neighbours = ($Location+1),($Location-1),($Location-$GameSquareLength),($Location+$GameSquareLength),($Location-$GameSquareLength-1),($Location-$GameSquareLength+1),($Location+$GameSquareLength-1),($Location+$GameSquareLength+1)}
   }
 }
 function Test-NextLifeState {
@@ -52,11 +52,13 @@ function Test-NextLifeState {
     $NeighbourCells = $Cells[$Cell.Neighbours]
     $AliveNeighbourCount = ($NeighbourCells | Where-Object {$_.CurrentState -eq $true}).Count
     if ($Cell.CurrentState -eq $true) {
+      $Cell.DisplayChar = '#'
       if ($AliveNeighbourCount -lt 2) {$Cell.NextGenState = $false}
       elseif ($AliveNeighbourCount -in (2,3) ) {$Cell.NextGenState = $true} 
       elseif ($AliveNeighbourCount -gt 3) {$Cell.NextGenState = $false}
     }
     if ($Cell.CurrentState -eq $false) {
+      $Cell.DisplayChar = '.'
       if ($AliveNeighbourCount -eq 3) {$Cell.NextGenState = $true}
     }
   }
@@ -71,7 +73,7 @@ function Set-NewCurrentState {
     }
     else {
       $Cell.CurrentState = $false
-      $Cell.DisplayChar = ' '
+      $Cell.DisplayChar = '.'
     }
   }
 
@@ -98,4 +100,5 @@ do {
   Show-Game -Cells $Game -Length $GameLength 
   Test-NextLifeState -Cells $Game
   Set-NewCurrentState -Cells $Game
+  Start-Sleep -Milliseconds 300
 } while ($true)
