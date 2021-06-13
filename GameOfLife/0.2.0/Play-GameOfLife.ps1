@@ -1,21 +1,32 @@
 <#
 .SYNOPSIS
-  Short description
+  Game of life - using John Conways original rules
 .DESCRIPTION
-  Long description
+  RIP John Conway, born 26 Dec 1937 and died 11 April 2020 from COVID-19
+  This is the original zero player game as created by the mathematician John Conway
+  The rules:
+    Any live cell with two or three live neighbours survives.
+    Any dead cell with three live neighbours becomes a live cell.
+    All other live cells die in the next generation. Similarly, all other dead cells stay dead.
 .EXAMPLE
-  PS C:\> <example usage>
-  Explanation of what the example does
-.INPUTS
-  Inputs (if any)
-.OUTPUTS
-  Output (if any)
+  Play-GameOfLife.ps1
+  Runs the game starting with random alive and dead cells and then runs until the same alive count is 
+  maintained for 5 turns
+.EXAMPLE
+  Play-GameOfLife.ps1 -GameSize 20
+  Runs the game starting with random alive and dead cells and will be played on a 20x20 game board it then 
+  runs until the same alive count is maintained for 5 turns
+.PARAMETER GameSize
+  This is the size of both the height and width of the board that is used for the game of life game
 .NOTES
   General notes
+    Created by: Brent Denny
+    Created on: 9 Jun 2021
+      Modified: 14 Jun 2021
 #>
-[cmdletbinding()]
+[CmdletBinding()]
 Param (
-
+  [int]$GameSize = 30
 )
 
 Class GOLCell {
@@ -99,14 +110,13 @@ function Show-Game {
 
 # Setup Game
 Clear-Host
-$GameLength = 30
-$Game = foreach ($Pos in 0..($GameLength*$GameLength-1)) {
-  [GOLCell]::New($Pos,$GameLength)
+$Game = foreach ($Pos in 0..($GameSize*$GameSize-1)) {
+  [GOLCell]::New($Pos,$GameSize)
 }
 # Play game
 do {
   $BeforeTurnCount = ($Game | Where-Object {$_.CurrentState -eq $true}).Count 
-  Show-Game -Cells $Game -Length $GameLength 
+  Show-Game -Cells $Game -Length $GameSize 
   Test-NextLifeState -Cells $Game
   Set-NewCurrentState -Cells $Game
   Start-Sleep -Milliseconds 100
