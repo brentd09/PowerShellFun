@@ -32,7 +32,13 @@ Class GOLCell {
     $this.Col = $Location%$GameSquareLength
     $this.Row = [math]::Truncate($Location/$GameSquareLength)
     $this.CurrentState = ($true,$false) | Get-Random
-    $this.NextGenState = $true
+#     if ($this.Col -eq 4 -and $this.Row -eq 3) {$this.CurrentState = $true}
+#     elseif ($this.Col -eq 3 -and $this.Row -eq 3) {$this.CurrentState = $true}
+#     elseif ($this.Col -eq 2 -and $this.Row -eq 3) {$this.CurrentState = $true}
+#     elseif ($this.Col -eq 4 -and $this.Row -eq 2) {$this.CurrentState = $true}
+#     elseif ($this.Col -eq 3 -and $this.Row -eq 1) {$this.CurrentState = $true}
+#     else {$this.CurrentState = $false}
+    $this.NextGenState = $false
     if ($this.CurrentState -eq $true) {$this.DisplayChar = '#'}
     else {$this.DisplayChar = '.'}
     if ($Location -eq 0) {$this.Neighbours = ($Location+1),($Location+$GameSquareLength),($Location+$GameSquareLength+1)}
@@ -87,18 +93,24 @@ function Show-Game {
     foreach ($Col in (0..($Length-1)))  {Write-Host -NoNewline $Cells[($Col+($Row*$Length))].DisplayChar' '}
     Write-Host
   }  
+  $AliveCount = ($Cells|Where-Object {$_.CurrentState -eq $true}).count
+  Write-Host -ForegroundColor Cyan "Alive -"$AliveCount"    "
 }
 
 # Setup Game
 Clear-Host
-$GameLength = 20
+$GameLength = 30
 $Game = foreach ($Pos in 0..($GameLength*$GameLength-1)) {
   [GOLCell]::New($Pos,$GameLength)
 }
 # Play game
 do {
+  $BeforeTurnCount = ($Game | Where-Object {$_.CurrentState -eq $true}).Count 
   Show-Game -Cells $Game -Length $GameLength 
   Test-NextLifeState -Cells $Game
   Set-NewCurrentState -Cells $Game
-  Start-Sleep -Milliseconds 300
-} while ($true)
+  Start-Sleep -Milliseconds 100
+  $AfterTurnCount = ($Game | Where-Object {$_.CurrentState -eq $true}).Count 
+  if ($AfterTurnCount -eq $BeforeTurnCount) {$Same++}
+  else {$Same=0}
+} until ($Same -eq 5)
