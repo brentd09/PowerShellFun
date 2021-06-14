@@ -26,7 +26,7 @@
 #>
 [CmdletBinding()]
 Param (
-  [int]$GameSize = 30
+  [int]$GameSize = 40
 )
 
 Class GOLCell {
@@ -101,7 +101,11 @@ function Show-Game {
   )
   $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 }
   foreach ($Row in (0..($Length-1))) {
-    foreach ($Col in (0..($Length-1)))  {Write-Host -NoNewline $Cells[($Col+($Row*$Length))].DisplayChar' '}
+    foreach ($Col in (0..($Length-1)))  {
+      if ($Cells[($Col+($Row*$Length))].CurrentState -eq $false) {$Color = 'DarkGray'}
+      else {$Color = 'Yellow'}
+      Write-Host -NoNewline -ForegroundColor $Color $Cells[($Col+($Row*$Length))].DisplayChar' '
+    }
     Write-Host
   }  
   $AliveCount = ($Cells|Where-Object {$_.CurrentState -eq $true}).count
