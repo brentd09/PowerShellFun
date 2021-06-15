@@ -62,6 +62,11 @@ Class GOLCell {
     elseif ($this.Col -eq $GameSquareLength-1) {$this.Neighbours = ($Location-$GameSquareLength),($Location+$GameSquareLength),($Location-1),($Location-$GameSquareLength-1),($Location+$GameSquareLength-1)}
     else {$this.Neighbours = ($Location+1),($Location-1),($Location-$GameSquareLength),($Location+$GameSquareLength),($Location-$GameSquareLength-1),($Location-$GameSquareLength+1),($Location+$GameSquareLength-1),($Location+$GameSquareLength+1)}
   }
+
+  [void]SetDisplayChar () {
+    if ($this.CurrentState -eq $true) {$this.DisplayChar = '#'}
+    if ($this.CurrentState -eq $false) {$this.DisplayChar = '.'}
+  }
 }
 function Test-NextLifeState {
   Param ([GOLCell[]]$Cells)
@@ -69,13 +74,13 @@ function Test-NextLifeState {
     $NeighbourCells = $Cells[$Cell.Neighbours]
     $AliveNeighbourCount = ($NeighbourCells | Where-Object {$_.CurrentState -eq $true}).Count
     if ($Cell.CurrentState -eq $true) {
-      $Cell.DisplayChar = '#'
+      $Cell.SetDisplayChar()
       if ($AliveNeighbourCount -lt 2) {$Cell.NextGenState = $false}
       elseif ($AliveNeighbourCount -in (2,3) ) {$Cell.NextGenState = $true} 
       elseif ($AliveNeighbourCount -gt 3) {$Cell.NextGenState = $false}
     }
     if ($Cell.CurrentState -eq $false) {
-      $Cell.DisplayChar = '.'
+      $Cell.SetDisplayChar()
       if ($AliveNeighbourCount -eq 3) {$Cell.NextGenState = $true}
     }
   }
@@ -86,11 +91,11 @@ function Set-NewCurrentState {
   foreach ($Cell in $Cells) {
     if ($Cell.NextGenState -eq $true) {
       $Cell.CurrentState = $true
-      $Cell.DisplayChar = '#'
+      $Cell.SetDisplayChar()
     }
     else {
       $Cell.CurrentState = $false
-      $Cell.DisplayChar = '.'
+      $Cell.SetDisplayChar()
     }
   }
 
