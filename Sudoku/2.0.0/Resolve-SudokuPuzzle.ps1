@@ -54,12 +54,35 @@ Class SudokuElement {
   }
 } # Class 
 
+class SudokuGrid {
+  [SudokuElement[]]$GameBoard
+  [int]$SolvedElements
+
+  SudokuGrid ($BoardArray) {
+    $this.GameBoard = $BoardArray
+    $this.SolvedElements = ($BoardArray| Where-Object {$_.Solved -eq $true}).Count
+  }
+  [string[]]SolvedRowNumbers ($RowNumber) {
+    return ($this.GameBoard | 
+      Where-Object {$_.Row -eq $RowNumber -and $_.Solved -eq $true}).Value | 
+      Sort-Object | 
+      Select-Object -Unique
+  }
+  [string[]]SolvedColNumbers ($ColNumber) {
+    return ($this.GameBoard | 
+      Where-Object {$_.Col -eq $ColNumber -and $_.Solved -eq $true}).Value | 
+      Sort-Object | 
+      Select-Object -Unique
+  }
+}
+
+
 # Main code
 
-[string[]]$SudokuArray = $GameBoard.ToCharArray()
-$Position = 0
-[SudokuElement[]]$Game = foreach ($SudokuCell in $SudokuArray) {
+$Position = 0 
+$GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
   [SudokuElement]::New($Position,$SudokuCell)
   $Position++
 } 
-$Game | ft
+$Game = [SudokuGrid]::New($GameArray)
+
