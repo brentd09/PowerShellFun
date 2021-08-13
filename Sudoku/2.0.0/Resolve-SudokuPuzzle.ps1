@@ -86,3 +86,4 @@ $GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
 } 
 $Game = [SudokuGrid]::New($GameArray)
 
+$Game.GameBoard | Format-Table
