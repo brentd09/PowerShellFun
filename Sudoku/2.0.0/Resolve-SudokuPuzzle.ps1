@@ -74,6 +74,22 @@ class SudokuGrid {
       Sort-Object | 
       Select-Object -Unique
   }
+  [SudokuElement[]]NotSolvedInRow ($RowNumber) {
+    return $this.GameBoard | Where-Object {$_.Row -eq $RowNumber -and $_.Solved -eq $false}
+  }
+  [SudokuElement[]]NotSolvedInCol ($ColNumber) {
+    return $this.GameBoard | Where-Object {$_.Col -eq $ColNumber -and $_.Solved -eq $false}
+  }
+}
+# Functions
+function Show-GameBoard {
+  Param ($GameArray)
+  foreach ($Row in (0..8)) {
+    foreach ($Col in (0..8)) {
+      Write-Host (($GameArray | Where-Object {$_.Row -eq $Row -and $_.Col -eq $Col}).Value + " ") -NoNewline
+    }
+    Write-Host
+  }
 }
 
 
@@ -86,3 +102,4 @@ $GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
 } 
 $Game = [SudokuGrid]::New($GameArray)
 
+Show-GameBoard -GameArray $Game.GameBoard
