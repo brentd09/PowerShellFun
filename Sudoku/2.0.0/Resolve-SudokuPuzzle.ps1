@@ -91,8 +91,26 @@ function Show-GameBoard {
     Write-Host
   }
 }
-
-
+<#
+Methods for solving puzzle - from https://www.sudoku-solutions.com/
+  RatingSolution    Techniques
+  --------------    ----------
+  Simple            Naked Single - A cell that only has one value possible
+                    Hidden Single - A row or col that contains one cell with the possible value
+  Easy              Naked Pair - two cells in a row/col that only contain the same two possible values
+                    Hidden Pair - two cells contains two values not in other cells - remove other values from two cells
+                    Pointing Pairs - remove possible value from sqr, one r/c contains a value not found in other sqrs
+  Medium            Naked Triple -
+                    Naked Quad -
+                    Pointing Triples -
+                    Hidden Triple -
+                    Hidden Quad -
+  Hard              XWing -
+                    Swordfish -
+                    Jellyfish -
+                    XYWing -
+                    XYZWing -
+#>
 # Main code
 
 $Position = 0 
