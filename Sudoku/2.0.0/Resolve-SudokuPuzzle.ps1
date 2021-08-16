@@ -125,7 +125,7 @@ function Resolve-EmptyCells {
   } 
 }
 
-# Main code
+# Main code 
 
 $Position = 0 
 $GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
