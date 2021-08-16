@@ -3,6 +3,15 @@ Param(
   [String]$GameBoard = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
 )
 
+<#
+RatingSolution      Techniques
+Simple              Naked Single, Hidden Single
+Easy                Naked Pair, Hidden Pair, Pointing Pairs
+Medium              Naked Triple, Naked Quad, Pointing Triples, Hidden Triple, Hidden Quad
+Hard                XWing, Swordfish, Jellyfish, XYWing, XYZWing
+#>
+
+
 Class SudokuElement {
   [int]$Pos 
   [string]$Value
