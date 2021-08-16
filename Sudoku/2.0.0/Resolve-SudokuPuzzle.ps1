@@ -137,6 +137,6 @@ $Game = [SudokuGrid]::New($GameArray)
 do {
   Show-GameBoard -GameArray $Game.GameBoard
   Resolve-EmptyCells -GameGrid $Game
-  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()}
+  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
   Show-GameBoard -GameArray $Game.GameBoard
 } until ($Game.GameBoard.Solved -notcontains $false)
