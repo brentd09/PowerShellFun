@@ -1,15 +1,44 @@
+<#
+.SYNOPSIS
+  Sudoku Solver
+.DESCRIPTION
+  This uses the following techniques to solve sudoku puzzles
+  RatingSolution      Techniques
+    Simple              Naked Single, Hidden Single
+    Easy                Naked Pair, Hidden Pair, Pointing Pairs
+    Medium              Naked Triple, Naked Quad, Pointing Triples, Hidden Triple, Hidden Quad
+    Hard                XWing, Swordfish, Jellyfish, XYWing, XYZWing
+  These are examples of the different dificulty grids
+    Simple - '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+.EXAMPLE
+  Resolve-SudokuPuzzle -GameBoard '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+  This solves the following Sudoku puzzle:
+  +-------+-------+-------+ 
+  | 7 - 5 | 4 2 - | - 6 - | 
+  | 6 8 - | 1 - - | 2 4 - |
+  | - 4 - | 7 6 - | - 1 8 |
+  +-------+-------+-------+
+  | - 9 1 | - - 2 | - 7 4 |
+  | 8 2 - | - 5 7 | 6 - - |
+  | 3 - - | - 1 4 | 8 2 - |
+  +-------+-------+-------+
+  | 1 5 8 | - - 6 | - - 9 |
+  | - - 2 | 5 - 9 | 1 - 6 |
+  | - - 6 | 8 4 - | 7 - 2 |
+  +-------+-------+-------+
+  When issuing the command unwrap the grid into a single string of characters where - means a blank spot and use this 
+  string as the GameBoard parameter value. 
+.NOTES
+  General notes
+       Created By: Brent Denny
+       Created On: 16 Aug 2021
+    Last Modified: 17 Aug 2021
+#>
 [CmdletBinding()]
 Param(
   [String]$GameBoard = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
 )
 
-<#
-RatingSolution      Techniques
-Simple              Naked Single, Hidden Single
-Easy                Naked Pair, Hidden Pair, Pointing Pairs
-Medium              Naked Triple, Naked Quad, Pointing Triples, Hidden Triple, Hidden Quad
-Hard                XWing, Swordfish, Jellyfish, XYWing, XYZWing
-#>
 
 
 Class SudokuElement {
@@ -103,6 +132,7 @@ class SudokuGrid {
 # Functions
 function Show-GameBoard {
   Param ($GameArray)
+  $Host.UI.RawUI.CursorPosition = @{ X = 0; Y = 0 }
   $RowCount = 0
   $BorderColor = 'Cyan'
   $BorderTopBot = "+-------+-------+-------+"
@@ -123,6 +153,7 @@ function Show-GameBoard {
     Write-Host
   }
   Write-Host "$BorderTopBot`n" -ForegroundColor $BorderColor
+  Start-Sleep -Milliseconds 500
 }
 
 function Resolve-EmptyCells {
@@ -134,17 +165,18 @@ function Resolve-EmptyCells {
   } 
 }
 
-# Main code 
-
+# Initialize BoardGrid Setup
+Clear-Host
 $Position = 0 
 $GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
   [SudokuElement]::New($Position,$SudokuCell)
   $Position++
 } 
 $Game = [SudokuGrid]::New($GameArray)
+Show-GameBoard -GameArray $Game.GameBoard
 
+#### Main code ###
 do {
-  Show-GameBoard -GameArray $Game.GameBoard
   Resolve-EmptyCells -GameGrid $Game
   $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
   Show-GameBoard -GameArray $Game.GameBoard
