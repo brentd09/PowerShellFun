@@ -145,7 +145,7 @@ function Show-GameBoard {
       $ColCount++
       $CellValue = ($GameArray | Where-Object {$_.Row -eq $Row -and $_.Col -eq $Col}).Value
       If ($CellValue -match '\d') {$ValueColor = 'White'}
-      else {$ValueColor = 'Yellow'}
+      else {$ValueColor = 'Red'}
       Write-Host "$CellValue " -NoNewline -ForegroundColor $ValueColor 
       if ($ColCount -in @(3,6,9)) {Write-Host "| " -NoNewline -ForegroundColor $BorderColor}
     }
