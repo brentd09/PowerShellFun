@@ -47,9 +47,10 @@ Class SudokuElement {
     }
     $this.PossibleValues = $NewPoss
   } # method RemoveFromPossibles
+
   [void]CheckForSinglePossible() {
     if ($this.PossibleValues.Count -eq 1) {
-      $this.Solved($this.PossibleValues[0])
+      $this.Solve($this.PossibleValues[0])
     }
   }
 } # Class 
@@ -62,15 +63,24 @@ class SudokuGrid {
     $this.GameBoard = $BoardArray
     $this.SolvedElements = ($BoardArray| Where-Object {$_.Solved -eq $true}).Count
   }
-  [string[]]SolvedRowNumbers ($RowNumber) {
+  [string[]]SolvedByRow ($RowNumber) {
     return ($this.GameBoard | 
       Where-Object {$_.Row -eq $RowNumber -and $_.Solved -eq $true}).Value | 
       Sort-Object | 
       Select-Object -Unique
   }
-  [string[]]SolvedColNumbers ($ColNumber) {
+  [string[]]SolvedByCol ($ColNumber) {
     return ($this.GameBoard | 
       Where-Object {$_.Col -eq $ColNumber -and $_.Solved -eq $true}).Value | 
+      Sort-Object | 
+      Select-Object -Unique
+  }
+  [string[]]SolvedByCell ($CellNumber) {
+    return ( $this.GameBoard | 
+      Where-Object {($_.Col -eq ($this.GameBoard[$CellNumber].Col) -or
+      $_.Row -eq ($this.GameBoard[$CellNumber].Row) -or 
+      $_.Sqr -eq ($this.GameBoard[$CellNumber].Sqr)) -and
+      $_.Solved -eq $true}).Value | 
       Sort-Object | 
       Select-Object -Unique
   }
@@ -84,14 +94,36 @@ class SudokuGrid {
 # Functions
 function Show-GameBoard {
   Param ($GameArray)
+  $RowCount = 0
+  $BorderColor = 'Cyan'
+  $BorderTopBot = "+-------+-------+-------+"
+  Write-Host $BorderTopBot -ForegroundColor $BorderColor
   foreach ($Row in (0..8)) {
+    $RowCount++
+    Write-Host "| " -NoNewline -ForegroundColor $BorderColor
+    $ColCount = 0
     foreach ($Col in (0..8)) {
-      Write-Host (($GameArray | Where-Object {$_.Row -eq $Row -and $_.Col -eq $Col}).Value + " ") -NoNewline
+      $ColCount++
+      $CellValue = ($GameArray | Where-Object {$_.Row -eq $Row -and $_.Col -eq $Col}).Value
+      If ($CellValue -match '\d') {$ValueColor = 'White'}
+      else {$ValueColor = 'Yellow'}
+      Write-Host "$CellValue " -NoNewline -ForegroundColor $ValueColor 
+      if ($ColCount -in @(3,6,9)) {Write-Host "| " -NoNewline -ForegroundColor $BorderColor}
     }
+    if ($RowCount -in @(3,6)) {Write-Host "`n$BorderTopBot" -NoNewline -ForegroundColor $BorderColor}
     Write-Host
   }
+  Write-Host "$BorderTopBot`n" -ForegroundColor $BorderColor
 }
 
+function Resolve-EmptyCells {
+  Param ([SudokuGrid]$GameGrid)
+  $Emptys = $GameGrid.GameBoard | Where-Object {$_.Solved -eq $false}
+  foreach ($Empty in $Emptys) {
+    $RelatedSolvedValues = $GameGrid.SolvedByCell($Empty.Pos)
+    $Empty.RemoveFromPossibles($RelatedSolvedValues)
+  } 
+}
 
 # Main code
 
@@ -102,4 +134,9 @@ $GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
 } 
 $Game = [SudokuGrid]::New($GameArray)
 
-Show-GameBoard -GameArray $Game.GameBoard
+do {
+  Show-GameBoard -GameArray $Game.GameBoard
+  Resolve-EmptyCells -GameGrid $Game
+  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()}
+  Show-GameBoard -GameArray $Game.GameBoard
+} until ($Game.GameBoard.Solved -notcontains $false)
