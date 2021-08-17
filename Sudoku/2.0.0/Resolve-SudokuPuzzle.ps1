@@ -9,7 +9,8 @@
     Medium              Naked Triple, Naked Quad, Pointing Triples, Hidden Triple, Hidden Quad
     Hard                XWing, Swordfish, Jellyfish, XYWing, XYZWing
   These are examples of the different dificulty grids
-    Simple - '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+    Simple: '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+    Easy:   '9-53--8-2---2-6-------1----7--4-3--8--6---7--1--6-8--9----6-------7-9---2-7--14-5'
 .EXAMPLE
   Resolve-SudokuPuzzle -GameBoard '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
   This solves the following Sudoku puzzle:
@@ -36,7 +37,7 @@
 #>
 [CmdletBinding()]
 Param(
-  [String]$GameBoard = '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+  [String]$GameBoard = '9-53--8-2---2-6-------1----7--4-3--8--6---7--1--6-8--9----6-------7-9---2-7--14-5'
 )
 
 
