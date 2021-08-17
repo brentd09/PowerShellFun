@@ -129,6 +129,42 @@ class SudokuGrid {
   [SudokuElement[]]NotSolvedInCol ($ColNumber) {
     return $this.GameBoard | Where-Object {$_.Col -eq $ColNumber -and $_.Solved -eq $false}
   }
+  [void]SolveHiddenSingleRow () {
+    foreach ($Index in @(0..8)) {
+      $RowElements = $this.GameBoard | Where-Object {$_.Row -eq $Index -and $_.Solved -eq $false}
+      $HiddenSingleRowVals = $RowElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
+      if ($HiddenSingleRowVals.Count -gt 0) {
+        foreach ($HiddenSingleRowVal in $HiddenSingleRowVals) {
+          $ChangeThisIndex = ($RowElements | Where-Object {$_.PossibleValues -contains $HiddenSingleRowVal.Name}).Pos
+          $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleRowVal.Name)
+        }
+      }
+    }
+  }
+  [void]SolveHiddenSingleCol () {
+    foreach ($Index in @(0..8)) {
+      $ColElements = $this.GameBoard | Where-Object {$_.Col -eq $Index -and $_.Solved -eq $false}
+      $HiddenSingleColVals = $ColElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
+      if ($HiddenSingleColVals.Count -gt 0) {
+        foreach ($HiddenSingleColVal in $HiddenSingleColVals) {
+          $ChangeThisIndex = ($ColElements | Where-Object {$_.PossibleValues -contains $HiddenSingleColVal.Name}).Pos
+          $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleColVal.Name)
+        }
+      }
+    }
+  }
+  [void]SolveHiddenSinglesqr () {
+    foreach ($Index in @(0..8)) {
+      $SqrElements = $this.GameBoard | Where-Object {$_.Sqr -eq $Index -and $_.Solved -eq $false}
+      $HiddenSingleSqrVals = $SqrElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
+      if ($HiddenSingleSqrVals.Count -gt 0) {
+        foreach ($HiddenSingleSqrVal in $HiddenSingleSqrVals) {
+          $ChangeThisIndex = ($SqrElements | Where-Object {$_.PossibleValues -contains $HiddenSingleSqrVal.Name}).Pos
+          $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleSqrVal.Name)
+        }
+      }
+    }
+  }
 }
 # Functions
 function Show-GameBoard {
@@ -178,6 +214,21 @@ Show-GameBoard -GameArray $Game.GameBoard
 
 #### Main code ###
 do {
+  Resolve-EmptyCells -GameGrid $Game
+  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
+  Resolve-EmptyCells -GameGrid $Game
+  Show-GameBoard -GameArray $Game.GameBoard
+  $Game.SolveHiddenSingleRow()
+  Resolve-EmptyCells -GameGrid $Game
+  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
+  Resolve-EmptyCells -GameGrid $Game
+  Show-GameBoard -GameArray $Game.GameBoard
+  $Game.SolveHiddenSingleCol()
+  Resolve-EmptyCells -GameGrid $Game
+  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
+  Resolve-EmptyCells -GameGrid $Game
+  Show-GameBoard -GameArray $Game.GameBoard
+  $Game.SolveHiddenSinglesqr()
   Resolve-EmptyCells -GameGrid $Game
   $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
   Show-GameBoard -GameArray $Game.GameBoard
