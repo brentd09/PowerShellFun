@@ -49,6 +49,7 @@ Class SudokuElement {
   [int]$Col 
   [int]$Sqr
   [string[]]$PossibleValues
+  [string]$PosValStr
   [bool]$Solved
 
   SudokuElement ([int]$Position,[string]$Value) {
@@ -67,10 +68,12 @@ Class SudokuElement {
     if ($Position -in @(60,61,62,69,70,71,78,79,80)) {$this.Sqr = 8}
     if ($Value -notmatch '\d') {
       $this.PossibleValues = @(1,2,3,4,5,6,7,8,9)
+      $this.PosValStr = $this.PossibleValues -join ','
       $this.Solved = $false
     }
     else {
       $this.PossibleValues = @($Value)
+      $this.PosValStr = $Value
       $this.Solved = $true
     }
   } # Constructor
@@ -78,6 +81,7 @@ Class SudokuElement {
     $this.Value = $Value
     $this.Solved = $true
     $this.PossibleValues = @($Value)
+    $this.PosValStr = $Value
   } # Method Solved
   [void]RemoveFromPossibles([int[]]$Values) {
     $NewPoss = @()
@@ -85,13 +89,8 @@ Class SudokuElement {
       if ($Poss -notin $Values) {$Poss}
     }
     $this.PossibleValues = $NewPoss
+    $this.PosValStr = $NewPoss
   } # method RemoveFromPossibles
-
-  [void]CheckForSinglePossible() {
-    if ($this.PossibleValues.Count -eq 1) {
-      $this.Solve($this.PossibleValues[0])
-    }
-  }
 } # Class 
 
 class SudokuGrid {
@@ -137,6 +136,7 @@ class SudokuGrid {
         foreach ($HiddenSingleRowVal in $HiddenSingleRowVals) {
           $ChangeThisIndex = ($RowElements | Where-Object {$_.PossibleValues -contains $HiddenSingleRowVal.Name}).Pos
           $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleRowVal.Name)
+          $this.GameBoard[$ChangeThisIndex].PosValStr = $HiddenSingleRowVal.Name
         }
       }
     }
@@ -149,6 +149,7 @@ class SudokuGrid {
         foreach ($HiddenSingleColVal in $HiddenSingleColVals) {
           $ChangeThisIndex = ($ColElements | Where-Object {$_.PossibleValues -contains $HiddenSingleColVal.Name}).Pos
           $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleColVal.Name)
+          $this.GameBoard[$ChangeThisIndex].PosValStr = $HiddenSingleColVal.Name
         }
       }
     }
@@ -161,9 +162,18 @@ class SudokuGrid {
         foreach ($HiddenSingleSqrVal in $HiddenSingleSqrVals) {
           $ChangeThisIndex = ($SqrElements | Where-Object {$_.PossibleValues -contains $HiddenSingleSqrVal.Name}).Pos
           $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleSqrVal.Name)
+          $this.GameBoard[$ChangeThisIndex].PosValStr = $HiddenSingleSqrVal.Name
         }
       }
     }
+  }
+  [void]CheckAndSolveSinglePossibles () {
+    $this.GameBoard | ForEach-Object {
+      if ($_.PossibleValues.Count -eq 1) {
+        $Index = $_.Pos
+        $this.GameBoard[$index].Solve($_.PossibleValues[0])
+      }
+    }  
   }
 }
 # Functions
@@ -193,7 +203,7 @@ function Show-GameBoard {
   Start-Sleep -Milliseconds 500
 }
 
-function Resolve-EmptyCells {
+function Remove-SolvedfromPossible {
   Param ([SudokuGrid]$GameGrid)
   $Emptys = $GameGrid.GameBoard | Where-Object {$_.Solved -eq $false}
   foreach ($Empty in $Emptys) {
@@ -211,25 +221,12 @@ $GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
 } 
 $Game = [SudokuGrid]::New($GameArray)
 Show-GameBoard -GameArray $Game.GameBoard
+Remove-SolvedfromPossible -GameGrid $Game
 
 #### Main code ###
 do {
-  Resolve-EmptyCells -GameGrid $Game
-  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
-  Resolve-EmptyCells -GameGrid $Game
-  Show-GameBoard -GameArray $Game.GameBoard
+  $Game.CheckAndSolveSinglePossibles() 
+  Remove-SolvedfromPossible -GameGrid $Game; $Game.CheckAndSolveSinglePossibles(); Show-GameBoard -GameArray $Game.GameBoard
   $Game.SolveHiddenSingleRow()
-  Resolve-EmptyCells -GameGrid $Game
-  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
-  Resolve-EmptyCells -GameGrid $Game
-  Show-GameBoard -GameArray $Game.GameBoard
-  $Game.SolveHiddenSingleCol()
-  Resolve-EmptyCells -GameGrid $Game
-  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
-  Resolve-EmptyCells -GameGrid $Game
-  Show-GameBoard -GameArray $Game.GameBoard
-  $Game.SolveHiddenSinglesqr()
-  Resolve-EmptyCells -GameGrid $Game
-  $Game.GameBoard | ForEach-Object {$_.CheckForSinglePossible()} 
-  Show-GameBoard -GameArray $Game.GameBoard
+  Remove-SolvedfromPossible -GameGrid $Game; $Game.CheckAndSolveSinglePossibles(); Show-GameBoard -GameArray $Game.GameBoard
 } until ($Game.GameBoard.Solved -notcontains $false)
