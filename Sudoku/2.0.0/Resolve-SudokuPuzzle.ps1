@@ -37,7 +37,7 @@
 #>
 [CmdletBinding()]
 Param(
-  [String]$GameBoard = '9-53--8-2---2-6-------1----7--4-3--8--6---7--1--6-8--9----6-------7-9---2-7--1495'
+  [String]$GameBoard = '9-53--8-2---2-6-------1----7--4-3--8--6---7--1--6-8--9----6-------7-9---2-7--14-5'
 )
 Class SudokuElement {
   [int]$Pos 
@@ -140,6 +140,12 @@ function Show-GameBoard {
   Start-Sleep -Milliseconds 500
 }
 
+# Init puzzle
+Clear-Host
 $Game = [SudokuGrid]::New($GameBoard)
-$Game
 Show-GameBoard -GameArray $Game.GameBoard
+
+# Main code
+do {
+  $Game.RemoveRelatedValues();$Game.SolveNakedSingles();Show-GameBoard -GameArray $Game.GameBoard
+} until ($Game.GameBoard.Solved -notcontains $false)
