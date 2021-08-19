@@ -39,9 +39,6 @@
 Param(
   [String]$GameBoard = '9-53--8-2---2-6-------1----7--4-3--8--6---7--1--6-8--9----6-------7-9---2-7--1495'
 )
-
-
-
 Class SudokuElement {
   [int]$Pos 
   [string]$Value
@@ -73,115 +70,47 @@ Class SudokuElement {
     }
     else {
       $this.PossibleValues = @($Value)
-      $this.PosValStr = $Value
+      $this.PosValStr = $this.PossibleValues -as [string]
       $this.Solved = $true
     }
   } # Constructor
-  [void]Solve($Value) {
-    $this.Value = $Value
-    $this.Solved = $true
-    $this.PossibleValues = @($Value)
-    $this.PosValStr = $Value
-  } # Method Solved
-  [void]RemoveFromPossibles([int[]]$Values) {
-    $NewPoss = @()
-    $NewPoss = foreach ($Poss in $this.PossibleValues) {
-      if ($Poss -notin $Values) {$Poss}
-    }
-    $this.PossibleValues = $NewPoss
-    $this.PosValStr = $NewPoss
-  } # method RemoveFromPossibles
 } # Class 
 
 class SudokuGrid {
   [SudokuElement[]]$GameBoard
   [int]$SolvedElements
 
-  SudokuGrid ($BoardArray) {
-    $this.GameBoard = $BoardArray
-    $this.SolvedElements = ($BoardArray| Where-Object {$_.Solved -eq $true}).Count
+  SudokuGrid ([string]$BoardString) {
+    $this.GameBoard = 0..80 | ForEach-Object {
+      [SudokuElement]::New($_,$BoardString[$_])
+    }
   }
-
-  [string[]]SolvedByRow ($RowNumber) {
-    return ($this.GameBoard | 
-      Where-Object {$_.Row -eq $RowNumber -and $_.Solved -eq $true}).Value | 
-      Sort-Object | 
-      Select-Object -Unique
+  [string[]]ShowRelatedValues ($CellIndex) {
+    $Cell = $this.GameBoard[$CellIndex]
+    [SudokuElement[]]$RelatedCells = $this.GameBoard | 
+      Where-Object {$_.Row -eq $Cell.Row -or $_.Col -eq $Cell.Col -or $_.Sqr -eq $Cell.Sqr -and $_.Solved -eq $true} | 
+      Sort-Object -Property Value
+    return $RelatedCells.Value | Select-Object -Unique
   }
-  [string[]]SolvedByCol ($ColNumber) {
-    return ($this.GameBoard | 
-      Where-Object {$_.Col -eq $ColNumber -and $_.Solved -eq $true}).Value | 
-      Sort-Object | 
-      Select-Object -Unique
-  }
-  [string[]]SolvedByCell ($CellNumber) {
-    return ( $this.GameBoard | 
-      Where-Object {($_.Col -eq ($this.GameBoard[$CellNumber].Col) -or
-      $_.Row -eq ($this.GameBoard[$CellNumber].Row) -or 
-      $_.Sqr -eq ($this.GameBoard[$CellNumber].Sqr)) -and
-      $_.Solved -eq $true}).Value | 
-      Sort-Object | 
-      Select-Object -Unique
-  }
-  [SudokuElement[]]NotSolvedInRow ($RowNumber) {
-    return $this.GameBoard | Where-Object {$_.Row -eq $RowNumber -and $_.Solved -eq $false}
-  }
-  [SudokuElement[]]NotSolvedInCol ($ColNumber) {
-    return $this.GameBoard | Where-Object {$_.Col -eq $ColNumber -and $_.Solved -eq $false}
-  }
-  [void]SolveHiddenSingleRow () {
-    foreach ($Index in @(0..8)) {
-      $RowElements = $this.GameBoard | Where-Object {$_.Row -eq $Index -and $_.Solved -eq $false}
-      $HiddenSingleRowVals = $RowElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
-      if ($HiddenSingleRowVals.Count -gt 0) {
-        foreach ($HiddenSingleRowVal in $HiddenSingleRowVals) {
-          $ChangeThisIndex = ($RowElements | Where-Object {$_.PossibleValues -contains $HiddenSingleRowVal.Name}).Pos
-          if ($ChangeThisIndex -match '\d{1,2}') {
-            $this.GameBoard[$ChangeThisIndex].RemoveFromPossibles( (1..9 | Where-Object {$_ -notcontains $HiddenSingleRowVal.Name}))
-            $this.GameBoard[$ChangeThisIndex].PosValStr = $this.GameBoard[$ChangeThisIndex].PossibleValues -join ','
-          }
-        }
+  [void]RemoveRelatedValues () {
+    $UnsolvedCells = $this.GameBoard | Where-Object {$_.Solved -eq $false}
+    foreach ($CellIndex in $UnsolvedCells.Pos) {
+      if ($this.GameBoard[$CellIndex].Solved -eq $false) {
+        $RelatedValues = $this.ShowRelatedValues($CellIndex)
+        $this.GameBoard[$CellIndex].PossibleValues = $this.GameBoard[$CellIndex].PossibleValues | Where-Object {$_ -notin $RelatedValues}
+        $this.GameBoard[$CellIndex].PosValStr = $this.GameBoard[$CellIndex].PossibleValues -as [string]
       }
     }
   }
-  [void]SolveHiddenSingleCol () {
-    foreach ($Index in @(0..8)) {
-      $ColElements = $this.GameBoard | Where-Object {$_.Col -eq $Index -and $_.Solved -eq $false}
-      $HiddenSingleColVals = $ColElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
-      if ($HiddenSingleColVals.Count -gt 0) {
-        foreach ($HiddenSingleColVal in $HiddenSingleColVals) {
-          $ChangeThisIndex = ($ColElements | Where-Object {$_.PossibleValues -contains $HiddenSingleColVal.Name}).Pos
-          if ($ChangeThisIndex -gt 0) {
-            $this.GameBoard[$ChangeThisIndex].RemoveFromPossibles( (1..9 | Where-Object {$_ -notcontains $HiddenSingleColVal.Name}))
-            $this.GameBoard[$ChangeThisIndex].PosValStr = $this.GameBoard[$ChangeThisIndex].PossibleValues -join ','
-          }
-        }
+  [void]SolveNakedSingles() {
+    $UnsolvedCells = $this.GameBoard | Where-Object {$_.Solved -eq $false}
+    foreach ($CellIndex in $UnsolvedCells.Pos) {
+      if ($this.GameBoard[$CellIndex].PossibleValues.Count -eq 1 -and $this.GameBoard[$CellIndex].Solved -eq $false) {
+        $this.GameBoard[$CellIndex].Value = $this.GameBoard[$CellIndex].PossibleValues[0]
+        $this.GameBoard[$CellIndex].PosValStr = $this.GameBoard[$CellIndex].PossibleValues[0] -as [string]
+        $this.GameBoard[$CellIndex].Solved = $true
       }
     }
-  }
-  [void]SolveHiddenSinglesqr () {
-    foreach ($Index in @(0..8)) {
-      $SqrElements = $this.GameBoard | Where-Object {$_.Sqr -eq $Index -and $_.Solved -eq $false}
-      $HiddenSingleSqrVals = $SqrElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}
-      if ($HiddenSingleSqrVals.Count -gt 0) {
-        foreach ($HiddenSingleSqrVal in $HiddenSingleSqrVals) {
-          $ChangeThisIndex = ($SqrElements | Where-Object {$_.PossibleValues -contains $HiddenSingleSqrVal.Name}).Pos
-          if ($ChangeThisIndex -gt 0) {
-            $this.GameBoard[$ChangeThisIndex].RemoveFromPossibles( (1..9 | Where-Object {$_ -notcontains $HiddenSingleSqrVal.Name}))
-            $this.GameBoard[$ChangeThisIndex].PosValStr = $this.GameBoard[$ChangeThisIndex].PossibleValues -join ','
-          }
-        }
-      }
-    }
-  }
-  [void]CheckAndSolveSinglePossibles () {
-    $this.GameBoard | ForEach-Object {
-      if ($_.PossibleValues.Count -eq 1) {
-        $Index = $_.Pos
-        $Value = $_.PossibleValues[0]
-        $this.GameBoard[$index].RemoveFromPossibles( (1..9 | Where-Object { $_ -notcontains $Value}))
-      }
-    }  
   }
 }
 # Functions
@@ -211,30 +140,6 @@ function Show-GameBoard {
   Start-Sleep -Milliseconds 500
 }
 
-function Remove-SolvedfromPossible {
-  Param ([SudokuGrid]$GameGrid)
-  $Emptys = $GameGrid.GameBoard | Where-Object {$_.Solved -eq $false}
-  foreach ($Empty in $Emptys) {
-    $RelatedSolvedValues = $GameGrid.SolvedByCell($Empty.Pos)
-    $Empty.RemoveFromPossibles($RelatedSolvedValues)
-  } 
-}
-
-# Initialize BoardGrid Setup
-Clear-Host
-$Position = 0 
-$GameArray =   foreach ($SudokuCell in $GameBoard.ToCharArray()) {
-  [SudokuElement]::New($Position,$SudokuCell)
-  $Position++
-} 
-$Game = [SudokuGrid]::New($GameArray)
+$Game = [SudokuGrid]::New($GameBoard)
+$Game
 Show-GameBoard -GameArray $Game.GameBoard
-Remove-SolvedfromPossible -GameGrid $Game
-
-#### Main code ###
-do {
-  $Game.CheckAndSolveSinglePossibles() 
-  Remove-SolvedfromPossible -GameGrid $Game; $Game.CheckAndSolveSinglePossibles(); Show-GameBoard -GameArray $Game.GameBoard
-  $Game.SolveHiddenSingleRow()
-  Remove-SolvedfromPossible -GameGrid $Game; $Game.CheckAndSolveSinglePossibles(); Show-GameBoard -GameArray $Game.GameBoard
-} until ($Game.GameBoard.Solved -notcontains $false)
