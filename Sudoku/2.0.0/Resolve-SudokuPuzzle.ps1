@@ -37,7 +37,7 @@
 #>
 [CmdletBinding()]
 Param(
-  [String]$GameBoard = '9-53--8-2---2-6-------1----7--4-3--8--6---7--1--6-8--9----6-------7-9---2-7--14-5'
+  [String]$GameBoard = '9-53--8-2---2-6-------1----7--4-3--8--6---7--1--6-8--9----6-------7-9---2-7--1495'
 )
 
 
@@ -101,6 +101,7 @@ class SudokuGrid {
     $this.GameBoard = $BoardArray
     $this.SolvedElements = ($BoardArray| Where-Object {$_.Solved -eq $true}).Count
   }
+
   [string[]]SolvedByRow ($RowNumber) {
     return ($this.GameBoard | 
       Where-Object {$_.Row -eq $RowNumber -and $_.Solved -eq $true}).Value | 
@@ -135,8 +136,10 @@ class SudokuGrid {
       if ($HiddenSingleRowVals.Count -gt 0) {
         foreach ($HiddenSingleRowVal in $HiddenSingleRowVals) {
           $ChangeThisIndex = ($RowElements | Where-Object {$_.PossibleValues -contains $HiddenSingleRowVal.Name}).Pos
-          $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleRowVal.Name)
-          $this.GameBoard[$ChangeThisIndex].PosValStr = $HiddenSingleRowVal.Name
+          if ($ChangeThisIndex -match '\d{1,2}') {
+            $this.GameBoard[$ChangeThisIndex].RemoveFromPossibles( (1..9 | Where-Object {$_ -notcontains $HiddenSingleRowVal.Name}))
+            $this.GameBoard[$ChangeThisIndex].PosValStr = $this.GameBoard[$ChangeThisIndex].PossibleValues -join ','
+          }
         }
       }
     }
@@ -148,8 +151,10 @@ class SudokuGrid {
       if ($HiddenSingleColVals.Count -gt 0) {
         foreach ($HiddenSingleColVal in $HiddenSingleColVals) {
           $ChangeThisIndex = ($ColElements | Where-Object {$_.PossibleValues -contains $HiddenSingleColVal.Name}).Pos
-          $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleColVal.Name)
-          $this.GameBoard[$ChangeThisIndex].PosValStr = $HiddenSingleColVal.Name
+          if ($ChangeThisIndex -gt 0) {
+            $this.GameBoard[$ChangeThisIndex].RemoveFromPossibles( (1..9 | Where-Object {$_ -notcontains $HiddenSingleColVal.Name}))
+            $this.GameBoard[$ChangeThisIndex].PosValStr = $this.GameBoard[$ChangeThisIndex].PossibleValues -join ','
+          }
         }
       }
     }
@@ -161,8 +166,10 @@ class SudokuGrid {
       if ($HiddenSingleSqrVals.Count -gt 0) {
         foreach ($HiddenSingleSqrVal in $HiddenSingleSqrVals) {
           $ChangeThisIndex = ($SqrElements | Where-Object {$_.PossibleValues -contains $HiddenSingleSqrVal.Name}).Pos
-          $this.GameBoard[$ChangeThisIndex].PossibleValues = @($HiddenSingleSqrVal.Name)
-          $this.GameBoard[$ChangeThisIndex].PosValStr = $HiddenSingleSqrVal.Name
+          if ($ChangeThisIndex -gt 0) {
+            $this.GameBoard[$ChangeThisIndex].RemoveFromPossibles( (1..9 | Where-Object {$_ -notcontains $HiddenSingleSqrVal.Name}))
+            $this.GameBoard[$ChangeThisIndex].PosValStr = $this.GameBoard[$ChangeThisIndex].PossibleValues -join ','
+          }
         }
       }
     }
@@ -171,7 +178,8 @@ class SudokuGrid {
     $this.GameBoard | ForEach-Object {
       if ($_.PossibleValues.Count -eq 1) {
         $Index = $_.Pos
-        $this.GameBoard[$index].Solve($_.PossibleValues[0])
+        $Value = $_.PossibleValues[0]
+        $this.GameBoard[$index].RemoveFromPossibles( (1..9 | Where-Object { $_ -notcontains $Value}))
       }
     }  
   }
