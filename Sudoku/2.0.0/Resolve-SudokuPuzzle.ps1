@@ -105,6 +105,9 @@ class SudokuGrid {
       }
     }
   }
+  [string]ConvertToString () {
+    return ($this.GameBoard.Value -as [string]) -replace '\s',''
+  }
   [void]SolveNakedSingles() {
     $UnsolvedCells = $this.GameBoard | Where-Object {$_.Solved -eq $false}
     foreach ($CellIndex in $UnsolvedCells.Pos) {
@@ -173,9 +176,19 @@ function Show-GameBoard {
 Clear-Host
 $Game = [SudokuGrid]::New($GameBoard)
 Show-GameBoard -GameArray $Game.GameBoard
-
+Write-Verbose "Initialise Board                    "
 # Main code
 do {
-  $Game.RemoveRelatedValues();$Game.SolveNakedSingles();Show-GameBoard -GameArray $Game.GameBoard
-  $Game.RemoveRelatedValues();$Game.SolveHiddenSingles();Show-GameBoard -GameArray $Game.GameBoard
+  do {
+    $Before = $Game.ConvertToString()
+    $Game.RemoveRelatedValues();$Game.SolveNakedSingles();Show-GameBoard -GameArray $Game.GameBoard
+    Write-Verbose "Naked Single                    "
+    $After = $Game.ConvertToString()
+  } until ($Before -eq $After)
+  do {
+    $Before = $Game.ConvertToString()
+    $Game.RemoveRelatedValues();$Game.SolveHiddenSingles();Show-GameBoard -GameArray $Game.GameBoard
+    Write-Verbose "Hidden Single                    "
+    $After = $Game.ConvertToString()
+  } until ($Before -eq $After)
 } until ($Game.GameBoard.Solved -notcontains $false)
