@@ -74,6 +74,9 @@ Class SudokuElement {
       $this.Solved = $true
     }
   } # Constructor
+  [void]RemoveValuesFromPossible ([string[]]$ValuesToRemove) {
+    $this.PossibleValues = $this.PossibleValues | Where-Object {$_ -notin $ValuesToRemove}
+  }
 } # Class 
 
 class SudokuGrid {
@@ -109,6 +112,32 @@ class SudokuGrid {
         $this.GameBoard[$CellIndex].Value = $this.GameBoard[$CellIndex].PossibleValues[0]
         $this.GameBoard[$CellIndex].PosValStr = $this.GameBoard[$CellIndex].PossibleValues[0] -as [string]
         $this.GameBoard[$CellIndex].Solved = $true
+      }
+    }
+  }
+  [void]SolveHiddenSingles() {
+    $UnsolvedCells = $this.GameBoard | Where-Object {$_.Solved -eq $false}
+    foreach ($Index in (0..8)) {
+      $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Index}
+      [string[]]$HiddenSingles = ($UnsolvedCellsInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}).name
+      foreach ($HiddenSingle in $HiddenSingles) {
+        $CellToChange = $UnsolvedCellsInRow | Where-Object {$_.PossibleValues -contains $HiddenSingle}
+        $ValuesToRemoveFromPossible = 1..9 | Where-Object {$_ -notcontains $HiddenSingle}
+        $CellToChange.RemoveValuesFromPossible($ValuesToRemoveFromPossible)
+      }
+      $UnsolvedCellsInCol = $UnsolvedCells | Where-Object {$_.Col -eq $Index}
+      [string[]]$HiddenSingles = ($UnsolvedCellsInCol.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}).name
+      foreach ($HiddenSingle in $HiddenSingles) {
+        $CellToChange = $UnsolvedCellsInCol | Where-Object {$_.PossibleValues -contains $HiddenSingle}
+        $ValuesToRemoveFromPossible = 1..9 | Where-Object {$_ -notcontains $HiddenSingle}
+        $CellToChange.RemoveValuesFromPossible($ValuesToRemoveFromPossible)
+      }
+      $UnsolvedCellsInSqr = $UnsolvedCells | Where-Object {$_.Sqr -eq $Index}
+      [string[]]$HiddenSingles = ($UnsolvedCellsInSqr.PossibleValues | Group-Object | Where-Object {$_.Count -eq 1}).name
+      foreach ($HiddenSingle in $HiddenSingles) {
+        $CellToChange = $UnsolvedCellsInSqr | Where-Object {$_.PossibleValues -contains $HiddenSingle}
+        $ValuesToRemoveFromPossible = 1..9 | Where-Object {$_ -notcontains $HiddenSingle}
+        $CellToChange.RemoveValuesFromPossible($ValuesToRemoveFromPossible)
       }
     }
   }
@@ -148,4 +177,5 @@ Show-GameBoard -GameArray $Game.GameBoard
 # Main code
 do {
   $Game.RemoveRelatedValues();$Game.SolveNakedSingles();Show-GameBoard -GameArray $Game.GameBoard
+  $Game.RemoveRelatedValues();$Game.SolveHiddenSingles();Show-GameBoard -GameArray $Game.GameBoard
 } until ($Game.GameBoard.Solved -notcontains $false)
