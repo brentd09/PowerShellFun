@@ -150,7 +150,7 @@ class SudokuGrid {
       $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Index}
       [string[]]$HiddenPairs = ($UnsolvedCellsInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}).name
       foreach ($HiddenPair in $HiddenPairs) {
-        $Columns = ($UnsolvedCellsInRow | Where-Object {$_.PossibleValues -contains $HiddenPair}).Col
+        $MatchingObjects = $UnsolvedCellsInRow | Where-Object {$_.PossibleValues -contains $HiddenPair}
       }
     }
   }
