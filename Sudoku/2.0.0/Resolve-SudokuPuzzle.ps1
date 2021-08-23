@@ -77,7 +77,7 @@ Class SudokuElement {
   [void]RemoveValuesFromPossible ([string[]]$ValuesToRemove) {
     $this.PossibleValues = $this.PossibleValues | Where-Object {$_ -notin $ValuesToRemove}
   }
-} # Class 
+} # End Class Sudoku Element
 
 class SudokuGrid {
   [SudokuElement[]]$GameBoard
@@ -144,7 +144,19 @@ class SudokuGrid {
       }
     }
   }
-}
+  [void]SolveHiddenPairs () {
+    $UnsolvedCells = $this.GameBoard | Where-Object {$_.Solved -eq $false}
+    foreach ($Index in (0..8)) {
+      $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Index}
+      [string[]]$HiddenPairs = ($UnsolvedCellsInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}).name
+      foreach ($HiddenPair in $HiddenPairs) {
+        $Columns = ($UnsolvedCellsInRow | Where-Object {$_.PossibleValues -contains $HiddenPair}).Col
+      }
+    }
+  }
+} # End Class Sudoku Grid
+
+
 # Functions
 function Show-GameBoard {
   Param ($GameArray)
