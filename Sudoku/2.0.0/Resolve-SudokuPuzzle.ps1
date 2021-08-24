@@ -148,10 +148,8 @@ class SudokuGrid {
     $UnsolvedCells = $this.GameBoard | Where-Object {$_.Solved -eq $false}
     foreach ($Index in (0..8)) {
       $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Index}
-      [string[]]$HiddenPairs = ($UnsolvedCellsInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}).name
-      foreach ($HiddenPair in $HiddenPairs) {
-        $MatchingObjects = $UnsolvedCellsInRow | Where-Object {$_.PossibleValues -contains $HiddenPair}
-      }
+      $HiddenPairObjects = $UnsolvedCellsInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}
+      sleep 1
     }
   }
 } # End Class Sudoku Grid
@@ -203,4 +201,5 @@ do {
     Write-Verbose "Hidden Single                    "
     $After = $Game.ConvertToString()
   } until ($Before -eq $After)
+  $Game.SolveHiddenPairs()
 } until ($Game.GameBoard.Solved -notcontains $false)
