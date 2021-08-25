@@ -148,8 +148,10 @@ class SudokuGrid {
     $UnsolvedCells = $this.GameBoard | Where-Object {$_.Solved -eq $false}
     foreach ($Index in (0..8)) {
       $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Index}
-      $HiddenPairObjects = $UnsolvedCellsInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}
-      $HiddenPairValues = $HiddenPairObjects.Name
+      $GroupedsHiddenPairs = $UnsolvedCellsInRow.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}
+      $HiddenPairValues = $GroupedsHiddenPairs.Name
+      # -not [bool]( $Small1 | Where-Object {$_ -notin $Large}).count
+      # this might be able to be used for pairs and triples, if I used a parameter to dictate if 2 -pair 3 for triple
       sleep 1
     }
   }
