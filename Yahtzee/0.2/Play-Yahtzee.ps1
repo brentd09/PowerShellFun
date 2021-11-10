@@ -14,9 +14,7 @@
   General notes
 #>
 [CmdletBinding()]
-Param (
-  [int]$NumberOfPlayers = 2
-)
+Param ()
 
 function Get-DiceRoll {
   Param (
@@ -33,7 +31,8 @@ function Get-DiceRoll {
 }
 
 function Show-ScoreCard {
-  Param 
+  Param ($Scores)
+  
 }
 
 # Main code
