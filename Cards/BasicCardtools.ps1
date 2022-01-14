@@ -38,9 +38,28 @@ function Show-Card {
   Write-Host -ForegroundColor $Card.Color -BackgroundColor white "$Spc$($Card.Rank + ' ' + $Card.Suit)  "
 }
 
+function Show-PlayerHand {
+  Param (
+    $PlayerName,
+    $PlayerCards
+  )
+}
+
+function Invoke-DealCard {
+  Param (
+    $Cards,
+    $CardIndex = 0
+  )
+  $DealtCard = $Cards[$CardIndex]
+  $Cards.RemoveAt($CardIndex)
+  return $DealtCard
+}
 
 ### Main Code
 
-$PlayingCards = New-CardPack
-$ShuffledCards = $PlayingCards | Sort-Object {Get-Random} | Sort-Object {Get-Random}
+[System.Collections.ArrayList]$PlayingCards = New-CardPack
+[System.Collections.ArrayList]$ShuffledCards = $PlayingCards | Sort-Object {Get-Random} | Sort-Object {Get-Random}
 $ShuffledCards | ForEach-Object {Show-Card -Card $_}
+[PlayingCard[]]$Player1 = @()
+$Player1 += Invoke-DealCard -Cards $ShuffledCards
+$Player1
