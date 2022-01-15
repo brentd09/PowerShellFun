@@ -3,12 +3,17 @@ Class PlayingCard {
   [string]$Rank
   [string]$Suit
   [string]$Color
+  [int]$ScoreValue
 
   PlayingCard ([string]$FaceRank, [int]$FaceValue, [string]$FaceSuit, [string]$FaceColor) {
     $this.Rank      = $FaceRank
     $this.RankValue = $FaceValue
     $this.Suit      = $FaceSuit
     $this.Color     = $FaceColor 
+  }
+
+  [void]SetScoreVal ([int]$Value) {
+    $this.ScoreValue = $Value
   }
 }
 
@@ -21,13 +26,15 @@ function New-CardPack {
     $Suit = [char]$SuitASCIINumber
     foreach ($Rank in $RankNumbers) {
       switch ($Rank) {
-         1 { $RankString = 'A' }
-        11 { $RankString = 'J' }
-        12 { $RankString = 'Q' }
-        13 { $RankString = 'K' }
-        Default {$RankString = $Rank -as [string]}
+         1 { $RankString = 'A'; $ScoreVal = 15 }
+        11 { $RankString = 'J'; $ScoreVal = 10 }
+        12 { $RankString = 'Q'; $ScoreVal = 10 }
+        13 { $RankString = 'K'; $ScoreVal = 10 }
+        Default {$RankString = $Rank -as [string]; $ScoreVal = 5}
       }
-      [PlayingCard]::New($RankString,$Rank,$Suit,$Color)
+      $Card = [PlayingCard]::New($RankString,$Rank,$Suit,$Color)
+      $Card.SetScoreVal($ScoreVal)
+      $card
     }
   }
 }
