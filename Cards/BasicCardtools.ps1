@@ -66,11 +66,22 @@ Class PlayingDeck {
 
 $Deck = [PlayingDeck]::New()
 $Deck.ShuffleDeck()
-$Player1 = 1..5 | ForEach-Object {$Deck.DealFromDeck()} 
-$Player2 = 1..5 | ForEach-Object {$Deck.DealFromDeck()} 
-$Player3 = 1..5 | ForEach-Object {$Deck.DealFromDeck()} 
-$Player4 = 1..5 | ForEach-Object {$Deck.DealFromDeck()} 
+$Player = New-Object -TypeName 'object[,]' -ArgumentList  4,2
+foreach ($PlayerNum in  (0..3))  {
+  foreach ($CardNum in (0..1)) {
+    $Player[$PlayerNum,$CardNum] = $Deck.DealFromDeck()
+  }
+}
 
-1..4 | ForEach-Object {(Get-Variable -Name Player$_).Value | Format-Table}
+foreach ($PlayerNum in  (0..3)) {
+  Write-Output "Player $($PlayerNum+1)"
+  foreach ($CardNum in (0..1)) {
+    if ($Player[$PlayerNum,$CardNum].RankValue -eq 10 ) {$Spc = ''}
+    else {$Spc = ' '}
+    Write-Host -BackgroundColor White -ForegroundColor $Player[$PlayerNum,$CardNum].Color -NoNewline " $Spc$($Player[$PlayerNum,$CardNum].Rank) $($Player[$PlayerNum,$CardNum].Suit) "
+    Write-Host ' ' -NoNewline
+  }
+  Write-Host
+}
 
-$Deck.Cards | Format-Table
+# $Deck.Cards | Format-Table
