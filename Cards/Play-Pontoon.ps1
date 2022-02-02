@@ -72,6 +72,19 @@ Class Hand {
   [void]AddCard ([PlayingCard]$Card) {
     $this.Cards += $Card
     $Score = ($this.Cards.ScoreValue | Measure-Object -Sum).Sum
+    while ($Score -gt 21) {
+      if ($Score -gt 21) {
+        foreach ($CardInHand in $this.Cards) {
+          if ($CardInHand.RankValue -eq 1 -and $CardInHand.ScoreValue -eq 11) {
+            $CardInHand.ScoreValue = 1
+            $this.HandScore = $this.HandScore - 10
+            $Score = ($this.Cards.ScoreValue | Measure-Object -Sum).Sum
+            break
+          } 
+        }
+      }
+      break
+    }
     $this.HandScore = $Score
   }
 }
@@ -95,6 +108,8 @@ $Deck = [PlayingDeck]::New()
 $Deck.ShuffleDeck()
 $PlayerHand = [Hand]::New()
 $PlayerHand.AddCard($Deck.DealFromDeck())
-$PlayerHand.AddCard($Deck.DealFromDeck())
-$PlayerHand.AddCard($Deck.DealFromDeck())
-
+do {
+  $PlayerHand.AddCard($Deck.DealFromDeck())
+  $PlayerHand.Cards | Format-Table -Property *,@{n='HandScore';e={$PlayerHand.HandScore}}
+  if ($PlayerHand.HandScore -lt 21) {$Choice = Read-Host -Prompt "[ENTER] to hit, S to stand"}
+} until ($PlayerHand.HandScore -ge 21 -or $Choice -like 's*')
