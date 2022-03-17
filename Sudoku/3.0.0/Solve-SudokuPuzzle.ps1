@@ -111,12 +111,11 @@ class Board {
   }
 
   [void]ResolvePointingPair () {
-    $Boxes = 0..8
-    foreach ($Box in $Boxes) {
-      $UnsolvedElements = $this.Element | Where-Object {$_.Box -eq $Box -and $_.Solved -eq $false}
+    $Rows = 0..8
+    foreach ($Row in $Rows) {
+      $UnsolvedElements = $this.Element | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
       if ($UnsolvedElements.Count -gt 0) {
-        $Rows = ($UnsolvedElements.Row | Group-Object | Where-Object {$_.Count -eq 2}).Name -as [int]
-        $Cols = ($UnsolvedElements.Col | Group-Object | Where-Object {$_.Count -eq 2}).Name -as [int]
+        
       }
     }
   }
