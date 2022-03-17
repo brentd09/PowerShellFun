@@ -114,21 +114,25 @@ class Board {
     $Boxes = 0..8
     foreach ($Box in $Boxes) {
       $UnsolvedElements = $this.Element | Where-Object {$_.Box -eq $Box -and $_.Solved -eq $false}
-      if ($UnsolvedElements -gt 0) {
-        $PossPairs = $UnsolvedElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}
-        if ($PossPairs.Count -gt 0) {
-          foreach ($PossPair in $PossPairs) {
-            $PairElements = $UnsolvedElements | Where-Object {$_.PossibleValues -contains $PossPair.Name}
-            # check for same row or col
-            # wipe out other possilbes in other boxes in the same row or col
-          }
-        } 
+      if ($UnsolvedElements.Count -gt 0) {
+        $Rows = ($UnsolvedElements.Row | Group-Object | Where-Object {$_.Count -eq 2}).Name -as [int]
+        $Cols = ($UnsolvedElements.Col | Group-Object | Where-Object {$_.Count -eq 2}).Name -as [int]
       }
     }
   }
 }
 
 ### Functions
+
+function Compare-Array {
+  Param ([string[]]$StrArray) 
+  foreach ($Str in $StrArray) {
+    $GroupObj = $StrArray | Group-Object
+    $NumOfGrps = $GroupObj.Name.Count
+    if ($NumOfGrps -eq 1 -and $GroupObj.Count -eq $StrArray.Count -and $StrArray[0] -eq $GroupObj.Name) {return $true }
+    else {return $false}
+  }
+}
 function Show-Board {
   Param ([Board]$BoardObj)
   Clear-Host 
@@ -357,8 +361,6 @@ function Show-Board {
   Start-Sleep -Seconds 1
 }
 
-
-
 ### Main Code
 $Elements = 0..80 | ForEach-Object {
   [BoardElement]::New($_,$FlatPuzzle[$_])
@@ -367,11 +369,17 @@ $WholeBoard = [Board]::New($Elements)
 
 do {
   Show-Board -BoardObj $WholeBoard
+  $WholeBoard.ResolveCandidates()
   $WholeBoard.ResolveHiddenSingleCandidateRow()
+  $WholeBoard.ResolveCandidates()
   Show-Board -BoardObj $WholeBoard
   $WholeBoard.ResolveHiddenSingleCandidateCol()
+  $WholeBoard.ResolveCandidates()
   Show-Board -BoardObj $WholeBoard
   $WholeBoard.ResolveHiddenSingleCandidateBox()
-  Show-Board -BoardObj $WholeBoard
   $WholeBoard.ResolveCandidates()
+  Show-Board -BoardObj $WholeBoard
+  $WholeBoard.ResolvePointingPair()
+  $WholeBoard.ResolveCandidates()
+  Show-Board -BoardObj $WholeBoard
 } Until ($WholeBoard.Element.Solved -notcontains $false)
