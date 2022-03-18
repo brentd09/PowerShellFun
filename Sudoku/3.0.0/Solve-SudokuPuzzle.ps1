@@ -38,6 +38,10 @@ Class BoardElement {
   [void]RemoveFromPossible ($Value) {
     $this.PossibleValues = $this.PossibleValues | Where-Object {$_ -ne $Value}
   }
+
+  [void]RemoveOtherValuesFromPossible ([string[]]$StrArray) {
+    $this.PossibleValues = $this.PossibleValues | Where-Object {$_ -in $StrArray}
+  }
 }
 
 class Board {
@@ -45,6 +49,10 @@ class Board {
 
   Board ($Elements) {
     $this.Element = $Elements
+  }
+
+  [string]RetrievePossibles () {
+    return $this.Element.PossibleValues -join ''
   }
 
   [void]ResolveCandidates () {
@@ -110,12 +118,57 @@ class Board {
     }
   }
 
-  [void]ResolvePointingPair () {
-    $Rows = 0..8
-    foreach ($Row in $Rows) {
+  [void]ResolveHiddenPair () {
+    $ElementCount = 0..8
+    foreach ($Row in $ElementCount) {
       $UnsolvedElements = $this.Element | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
-      if ($UnsolvedElements.Count -gt 0) {
-        
+      if ($UnsolvedElements.Count -ge 2) {
+        $Pairs = ($UnsolvedElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}).Name
+        if ($Pairs.Count -ge 2) {
+          $PairedElements = foreach ($Pair in $Pairs) {$UnsolvedElements | Where-Object {$_.PossibleValues -contains $Pair} }
+          $TwoInSameBox = ($PairedElements.Box | Group-Object | Where-Object {$_.Count -eq 2}).Name
+          #need code to finish here 
+        }
+      }
+    }    
+  }
+
+  [void]ResolvePointingPair () {
+    $ElementCount = 0..8
+    foreach ($Row in $ElementCount) {
+      $UnsolvedElements = $this.Element | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
+      if ($UnsolvedElements.Count -ge 2) {
+        $Pairs = ($UnsolvedElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}).Name
+        if ($Pairs.Count -gt 0) {
+          foreach ($Pair in $Pairs) {
+            $UnsolvedPair = $UnsolvedElements | Where-Object {$_.PossibleValues -contains $Pair}
+            if (Compare-Array -StrArray $UnsolvedPair.Box) {
+              $BoxToRemoveCandidate = $UnsolvedPair[0].Box
+              $ElementsToRemoveCandidate = $this.Element | Where-Object {$_.Box -eq $BoxToRemoveCandidate -and $_.Solved -eq $false -and $_.Pos -notin $UnsolvedPair.Pos}
+              if ($ElementsToRemoveCandidate.Count -gt 0) {
+                foreach ($Element in $ElementsToRemoveCandidate) {$Element.RemoveFromPossible($Pair)}
+              }
+            }
+          }
+        } 
+      }
+    }
+    foreach ($Col in $ElementCount) {
+      $UnsolvedElements = $this.Element | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
+      if ($UnsolvedElements.Count -ge 2) {
+        $Pairs = ($UnsolvedElements.PossibleValues | Group-Object | Where-Object {$_.Count -eq 2}).Name
+        if ($Pairs.Count -gt 0) {
+          foreach ($Pair in $Pairs) {
+            $UnsolvedPair = $UnsolvedElements | Where-Object {$_.PossibleValues -contains $Pair}
+            if (Compare-Array -StrArray $UnsolvedPair.Box) {
+              $BoxToRemoveCandidate = $UnsolvedPair.Box
+              $ElementsToRemoveCandidate = $this.Element | Where-Object {$_.Box -eq $BoxToRemoveCandidate -and $_.Solved -eq $false -and $_.Pos -notin $UnsolvedPair.Pos}
+              if ($ElementsToRemoveCandidate.Count -gt 0) {
+                foreach ($Element in $ElementsToRemoveCandidate) {$Element.RemoveFromPossible($Pair)}
+              }
+            }
+          }
+        } 
       }
     }
   }
@@ -138,7 +191,7 @@ function Show-Board {
   $MainColor = 'Green'
   $InnerColor = 'DarkGray'
   $SolvedColor = 'Gray'
-  $UnsolvedColor = 'Brown'
+  # $UnsolvedColor = 'Brown'
   $DL = [Char]449
   Write-Host "+===+===+===+===+===+===+===+===+===+" -ForeGroundColor $MainColor
   Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
@@ -297,7 +350,7 @@ function Show-Board {
   Write-Host $BoardObj.Element.Value[58] -NoNewline -ForeGroundColor $SolvedColor
   Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
   Write-Host $BoardObj.Element.Value[59] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $MainColor
+  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
   Write-Host $BoardObj.Element.Value[60] -NoNewline -ForeGroundColor $SolvedColor
   Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
   Write-Host $BoardObj.Element.Value[61] -NoNewline -ForeGroundColor $SolvedColor
@@ -368,17 +421,36 @@ $WholeBoard = [Board]::New($Elements)
 
 do {
   Show-Board -BoardObj $WholeBoard
-  $WholeBoard.ResolveCandidates()
-  $WholeBoard.ResolveHiddenSingleCandidateRow()
-  $WholeBoard.ResolveCandidates()
+  do {
+    $CurrentState = $WholeBoard.RetrievePossibles()
+    $WholeBoard.ResolveCandidates()
+    $WholeBoard.ResolveHiddenSingleCandidateRow()
+    $WholeBoard.ResolveCandidates()
+  } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
   Show-Board -BoardObj $WholeBoard
-  $WholeBoard.ResolveHiddenSingleCandidateCol()
-  $WholeBoard.ResolveCandidates()
+  
+  do {
+    $CurrentState = $WholeBoard.RetrievePossibles()
+    $WholeBoard.ResolveCandidates()
+    $WholeBoard.ResolveHiddenSingleCandidateCol()
+    $WholeBoard.ResolveCandidates()
+  } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
   Show-Board -BoardObj $WholeBoard
-  $WholeBoard.ResolveHiddenSingleCandidateBox()
-  $WholeBoard.ResolveCandidates()
+
+  do {
+    $CurrentState = $WholeBoard.RetrievePossibles()
+    $WholeBoard.ResolveCandidates()
+    $WholeBoard.ResolveHiddenSingleCandidateBox()
+    $WholeBoard.ResolveCandidates()
+  } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
   Show-Board -BoardObj $WholeBoard
-  $WholeBoard.ResolvePointingPair()
-  $WholeBoard.ResolveCandidates()
-  Show-Board -BoardObj $WholeBoard
+
+  do {
+    $CurrentState = $WholeBoard.RetrievePossibles()
+    $WholeBoard.ResolveCandidates()
+    $WholeBoard.ResolvePointingPair()
+    $WholeBoard.ResolveCandidates()
+  } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
+  Show-Board -BoardObj $WholeBoard  
+
 } Until ($WholeBoard.Element.Solved -notcontains $false)
