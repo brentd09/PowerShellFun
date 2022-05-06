@@ -16,44 +16,46 @@
 Param ()
 
 Class Square {
+  [int]$Pos
   [int]$Row
   [int]$Col
   [String]$Color 
   [bool]$Occupied
 
-
-  Square ([int]$Row,[int]$Col,[bool]$Occupied,[string]$Color) {
-    if ($Occupied -eq $true) {
-      $this.Row = $Row
-      $this.Col = $Col
-      $this.Occupied = $true
-      $this.Color = $Color
+  Square ([int]$Pos) {
+    $this.Pos = $Pos
+    $this.Row = [math]::Truncate($Pos/8)
+    $this.Col = $Pos % 8
+    if ($Pos -in @(27,36)) {
+      $this.Occupied = $true  
+      $this.Color = 'White'
+    }
+    elseif ($Pos -in @(28,35)) {
+      $this.Occupied = $True
+      $this.Color = 'Black'
     }
     else {
-      $this.Row = $Row
-      $this.Col = $Col
       $this.Occupied = $false
       $this.Color = 'None'
     }
   }
 
-  Square ([int]$Row,[int]$Col) {
-    $this.Row = $Row
-    $this.Col = $Col
-    $this.Occupied = $false
-    $this.Color = 'None'
+  [bool]Place ([string]$Color) {
+    if ($this.Occupied -eq $false) {
+      $this.Occupied = $true
+      $this.Color = $Color
+      return $true
+    }
+    else {return $false}
   }
 
-  [void]Place ([string]$Color) {
-    $this.Occupied = $true
-    $this.Color = $Color
-  }
-
-  [void]Flip () {
+  [bool]Flip () {
     if ($this.Occupied -eq $true) {
       if ($this.Color -eq 'Black') {$this.Color = 'White'}
       elseif ($this.Color -eq 'White') {$this.Color = 'Black'}
+      return $true
     }
+    else {return $false}
   }
 } # END Class Square
 
