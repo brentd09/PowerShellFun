@@ -49,6 +49,8 @@ Class Board {
       $EmptyElement.Value = $TempSwapVal
       return $true
     }
+    elseif ($ChosenElement.Row -eq $EmptyElement.Row) {} # these are so I can move multiple elements at once either on the came row or col
+    elseif ($ChosenElement.Col -eq $EmptyElement.Col) {}    
     else {return $false}
   }
 }
@@ -86,6 +88,7 @@ function Set-GameRandom {
   )
   $BoardFaces = 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y'
   1..($Size * 100) | ForEach-Object {
+    Write-Progress -Activity 'Shuffling the pieces' -PercentComplete ($_ / ($Size*100)* 100)
     do {
       $Empty = $Game | Where-Object {$_.Element.Value -match '-'}
       $RandomNeighbour = $Empty.Element.Neighbours | Get-Random
@@ -109,13 +112,17 @@ Set-GameRandom -Game $GameBoard -Size $MaxBoardPos
 $TurnCounter = 0
 
 do {
+  $GameSolved = $false
   Show-Game -Game $GameBoard -Size $BoardSize
   do {
-    $Choice = Read-Host -Prompt "Enter a number to move"
+    $Choice = Read-Host -Prompt "Enter a Letter to move"
     $LegalMove = $GameBoard.MoveElement($Choice)
   } until ($LegalMove)
   $GameState = $GameBoard.Element.Value -join ''
+  if ($BoardSize -eq 3 -and $GameState -eq 'ABCDEFGH-') {$GameSolved = $true}
+  elseif ($BoardSize -eq 4 -and $GameState -eq 'ABCDEFGHIJKLMNO-') {$GameSolved = $true}
+  elseif ($BoardSize -eq 5 -and $GameState -eq 'ABCDEFGHIJKLMNOPQRSTUVWX-') {$GameSolved = $true}
   $TurnCounter++
-} until ($false )    
+} until ($GameSolved -eq $true)    
 Show-Game -Game $GameBoard -Size $BoardSize
 Write-Host "That took $TurnCounter moves"
