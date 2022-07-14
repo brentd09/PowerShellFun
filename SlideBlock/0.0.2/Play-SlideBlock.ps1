@@ -49,8 +49,8 @@ Class Board {
       $EmptyElement.Value = $TempSwapVal
       return $true
     }
-    elseif ($ChosenElement.Row -eq $EmptyElement.Row) {} # these are so I can move multiple elements at once either on the came row or col
-    elseif ($ChosenElement.Col -eq $EmptyElement.Col) {}    
+    elseif ($ChosenElement.Row -eq $EmptyElement.Row) {return $true} # these are so I can move multiple 
+    elseif ($ChosenElement.Col -eq $EmptyElement.Col) {return $true} # elements at once either on the came row or col   
     else {return $false}
   }
 }
