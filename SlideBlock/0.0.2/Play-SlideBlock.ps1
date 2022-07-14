@@ -1,5 +1,8 @@
 [cmdletbinding()]
-Param ()
+Param (
+  [ValidateSet(3,4,5)]
+  [int]$BoardSize = 5
+)
 
 Class Element {
   [string]$Value
@@ -8,20 +11,23 @@ Class Element {
   [int]$Col
   [int[]]$Neighbours
 
-  Element ([string]$Val,[int]$Pos) {  
+  Element ([string]$Val,[int]$Pos,[int]$Size) {  
     $this.Value = $Val 
     $this.Position = $Pos
-    $this.Row = [math]::Truncate($Pos/3)
-    $this.Col = $Pos%3
-    if ($Pos -eq 0) {$this.Neighbours = @(1,3)}
-    elseif ($Pos -eq 1) {$this.Neighbours = @(0,4,2)}
-    elseif ($Pos -eq 2) {$this.Neighbours = @(1,5)}
-    elseif ($Pos -eq 3) {$this.Neighbours = @(0,6,4)}
-    elseif ($Pos -eq 4) {$this.Neighbours = @(1,3,5,7)}
-    elseif ($Pos -eq 5) {$this.Neighbours = @(2,8,4)}
-    elseif ($Pos -eq 6) {$this.Neighbours = @(3,7)}
-    elseif ($Pos -eq 7) {$this.Neighbours = @(6,4,8)}
-    elseif ($Pos -eq 8) {$this.Neighbours = @(5,7)}
+    $this.Row = [math]::Truncate($Pos/$Size)
+    $this.Col = $Pos % $Size
+    $RealNeighbours = @()
+    $PotentialAboveNeighbour = $Pos-$Size
+    $PotentialBelowNeighbour = $Pos+$Size
+    $PotentialLeftNeighbour = $Pos-1
+    $PotentialRightNeighbour =  $Pos+1
+    $RowOfPotLeftNbr = [math]::Abs([math]::Truncate($PotentialLeftNeighbour / $Size))
+    $RowOfPotRightNbr = [math]::Abs([math]::Truncate($PotentialRightNeighbour / $Size))
+    if ($PotentialAboveNeighbour -ge 0) {$RealNeighbours += $PotentialAboveNeighbour}
+    if ($PotentialBelowNeighbour -lt ($Size*$Size)) {$RealNeighbours += $PotentialBelowNeighbour}
+    if ($this.Row -eq $RowOfPotLeftNbr -and $PotentialLeftNeighbour -ge 0) {$RealNeighbours += $PotentialLeftNeighbour}
+    if ($this.Row -eq $RowOfPotRightNbr -and $PotentialRightNeighbour -lt ($Size*$Size)) {$RealNeighbours += $PotentialRightNeighbour}
+    $this.Neighbours = $RealNeighbours
   }
 }
 
@@ -51,47 +57,65 @@ Class Board {
 # Functions 
 
 function Show-Game {
-  Param ([Board]$Game)
+  Param (
+    [Board]$Game,
+    [int]$Size
+  )
   Clear-Host
+  $BoardFaces = 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y'
   $Elements = $Game.Element
-  Write-Host '+---+---+---+'
+  $SizeIndex = $Size - 1
+  $Horizontal = (1..$SizeIndex | ForEach-Object {"+---"} ) -join ''
+  $Horizontal += '+---+'
+  Write-Host $Horizontal
   $Elements | Sort-Object -Property Position | ForEach-Object {
-    if ($_.Col -eq 0 -and $_.Row -ne 0) {Write-Host }
-    if ($_.Value -match '[1-8]') {Write-Host "| $($_.Value) " -NoNewline}
+    if ($_.Value -in $BoardFaces) {Write-Host "| $($_.Value) " -NoNewline}
     else {Write-Host "|   " -NoNewline}
-    if ($_.Col -eq 2) {
-      Write-Host '|' 
-      Write-Host '+---+---+---+' -NoNewline
-    }
+    if ($_.Col -eq ($Size - 1)) {
+      Write-Host "|"
+      Write-Host $Horizontal
+    } 
   }
-  Write-Host
   Write-Host
 }
 
 function Set-GameRandom {
-  Param ([Board]$Game)
-  1..5000 | ForEach-Object {
-    $Move = 1..8 | Get-Random
-    $Result = $Game.MoveElement($Move)
+  Param (
+    [Board]$Game,
+    [int]$Size
+  )
+  $BoardFaces = 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y'
+  1..($Size * 100) | ForEach-Object {
+    do {
+      $Empty = $Game | Where-Object {$_.Element.Value -match '-'}
+      $RandomNeighbour = $Empty.Element.Neighbours | Get-Random
+      $Result = $Game.MoveElement($BoardFaces[$RandomNeighbour-1])
+    } until ($Result -eq $true)
   }
 }
 
 # Main Code 
+$BoardFaces = 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y'
+$MaxBoardPos = $BoardSize * $BoardSize - 1
+$Numbers = 1..$MaxBoardPos
+$Numbers += '-'
+$Slides = 0..$MaxBoardPos | ForEach-Object {
+  if ($_ -lt $MaxBoardPos) {[Element]::New($BoardFaces[$_],$_,$BoardSize)}
+  else {[Element]::New('-',$MaxBoardPos,$BoardSize)}
+}
 
-$Numbers = '1','2','3','4','5','6','7','8','-'
-$Slides = 0..8 | ForEach-Object {[Element]::New($Numbers[$_],$_)}
 $GameBoard = [Board]::New($Slides)
-Set-GameRandom -Game $GameBoard
+Set-GameRandom -Game $GameBoard -Size $MaxBoardPos
 $TurnCounter = 0
 
 do {
-  Show-Game -Game $GameBoard
+  Show-Game -Game $GameBoard -Size $BoardSize
   do {
     $Choice = Read-Host -Prompt "Enter a number to move"
     $LegalMove = $GameBoard.MoveElement($Choice)
   } until ($LegalMove)
   $GameState = $GameBoard.Element.Value -join ''
   $TurnCounter++
-} until ($GameState -eq '12345678-' )    
-Show-Game -Game $GameBoard
+} until ($false )    
+Show-Game -Game $GameBoard -Size $BoardSize
 Write-Host "That took $TurnCounter moves"
