@@ -63,7 +63,7 @@ Class Board {
           for ($Pos = $EmptyElement.Position + $Size;$Pos -le $ChosenElement.Position;$Pos = $Pos + $Size) {$this.MoveElementByPosition($Pos)}
         }
         else {          
-          for ($Pos = $EmptyElement.Position - $Size;$Pos -le $ChosenElement.Position;$Pos = $Pos - $Size) {$this.MoveElementByPosition($Pos)}
+          for ($Pos = $EmptyElement.Position - $Size;$Pos -ge $ChosenElement.Position;$Pos = $Pos - $Size) {$this.MoveElementByPosition($Pos)}
         }
       }
       return $true
@@ -116,9 +116,10 @@ function Set-GameRandom {
     [Board]$Game,
     [int]$Size
   )
+  Clear-Host
+  Write-Host -ForegroundColor Red "Please wait while I shuffle the tiles"
   $BoardFaces = 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y'
   1..($Size * 50) | ForEach-Object {
-    Write-Progress -Activity 'Shuffling the pieces' -PercentComplete ($_ / ($Size*100)* 100)
     do {
       $Empty = $Game | Where-Object {$_.Element.Value -match '-'}
       $RandomNeighbour = $Empty.Element.Neighbours | Get-Random
