@@ -1,7 +1,7 @@
 [cmdletbinding()]
 Param (
   [ValidateSet(3,4,5)]
-  [int]$BoardSize = 5
+  [int]$BoardSize = 4
 )
 
 Class Element {
@@ -38,7 +38,7 @@ Class Board {
     $this.Element = $Elements
   }
 
-  [bool]MoveElement ([string]$FaceValue) {
+  [bool]MoveElement ([string]$FaceValue,[int]$Size) {
     $EmptyElement = $this.Element | Where-Object {$_.Value -eq '-'}
     $ChosenElement = $this.Element | Where-Object {$_.Value -eq $FaceValue}
     $ChosenNeighbours = $ChosenElement.Neighbours
@@ -49,8 +49,38 @@ Class Board {
       $EmptyElement.Value = $TempSwapVal
       return $true
     }
-    elseif ($ChosenElement.Row -eq $EmptyElement.Row) {return $true} # these are so I can move multiple 
-    elseif ($ChosenElement.Col -eq $EmptyElement.Col) {return $true} # elements at once either on the came row or col   
+    elseif ($ChosenElement.Row -eq $EmptyElement.Row -or $ChosenElement.Col -eq $EmptyElement.Col) {
+      if ($ChosenElement.Row -eq $EmptyElement.Row) {
+        if ($ChosenElement.Col -gt $EmptyElement.Col) {
+          ($EmptyElement.Position + 1)..$ChosenElement.Position | ForEach-Object {$this.MoveElementByPosition($_)}
+        }
+        else {          
+          ($EmptyElement.Position - 1)..$ChosenElement.Position | ForEach-Object {$this.MoveElementByPosition($_)}
+        }
+      }
+      if ($ChosenElement.Col -eq $EmptyElement.Col) {
+        if ($ChosenElement.Row -gt $EmptyElement.Row) {
+          for ($Pos = $EmptyElement.Position + $Size;$Pos -le $ChosenElement.Position;$Pos = $Pos + $Size) {$this.MoveElementByPosition($Pos)}
+        }
+        else {          
+          for ($Pos = $EmptyElement.Position - $Size;$Pos -le $ChosenElement.Position;$Pos = $Pos - $Size) {$this.MoveElementByPosition($Pos)}
+        }
+      }
+      return $true
+    } # these are so I can move multiple elements at once either on the came row or col   
+    else {return $false}
+  }
+
+  [bool]MoveElementByPosition ([int]$PositionToSwap) {
+    $EmptyElement = $this.Element | Where-Object {$_.Value -eq '-'}
+    $ChosenElement = $this.Element | Where-Object {$_.Position -eq $PositionToSwap}
+    $ChosenNeighbours = $ChosenElement.Neighbours
+    if ($EmptyElement.Position -in $ChosenNeighbours) {
+      $TempSwapVal = $ChosenElement.Value
+      $ChosenElement.Value = $EmptyElement.Value
+      $EmptyElement.Value = $TempSwapVal
+      return $true
+    }
     else {return $false}
   }
 }
@@ -87,12 +117,12 @@ function Set-GameRandom {
     [int]$Size
   )
   $BoardFaces = 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y'
-  1..($Size * 100) | ForEach-Object {
+  1..($Size * 50) | ForEach-Object {
     Write-Progress -Activity 'Shuffling the pieces' -PercentComplete ($_ / ($Size*100)* 100)
     do {
       $Empty = $Game | Where-Object {$_.Element.Value -match '-'}
       $RandomNeighbour = $Empty.Element.Neighbours | Get-Random
-      $Result = $Game.MoveElement($BoardFaces[$RandomNeighbour-1])
+      $Result = $Game.MoveElement($BoardFaces[$RandomNeighbour-1],$BoardSize)
     } until ($Result -eq $true)
   }
 }
@@ -116,7 +146,7 @@ do {
   Show-Game -Game $GameBoard -Size $BoardSize
   do {
     $Choice = Read-Host -Prompt "Enter a Letter to move"
-    $LegalMove = $GameBoard.MoveElement($Choice)
+    $LegalMove = $GameBoard.MoveElement($Choice,$BoardSize)
   } until ($LegalMove)
   $GameState = $GameBoard.Element.Value -join ''
   if ($BoardSize -eq 3 -and $GameState -eq 'ABCDEFGH-') {$GameSolved = $true}
