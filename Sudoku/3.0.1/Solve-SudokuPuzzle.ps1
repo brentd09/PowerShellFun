@@ -1,7 +1,8 @@
 [CmdletBinding()]
 Param (
   [ValidateLength(81,81)]
-  [string]$FlatPuzzle = '2-------4--641------5-2-83--------9--12-3-56--8--------63-5-1------873--8-------2'
+  [string]$FlatPuzzle = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1--3------'
+  # '2-------4--641------5-2-83--------9--12-3-56--8--------63-5-1------873--8-------2'
 )
 
 Class BoardElement {
@@ -196,229 +197,58 @@ function Compare-Array {
 function Show-Board {
   Param ([Board]$BoardObj)
   Clear-Host 
-  $MainColor = 'Green'
-  $InnerColor = 'DarkGray'
-  $SolvedColor = 'Gray'
-  # $UnsolvedColor = 'Brown'
+  $MainColor = 'cyan'
+  $InnerColor = 'gray'
+  $SolvedColor = 'yellow'
+  $UnsolvedColor = 'Brown'
   $DL = [Char]449
   Write-Host "+===+===+===+===+===+===+===+===+===+" -ForeGroundColor $MainColor
+  foreach ($outercount in (0,27,54)) {
   Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[0]  -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[1] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[2] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $Maincolor
-  Write-Host $BoardObj.Element.Value[3] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[4] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[5] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[6] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[7] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[8] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "   -ForeGroundColor $MainColor
-  Write-Host "+" -NoNewline -ForeGroundColor $MainColor
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---"  -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+"  -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[9] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[10] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[11] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[12] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[13] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[14] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[15] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[16] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[17] -NoNewline  -ForeGroundColor $SolvedColor
-  Write-Host " $DL "    -ForeGroundColor $MainColor
-  Write-Host "+" -NoNewline -ForeGroundColor $MainColor
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---"  -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+"  -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[18] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[19] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[20] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[21] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[22] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[23] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[24] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[25] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[26] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL"    -ForeGroundColor $MainColor
-  Write-Host "+===+===+===+===+===+===+===+===+===+" -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[27] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[28] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[29] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[30] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[31] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[32] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[33] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[34] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[35] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL"    -ForeGroundColor $MainColor
-  Write-Host "+" -NoNewline -ForeGroundColor $MainColor
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---"  -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+"  -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[36] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[37] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[38] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[39] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[40] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[41] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[42] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[43] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[44] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL"  -ForeGroundColor $MainColor
-  Write-Host "+" -NoNewline -ForeGroundColor $MainColor
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---"  -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+"  -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[45] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[46] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[47] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[48] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[49] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[50] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[51] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[52] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[53] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL"   -ForeGroundColor $MainColor
-  Write-Host "+===+===+===+===+===+===+===+===+===+" -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[54] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[55] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[56] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[57] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[58] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[59] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[60] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[61] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[62] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL"   -ForeGroundColor $MainColor
-  Write-Host "+" -NoNewline -ForeGroundColor $MainColor
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---"  -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+"  -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[63] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[64] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[65] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[66] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[67] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[68] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[69] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[70] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[71] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL"   -ForeGroundColor $MainColor
-  Write-Host "+" -NoNewline -ForeGroundColor $MainColor
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+" -ForeGroundColor $MainColor -NoNewline
-  Write-Host "---+---+---"  -ForeGroundColor $InnerColor -NoNewline
-  Write-Host "+"  -ForeGroundColor $MainColor
-  Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[72] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[73] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[74] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[75] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[76] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[77] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL "  -NoNewline -ForeGroundColor $MainColor
-  Write-Host $BoardObj.Element.Value[78] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[79] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
-  Write-Host $BoardObj.Element.Value[80] -NoNewline -ForeGroundColor $SolvedColor
-  Write-Host " $DL"  -ForeGroundColor $MainColor
-  Write-Host "+===+===+===+===+===+===+===+===+===+" -ForeGroundColor $MainColor
-  Start-Sleep -Seconds 1
+    foreach ($count in (0,3,6)) {
+      Write-Host $BoardObj.Element.Value[0+$count+$outercount]  -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
+      Write-Host $BoardObj.Element.Value[1+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
+      Write-Host $BoardObj.Element.Value[2+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " $DL "  -NoNewline -ForeGroundColor $Maincolor
+    }
+    Write-Host
+    Write-Host "+" -NoNewline -ForeGroundColor $MainColor
+    foreach ($count in (1..3)) {
+      Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
+      Write-Host "+" -ForeGroundColor $MainColor -NoNewline
+    }
+    Write-Host
+    Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
+    foreach ($count in (0,3,6)) {
+      Write-Host $BoardObj.Element.Value[9+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
+      Write-Host $BoardObj.Element.Value[10+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
+      Write-Host $BoardObj.Element.Value[11+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
+    }
+    Write-Host
+    Write-Host "+" -NoNewline -ForeGroundColor $MainColor
+    foreach ($count in (1..3)) {
+      Write-Host "---+---+---" -ForeGroundColor $InnerColor -NoNewline
+      Write-Host "+" -ForeGroundColor $MainColor -NoNewline
+    }
+    Write-Host
+    Write-Host "$DL " -NoNewline -ForeGroundColor $MainColor
+    foreach ($count in (0,3,6)) {
+      Write-Host $BoardObj.Element.Value[18+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " | "  -NoNewline -ForeGroundColor $InnerColor
+      Write-Host $BoardObj.Element.Value[19+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " | "   -NoNewline -ForeGroundColor $InnerColor
+      Write-Host $BoardObj.Element.Value[20+$count+$outercount] -NoNewline -ForeGroundColor $SolvedColor
+      Write-Host " $DL "   -NoNewline -ForeGroundColor $MainColor
+    }  
+    Write-Host
+    Write-Host "+===+===+===+===+===+===+===+===+===+" -ForeGroundColor $MainColor
+  }
+  # Start-Sleep -Milliseconds 10000
 }
 
 ### Main Code
@@ -426,39 +256,23 @@ $Elements = 0..80 | ForEach-Object {
   [BoardElement]::New($_,$FlatPuzzle[$_])
 } 
 $WholeBoard = [Board]::New($Elements)
-
 do {
   Show-Board -BoardObj $WholeBoard
   do {
     $CurrentState = $WholeBoard.RetrievePossibles()
     $WholeBoard.ResolveCandidates()
+    if ($WholeBoard.Element.Solved -notcontains $false) {break}
+    Show-Board -BoardObj $WholeBoard
     $WholeBoard.ResolveHiddenSingleCandidateRow()
+    if ($WholeBoard.Element.Solved -notcontains $false) {break}
+    Show-Board -BoardObj $WholeBoard
     $WholeBoard.ResolveCandidates()
+    if ($WholeBoard.Element.Solved -notcontains $false) {break}
+    Show-Board -BoardObj $WholeBoard
   } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
   Show-Board -BoardObj $WholeBoard
   
-  do {
-    $CurrentState = $WholeBoard.RetrievePossibles()
-    $WholeBoard.ResolveCandidates()
-    $WholeBoard.ResolveHiddenSingleCandidateCol()
-    $WholeBoard.ResolveCandidates()
-  } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
-  Show-Board -BoardObj $WholeBoard
 
-  do {
-    $CurrentState = $WholeBoard.RetrievePossibles()
-    $WholeBoard.ResolveCandidates()
-    $WholeBoard.ResolveHiddenSingleCandidateBox()
-    $WholeBoard.ResolveCandidates()
-  } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
-  Show-Board -BoardObj $WholeBoard
-
-  do {
-    $CurrentState = $WholeBoard.RetrievePossibles()
-    $WholeBoard.ResolveCandidates()
-    $WholeBoard.ResolvePointingPair()
-    $WholeBoard.ResolveCandidates()
-  } until ($CurrentState -eq $WholeBoard.RetrievePossibles())
-  Show-Board -BoardObj $WholeBoard  
+ 
 
 } Until ($WholeBoard.Element.Solved -notcontains $false)
