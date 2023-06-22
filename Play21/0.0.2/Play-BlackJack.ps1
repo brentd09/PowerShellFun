@@ -22,7 +22,7 @@
   }
 }
 
-function Display-Card {
+function Show-Card {
   Param($DeckShuffled,$WhichCard,[switch]$HideCard)
   $SingleCard = $DeckShuffled[$WhichCard] 
   if ($HideCard) {$ForeColor = "White"}
@@ -31,7 +31,7 @@ function Display-Card {
   write-host ' ' -NoNewline
 }
 
-function Check-HandScore {
+function Test-HandScore {
   Param ($EntireHand)
   $HandBusted = $false
   $ScoreAdjust = 0
@@ -52,7 +52,7 @@ function Check-HandScore {
   New-Object -TypeName psobject -Property $ScoreParam
 }
 
-function Check-WhoWon {
+function Test-WhoWon {
   Param($DealerInfo,$PlayerInfo)
   if ($PlayerInfo.busted) {
     if ($DealerInfo.score -le 21) {$WhoWon = "Dealer"}
@@ -99,10 +99,10 @@ do {
     Write-Host ''
     # Display the Dealers Hand
     Write-Host -ForegroundColor Yellow  "Dealer Hand"
-    $DealerStatus = Check-HandScore -EntireHand $InitShuffle[$DealerHand] 
+    $DealerStatus = Test-HandScore -EntireHand $InitShuffle[$DealerHand] 
     foreach ($DealerCard in $DealerHand) {
-      if (-not $DealersTurn -and $DealerCard -eq $DealerHand[0]) {Display-Card -DeckShuffled $InitShuffle -WhichCard $DealerCard -HideCard}
-      else {Display-Card -DeckShuffled $InitShuffle -WhichCard $DealerCard}
+      if (-not $DealersTurn -and $DealerCard -eq $DealerHand[0]) {Show-Card -DeckShuffled $InitShuffle -WhichCard $DealerCard -HideCard}
+      else {Show-Card -DeckShuffled $InitShuffle -WhichCard $DealerCard}
     }
     Write-Host ''
     if ($DealerStatus.Busted) { 
@@ -116,9 +116,9 @@ do {
     else {Write-Host -ForegroundColor Cyan "Waiting For Player"}
     # Display the Players Hand
     Write-Host -ForegroundColor Green  "`nPlayer Hand"
-    $PlayerStatus = Check-HandScore -EntireHand $InitShuffle[$PlayerHand] 
+    $PlayerStatus = Test-HandScore -EntireHand $InitShuffle[$PlayerHand] 
     foreach ($PlayerCard in $PlayerHand) {
-      Display-Card -DeckShuffled $InitShuffle -WhichCard $PlayerCard
+      Show-Card -DeckShuffled $InitShuffle -WhichCard $PlayerCard
     }
     Write-Host ''
     if ($PlayerStatus.Busted) { 
@@ -159,11 +159,11 @@ do {
   
   } until ($DealersTurn -eq $false -and $PlayersTurn -eq $false)
   # Determine the winner, if there is one
-  $Winner = Check-WhoWon -DealerInfo $DealerStatus -PlayerInfo $PlayerStatus
+  $Winner = Test-WhoWon -DealerInfo $DealerStatus -PlayerInfo $PlayerStatus
   Write-Host -NoNewline  "Winner is: "
   if ($Winner -eq 'Player') {$WinColor = 'Green'}
   elseif ($Winner -eq 'Dealer') {$WinColor = 'Yellow'}
   else {$WinColor = 'White'; $Winner = 'Draw'}
   write-host -ForegroundColor $WinColor "$Winner"
   $PlayAgain = Read-Host -Prompt "Do you want to play again Y/N"
-} until ($PlayAgain -notlike "y*")  
+} while ($PlayAgain -notmatch 'n')  

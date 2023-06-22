@@ -31,7 +31,7 @@ function Find-Neighbours {
     [int]$Row,
     [int]$Col
   )
-  $Neighbours = @{}
+  [System.Collections.ArrayList]$Neighbours = @()
   if (($Row - 1) -ge 0) { 
     foreach ($c in @(-1,0,1)){
       if (($Col + $c) -ge 0 -and ($Col + $c) -le 7) {
@@ -54,12 +54,29 @@ function Find-Neighbours {
   return $Neighbours
 }
 
+function Find-LegalMoves {
+  Param (
+    $Grid,
+    $Player
+  )
+  foreach ($Row in @(0..7)) {
+    foreach ($Col in @(0..7)) {
+      if ($Grid[$Row][$Col] -in @('X','O')) {continue}
+      $LegalNeighbours = Find-Neighbours -Grid $Grid -Row $Row -Col $Col
+      foreach ($Neighbour in $LegalNeighbours) {
+        if ($Grid[$Neighbour])
+      }
+    }
+  }
+}
+
 # Main code
 Clear-Host
+$Player = 'X'
 do {
   Show-Grid -Grid $Grid
   do {
-    $Choice = Read-Host -Prompt "Enter a coordinate to move"
+    $Choice = Read-Host -Prompt "Player $Player, enter a coordinate to move"
     $ChoiceNumber = $Choice -replace '[^1-8]',''
     $ChoiceLetter = ($Choice -replace '[^a-z]','').ToUpper()
 
