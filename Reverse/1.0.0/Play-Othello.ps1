@@ -52,12 +52,41 @@ Class OthelloBoard {
     Write-Host
     Write-Host
   }
+
+  [bool]TestPlacement ($Pos,$Player) {
+    $Opponent = ('X','O' | Where-Object {$_ -ne $Player})[0]
+    if ($this.Positions[$Pos].Value -in @('X','O') ) {
+      return $false
+    }
+    foreach ($Neighbour in $this.Positions[$Pos].Neighbours){
+      if ($this.Positions[$Neighbour].Value -eq $Opponent) {return $true}
+    }
+    return $false
+  }
+}
+
+# Functions
+
+function Get-NextPosition {
+  Param ($Player)
+  $Choice = Read-Host -Prompt "Enter the coordinates of the next play for $Player"
+  $Choice = $Choice.Substring(0,2)
+  [int]$ChoiceCol = [byte][char]($Choice.ToLower() -replace '[0-9]','') - 97
+  [int]$ChoiceRow = [int]($Choice.ToLower() -replace '[a-h]','') - 1
+  $Pos = 8 * $ChoiceRow + $ChoiceCol
+  Return $Pos
 }
 
 # Main Code
+$Player = 'X'
 
 $Board = [OthelloBoard]::New()
 do {
   $Board.ShowBoard()
+  do {
+    $Pos = Get-NextPosition -Player $Player
+    $TestResult = $Board.TestPlacement($Pos,$Player)
+  } until ($TestResult -eq $true)
   break
+  if ($Player -eq 'X') {$Player = 'O'} else {$Player = 'X'}
 } Until ($true) #game over
