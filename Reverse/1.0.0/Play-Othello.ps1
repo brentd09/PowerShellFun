@@ -53,13 +53,19 @@ Class OthelloBoard {
     Write-Host
   }
 
-  [bool]TestPlacement ($Pos,$Player) {
-    $Opponent = ('X','O' | Where-Object {$_ -ne $Player})[0]
+  [bool]PlayMove ($Pos,$Player) {
+    if ($Player -eq 'X') {$Opponent = 'O'} else {$Opponent = 'X'}
     if ($this.Positions[$Pos].Value -in @('X','O') ) {
       return $false
     }
     foreach ($Neighbour in $this.Positions[$Pos].Neighbours){
-      if ($this.Positions[$Neighbour].Value -eq $Opponent) {return $true}
+      if ($this.Positions[$Neighbour].Value -eq $Opponent) { 
+        # Possible legal move because opponent is a neighbour
+        # check to see if the next neighbour in the same direction is the opponent or is players token
+        # if another opponent token then do the previous step again for this position until we find a player token or not
+        # if opponent are direct neighbour and then player token eventually - change all opponents to player tokens - legal move
+        return $true
+      }
     }
     return $false
   }
@@ -67,12 +73,15 @@ Class OthelloBoard {
 
 # Functions
 
-function Get-NextPosition {
+function Get-NextMove {
   Param ($Player)
-  $Choice = Read-Host -Prompt "Enter the coordinates of the next play for $Player"
-  $Choice = $Choice.Substring(0,2)
-  [int]$ChoiceCol = [byte][char]($Choice.ToLower() -replace '[0-9]','') - 97
-  [int]$ChoiceRow = [int]($Choice.ToLower() -replace '[a-h]','') - 1
+  do {
+    $Choice = Read-Host -Prompt "Enter the coordinates of the next play for $Player"
+    $Choice = $Choice.ToLower() -replace '[^a-h1-8]',''
+    if ($Choice.Length -ne 2) {continue}
+  } until ($Choice -match '[a-h][1-8]' -or $Choice -match '[1-8][a-h]')
+  [int]$ChoiceCol = [byte][char]($Choice -replace '[0-9]','') - 97
+  [int]$ChoiceRow = [int]($Choice -replace '[a-h]','') - 1
   $Pos = 8 * $ChoiceRow + $ChoiceCol
   Return $Pos
 }
@@ -84,8 +93,8 @@ $Board = [OthelloBoard]::New()
 do {
   $Board.ShowBoard()
   do {
-    $Pos = Get-NextPosition -Player $Player
-    $TestResult = $Board.TestPlacement($Pos,$Player)
+    $Pos = Get-NextMove -Player $Player
+    $TestResult = $Board.PlayMove($Pos,$Player)
   } until ($TestResult -eq $true)
   break
   if ($Player -eq 'X') {$Player = 'O'} else {$Player = 'X'}
