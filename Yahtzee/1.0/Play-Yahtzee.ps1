@@ -1,4 +1,9 @@
-﻿function Invoke-DiceRoll {
+﻿[CmdletBinding()]
+Param (
+  [switch]$EditDice
+)
+
+function Invoke-DiceRoll {
   Param($DiceFaces = 6)
   return (1..$DiceFaces | Get-Random)
 }
@@ -16,6 +21,7 @@ function Clear-Dice {
   $tbox_dice5.BackColor = 'White'
   $Script:RollCount = 0
   $tbox_rollcount.text = $Script:RollCount
+  $butt_rollselected.Visible = $false
 }
 
 function Add-TopTotal {
@@ -39,12 +45,15 @@ function Add-GrandTotal {
 }
 
 function Test-EndGame {
-  if ($tbox_one.Text -and $tbox_two.Text -and $tbox_three.Text -and $tbox_four.Text -and $tbox_five.Text -and $tbox_six.Text -and $tbox_3kind.Text -and 
+  if (($tbox_one.Text -and $tbox_two.Text -and $tbox_three.Text -and $tbox_four.Text -and $tbox_five.Text -and $tbox_six.Text -and $tbox_3kind.Text -and 
       $tbox_4kind.Text -and $tbox_fullhouse.Text -and $tbox_smstraight.Text -and $tbox_lgstraight.Text -and $tbox_yahtzee.Text -and 
-      $tbox_yahtzeebonus.Text -and $tbox_chance.Text){
+      $tbox_yahtzeebonus.Text -and $tbox_chance.Text) -or ($tbox_one.Text -and $tbox_two.Text -and $tbox_three.Text -and $tbox_four.Text -and $tbox_five.Text -and $tbox_six.Text -and $tbox_3kind.Text -and 
+      $tbox_4kind.Text -and $tbox_fullhouse.Text -and $tbox_smstraight.Text -and $tbox_lgstraight.Text -and $tbox_yahtzee.Text -and $tbox_chance.Text)){
         $butt_rollall.Enabled = $false
         $butt_rollselected.Enabled = $false
         $butt_EndGame.Enabled = $true
+        $butt_EndGame.Visible = $true
+        $butt_EndGame.BackColor = 'Yellow'
       }
 }
 
@@ -87,6 +96,7 @@ $tbox_one.height                 = 20
 $tbox_one.location               = New-Object System.Drawing.Point(14,27)
 $tbox_one.Font                   = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_one.ReadOnly               = $true
+$tbox_one.TextAlign              = "Right"
 
 $tbox_two                        = New-Object system.Windows.Forms.TextBox
 $tbox_two.multiline              = $false
@@ -95,6 +105,7 @@ $tbox_two.height                 = 20
 $tbox_two.location               = New-Object System.Drawing.Point(14,52)
 $tbox_two.Font                   = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_two.ReadOnly               = $true
+$tbox_two.TextAlign              = "Right"
 
 $tbox_three                      = New-Object system.Windows.Forms.TextBox
 $tbox_three.multiline            = $false
@@ -103,6 +114,7 @@ $tbox_three.height               = 20
 $tbox_three.location             = New-Object System.Drawing.Point(14,77)
 $tbox_three.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_three.ReadOnly             = $true
+$tbox_three.TextAlign            = "Right"
 
 $tbox_six                        = New-Object system.Windows.Forms.TextBox
 $tbox_six.multiline              = $false
@@ -111,6 +123,7 @@ $tbox_six.height                 = 20
 $tbox_six.location               = New-Object System.Drawing.Point(14,152)
 $tbox_six.Font                   = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_six.ReadOnly               = $true
+$tbox_six.TextAlign              = "Right"
 
 $tbox_five                       = New-Object system.Windows.Forms.TextBox
 $tbox_five.multiline             = $false
@@ -119,6 +132,7 @@ $tbox_five.height                = 20
 $tbox_five.location              = New-Object System.Drawing.Point(14,127)
 $tbox_five.Font                  = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_five.ReadOnly              = $true
+$tbox_five.TextAlign             = "Right"
 
 $tbox_four                       = New-Object system.Windows.Forms.TextBox
 $tbox_four.multiline             = $false
@@ -127,6 +141,7 @@ $tbox_four.height                = 20
 $tbox_four.location              = New-Object System.Drawing.Point(14,102)
 $tbox_four.Font                  = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_four.ReadOnly              = $true
+$tbox_four.TextAlign             = "Right"
 
 $tbox_toptotal                   = New-Object system.Windows.Forms.TextBox
 $tbox_toptotal.multiline         = $false
@@ -134,7 +149,8 @@ $tbox_toptotal.width             = 33
 $tbox_toptotal.height            = 20
 $tbox_toptotal.location          = New-Object System.Drawing.Point(158,225)
 $tbox_toptotal.Font              = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
-$tbox_toptotal.ReadOnly         = $true
+$tbox_toptotal.ReadOnly          = $true
+$tbox_toptotal.TextAlign         = "Right"
 
 $tbox_bonus                      = New-Object system.Windows.Forms.TextBox
 $tbox_bonus.multiline            = $false
@@ -143,6 +159,7 @@ $tbox_bonus.height               = 20
 $tbox_bonus.location             = New-Object System.Drawing.Point(158,200)
 $tbox_bonus.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_bonus.ReadOnly             = $true
+$tbox_bonus.TextAlign            = "Right"
 
 $tbox_subtotal                   = New-Object system.Windows.Forms.TextBox
 $tbox_subtotal.multiline         = $false
@@ -151,6 +168,7 @@ $tbox_subtotal.height            = 20
 $tbox_subtotal.location          = New-Object System.Drawing.Point(158,175)
 $tbox_subtotal.Font              = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_subtotal.ReadOnly          = $true
+$tbox_subtotal.TextAlign         = "Right"
 
 $label_one                       = New-Object system.Windows.Forms.Label
 $label_one.text                  = "1s"
@@ -230,7 +248,9 @@ $tbox_dice1.width                = 28
 $tbox_dice1.height               = 20
 $tbox_dice1.location             = New-Object System.Drawing.Point(14,25)
 $tbox_dice1.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
-$tbox_dice1.ReadOnly             = $true
+if ($EditDice -eq $true) {$tbox_dice1.ReadOnly = $false}
+else {$tbox_dice1.ReadOnly = $true}
+$tbox_dice1.TextAlign            = "Center"
 
 $tbox_dice5                      = New-Object system.Windows.Forms.TextBox
 $tbox_dice5.multiline            = $false
@@ -238,7 +258,9 @@ $tbox_dice5.width                = 28
 $tbox_dice5.height               = 20
 $tbox_dice5.location             = New-Object System.Drawing.Point(13,125)
 $tbox_dice5.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
-$tbox_dice5.ReadOnly             = $true
+if ($EditDice -eq $true) {$tbox_dice1.ReadOnly = $false}
+else {$tbox_dice1.ReadOnly = $true}
+$tbox_dice5.TextAlign            = "Center"
 
 
 $tbox_dice4                      = New-Object system.Windows.Forms.TextBox
@@ -247,7 +269,9 @@ $tbox_dice4.width                = 28
 $tbox_dice4.height               = 20
 $tbox_dice4.location             = New-Object System.Drawing.Point(13,100)
 $tbox_dice4.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
-$tbox_dice4.ReadOnly             = $true
+if ($EditDice -eq $true) {$tbox_dice1.ReadOnly = $false}
+else {$tbox_dice1.ReadOnly = $true}
+$tbox_dice4.TextAlign            = "Center"
 
 $tbox_dice3                      = New-Object system.Windows.Forms.TextBox
 $tbox_dice3.multiline            = $false
@@ -255,7 +279,9 @@ $tbox_dice3.width                = 28
 $tbox_dice3.height               = 20
 $tbox_dice3.location             = New-Object System.Drawing.Point(14,75)
 $tbox_dice3.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
-$tbox_dice3.ReadOnly             = $true
+if ($EditDice -eq $true) {$tbox_dice1.ReadOnly = $false}
+else {$tbox_dice1.ReadOnly = $true}
+$tbox_dice3.TextAlign            = "Center"
 
 $tbox_dice2                      = New-Object system.Windows.Forms.TextBox
 $tbox_dice2.multiline            = $false
@@ -263,7 +289,9 @@ $tbox_dice2.width                = 28
 $tbox_dice2.height               = 20
 $tbox_dice2.location             = New-Object System.Drawing.Point(14,50)
 $tbox_dice2.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
-$tbox_dice2.ReadOnly             = $true
+if ($EditDice -eq $true) {$tbox_dice1.ReadOnly = $false}
+else {$tbox_dice1.ReadOnly = $true}
+$tbox_dice2.TextAlign            = "Center"
 
 $butt_rollall                    = New-Object system.Windows.Forms.Button
 $butt_rollall.text               = "Roll All"
@@ -278,6 +306,7 @@ $butt_rollselected.width         = 109
 $butt_rollselected.height        = 30
 $butt_rollselected.location      = New-Object System.Drawing.Point(76,106)
 $butt_rollselected.Font          = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
+$butt_rollselected.Visible       = $false
 
 $butt_EndGame                    = New-Object system.Windows.Forms.Button
 $butt_EndGame.text               = "End Game"
@@ -286,6 +315,7 @@ $butt_EndGame.height             = 30
 $butt_EndGame.location           = New-Object System.Drawing.Point(440,640)
 $butt_EndGame.Font               = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $butt_EndGame.Enabled            = $false 
+$butt_EndGame.Visible            = $false
 
 $tbox_3kind                      = New-Object system.Windows.Forms.TextBox
 $tbox_3kind.multiline            = $false
@@ -294,6 +324,7 @@ $tbox_3kind.height               = 20
 $tbox_3kind.location             = New-Object System.Drawing.Point(14,25)
 $tbox_3kind.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_3kind.ReadOnly             = $true
+$tbox_3kind.TextAlign            = "Right"
 
 $tbox_grandtotal                 = New-Object system.Windows.Forms.TextBox
 $tbox_grandtotal.multiline       = $false
@@ -302,6 +333,7 @@ $tbox_grandtotal.height          = 20
 $tbox_grandtotal.location        = New-Object System.Drawing.Point(147,270)
 $tbox_grandtotal.Font            = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_grandtotal.ReadOnly        = $true
+$tbox_grandtotal.TextAlign       = "Right"
 
 $tbox_chance                     = New-Object system.Windows.Forms.TextBox
 $tbox_chance.multiline           = $false
@@ -310,6 +342,7 @@ $tbox_chance.height              = 20
 $tbox_chance.location            = New-Object System.Drawing.Point(14,200)
 $tbox_chance.Font                = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_chance.ReadOnly            = $true
+$tbox_chance.TextAlign           = "Right"
 
 $tbox_yahtzeebonus               = New-Object system.Windows.Forms.TextBox
 $tbox_yahtzeebonus.multiline     = $false
@@ -318,6 +351,7 @@ $tbox_yahtzeebonus.height        = 20
 $tbox_yahtzeebonus.location      = New-Object System.Drawing.Point(14,175)
 $tbox_yahtzeebonus.Font          = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_yahtzeebonus.ReadOnly      = $true
+$tbox_yahtzeebonus.TextAlign     = "Right"
 
 $tbox_yahtzee                    = New-Object system.Windows.Forms.TextBox
 $tbox_yahtzee.multiline          = $false
@@ -326,6 +360,7 @@ $tbox_yahtzee.height             = 20
 $tbox_yahtzee.location           = New-Object System.Drawing.Point(14,150)
 $tbox_yahtzee.Font               = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_yahtzee.ReadOnly           = $true
+$tbox_yahtzee.TextAlign          = "Right"
 
 $tbox_lgstraight                 = New-Object system.Windows.Forms.TextBox
 $tbox_lgstraight.multiline       = $false
@@ -334,6 +369,7 @@ $tbox_lgstraight.height          = 20
 $tbox_lgstraight.location        = New-Object System.Drawing.Point(14,125)
 $tbox_lgstraight.Font            = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_lgstraight.ReadOnly        = $true
+$tbox_lgstraight.TextAlign       = "Right"
 
 $tbox_smstraight                 = New-Object system.Windows.Forms.TextBox
 $tbox_smstraight.multiline       = $false
@@ -342,6 +378,7 @@ $tbox_smstraight.height          = 20
 $tbox_smstraight.location        = New-Object System.Drawing.Point(14,100)
 $tbox_smstraight.Font            = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_smstraight.ReadOnly        = $true
+$tbox_smstraight.TextAlign       = "Right"
 
 $tbox_fullhouse                  = New-Object system.Windows.Forms.TextBox
 $tbox_fullhouse.multiline        = $false
@@ -350,6 +387,7 @@ $tbox_fullhouse.height           = 20
 $tbox_fullhouse.location         = New-Object System.Drawing.Point(15,75)
 $tbox_fullhouse.Font             = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_fullhouse.ReadOnly         = $true
+$tbox_fullhouse.TextAlign        = "Right"
 
 $tbox_4kind                      = New-Object system.Windows.Forms.TextBox
 $tbox_4kind.multiline            = $false
@@ -358,6 +396,7 @@ $tbox_4kind.height               = 20
 $tbox_4kind.location             = New-Object System.Drawing.Point(14,50)
 $tbox_4kind.Font                 = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_4kind.ReadOnly             = $true
+$tbox_4kind.TextAlign            = "Right"
 
 $label_3kind                     = New-Object system.Windows.Forms.Label
 $label_3kind.text                = "3 of a kind"
@@ -447,6 +486,7 @@ $tbox_rollcount.location         = New-Object System.Drawing.Point(85,25)
 $tbox_rollcount.Font             = New-Object System.Drawing.Font('Microsoft Sans Serif',10)
 $tbox_rollcount.Text             = $Script:RollCount
 $tbox_rollcount.ReadOnly         = $true
+$tbox_rollcount.TextAlign        = "Right"
 
 
 $label_rollcount                 = New-Object system.Windows.Forms.Label
@@ -563,7 +603,6 @@ $tbox_fullhouse.Add_Click({
 })
 $tbox_smstraight.Add_Click({
   if ($Script:RollCount -ge 1 -and -not $tbox_smstraight.Text) {
-    $GroupDice = $Script:AllDice | Group-Object | Select-Object -Property *,@{n='Duplicates';e={$_.count}}
     if (($Script:AllDice -contains 1 -and $Script:AllDice -contains 2 -and $Script:AllDice -contains 3 -and $Script:AllDice -contains 4) -or
        ($Script:AllDice -contains 2 -and $Script:AllDice -contains 3 -and $Script:AllDice -contains 4 -and $Script:AllDice -contains 5) -or
        ($Script:AllDice -contains 3 -and $Script:AllDice -contains 4 -and $Script:AllDice -contains 5 -and $Script:AllDice -contains 6) ) {
@@ -603,12 +642,13 @@ $tbox_yahtzee.Add_Click({
 $tbox_yahtzeebonus.Add_Click({
   if ($Script:RollCount -ge 1 -and -not $tbox_yahtzeebonus.Text) {
     $Same = $Script:AllDice | Group-Object | Select-Object -Property *,@{n='Duplicates';e={$_.count}}
-    if ($Same.Duplicates -eq 5 -and $tbox_yahtzee.Text -eq 50) {$tbox_yahtzeebonus.Text = 100}
-    else {$tbox_yahtzeebonus.Text = 0}
-    Clear-Dice
-    Add-TopTotal
-    Add-GrandTotal
-    Test-EndGame
+    if ($Same.Duplicates -eq 5 -and $tbox_yahtzee.Text -eq 50) {
+      $tbox_yahtzeebonus.Text = 100
+      Clear-Dice
+      Add-TopTotal
+      Add-GrandTotal
+      Test-EndGame
+    }
   }
 })
 $tbox_chance.Add_Click({
@@ -626,30 +666,45 @@ $tbox_dice1.Add_Click({
   if ($Script:RollCount -lt 3) {
     if ($tbox_dice1.BackColor -ne 'Red' -and $tbox_dice1.text) {$tbox_dice1.BackColor = 'Red'}
     else {$tbox_dice1.BackColor = 'White'}
+    if ($tbox_dice1.BackColor -eq 'Red' -or $tbox_dice2.BackColor -eq 'Red' -or $tbox_dice3.BackColor -eq 'Red' -or 
+        $tbox_dice4.BackColor -eq 'Red' -or $tbox_dice5.BackColor -eq 'Red' ) {$butt_rollselected.Visible = $true}
+    else {$butt_rollselected.Visible = $false}    
   }
 })
 $tbox_dice2.Add_Click({  
   if ($Script:RollCount -lt 3) {
     if ($tbox_dice2.BackColor -ne 'Red' -and $tbox_dice2.text) {$tbox_dice2.BackColor = 'Red'}
     else {$tbox_dice2.BackColor = 'White'}
+    if ($tbox_dice1.BackColor -eq 'Red' -or $tbox_dice2.BackColor -eq 'Red' -or $tbox_dice3.BackColor -eq 'Red' -or 
+        $tbox_dice4.BackColor -eq 'Red' -or $tbox_dice5.BackColor -eq 'Red' ) {$butt_rollselected.Visible = $true}
+    else {$butt_rollselected.Visible = $false}    
   }
 })
 $tbox_dice3.Add_Click({  
   if ($Script:RollCount -lt 3) {
     if ($tbox_dice3.BackColor -ne 'Red' -and $tbox_dice3.text) {$tbox_dice3.BackColor = 'Red'}
     else {$tbox_dice3.BackColor = 'White'}
+    if ($tbox_dice1.BackColor -eq 'Red' -or $tbox_dice2.BackColor -eq 'Red' -or $tbox_dice3.BackColor -eq 'Red' -or 
+        $tbox_dice4.BackColor -eq 'Red' -or $tbox_dice5.BackColor -eq 'Red' ) {$butt_rollselected.Visible = $true}
+    else {$butt_rollselected.Visible = $false}    
   }
 })
 $tbox_dice4.Add_Click({
   if ($Script:RollCount -lt 3) {
     if ($tbox_dice4.BackColor -ne 'Red' -and $tbox_dice4.text) {$tbox_dice4.BackColor = 'Red'}
     else {$tbox_dice4.BackColor = 'White'}
+    if ($tbox_dice1.BackColor -eq 'Red' -or $tbox_dice2.BackColor -eq 'Red' -or $tbox_dice3.BackColor -eq 'Red' -or 
+        $tbox_dice4.BackColor -eq 'Red' -or $tbox_dice5.BackColor -eq 'Red' ) {$butt_rollselected.Visible = $true}
+    else {$butt_rollselected.Visible = $false}    
   }
 })
 $tbox_dice5.Add_Click({
   if ($Script:RollCount -lt 3) {
     if ($tbox_dice5.BackColor -ne 'Red' -and $tbox_dice5.text) {$tbox_dice5.BackColor = 'Red'}
     else {$tbox_dice5.BackColor = 'White'}
+    if ($tbox_dice1.BackColor -eq 'Red' -or $tbox_dice2.BackColor -eq 'Red' -or $tbox_dice3.BackColor -eq 'Red' -or 
+        $tbox_dice4.BackColor -eq 'Red' -or $tbox_dice5.BackColor -eq 'Red' ) {$butt_rollselected.Visible = $true}
+    else {$butt_rollselected.Visible = $false}    
   }
 })
 $butt_rollall.Add_Click({
