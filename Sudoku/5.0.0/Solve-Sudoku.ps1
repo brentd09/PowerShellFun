@@ -1,6 +1,25 @@
+<#
+Here are some puzzle strings to try:
+'7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2' - EASY
+'-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------' - Medium
+'-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1--3------' - Difficult
+'--97486--7---------2-1-987---7---24--64-1-59--98---3-----8-3-2---------6---2759--' - Difficult
+'-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' - Difficult
+'-2-6------562-----1------28----2-4-9-914-873-2-8-9----71------3-----217------5-6-' - Difficult
+'---4----------8-96----53-8--48------2---49--16-----5-94--1--7---8-9--4---1--7--2-' - Difficult
+'89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' - Extreme
+'-2-7---15------6--5--9-----8---------------2---6--4-73--78-1-6---4-7--5---3-49---' = Expert
+'--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' - Impossible
+'-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' - Impossible
+'----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----' - impossible
+'--7---28---4-25---28---46---9---6---3-------2---1---9---62---75---57-4---78---3--' - impossible 
+'1-----569492-561-8-561-924---964-8-1-64-1----218-356-4-4-5---1-9-5-614-2621-----5' - impossible (xwing)
+'-----2-----8-6---1-49---7-------58--56-----4---3-----77-46---8----5-1--3-9-3---6-' - impossible
+'--72-41-----169---5-------263---2-89-7-----3-12-5---467-------4---931-----36-79--' - Evil
+#>
 [CmdletBinding()]
 Param (
-  $SudokuNumbers = '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------'
+  $SudokuNumbers = '--72-41-----169---5-------263---2-89-7-----3-12-5---467-------4---931-----36-79--'
 )
 
 
@@ -78,7 +97,68 @@ class SudokuGrid {
       $Cell.RemoveFromPossible($SolvedValues)
     }
   }
+
+  [bool]FindHiddenSingles () {
+    [bool]$FoundOne = $false
+    foreach ($Row in @(0..8)) {
+      $RowCells = $this.Cells | Where-Object {$_.Row -eq $Row -and $_.Solved -eq $false}
+      $SingleVals = ($RowCells.PosVal | Group-Object | Where-Object {$_.Count -eq 1}).Name
+      foreach ($Val in $SingleVals) {
+        $IntVal = $Val -as [int]
+        $SingleCell = $RowCells | Where-Object {$_.PosVal -contains $IntVal}
+        $SingleCell.SetValue($IntVal)
+        $FoundOne = $true
+        break
+      }
+      if ($FoundOne -eq $true) {break}
+    }
+
+    if ($FoundOne -eq $false) {
+      $FoundOne = $false
+      foreach ($Col in @(0..8)) {
+        $ColCells = $this.Cells | Where-Object {$_.Col -eq $Col -and $_.Solved -eq $false}
+        $SingleVals = ($ColCells.PosVal | Group-Object | Where-Object {$_.Count -eq 1}).Name
+        foreach ($Val in $SingleVals) {
+          $IntVal = $Val -as [int]
+          $SingleCell = $ColCells | Where-Object {$_.PosVal -contains $IntVal}
+          $SingleCell.SetValue($IntVal)
+          $FoundOne = $true
+          break
+        }
+        if ($FoundOne -eq $true) {break}
+      }
+    }
+
+    if ($FoundOne -eq $false) {
+      $FoundOne = $false
+      foreach ($Blk in @(0..8)) {
+        $BlkCells = $this.Cells | Where-Object {$_.Blk -eq $Blk -and $_.Solved -eq $false}
+        $SingleVals = ($BlkCells.PosVal | Group-Object | Where-Object {$_.Count -eq 1}).Name
+        foreach ($Val in $SingleVals) {
+          $IntVal = $Val -as [int]
+          $SingleCell = $BlkCells | Where-Object {$_.PosVal -contains $IntVal}
+          $SingleCell.SetValue($IntVal)
+          $FoundOne = $true
+          break
+        }
+        if ($FoundOne -eq $true) {break}
+      }
+    }
+    return $FoundOne
+  }
+
+  [bool]FindNakedSingles () {
+    $NakedCells = $this.Cells | Where-Object {$_.Solved -eq $false -and $_.PosVal.Count -eq 1}
+    if ($NakedCells.count -gt 0) {
+      $RandomNakedCell = $NakedCells | Get-Random
+      $RandomNakedCell.SetValue($RandomNakedCell.PosVal[0])
+      return $true
+    }
+    else {return $false}
+  }
+
 }
+
 
 
 # Functions
@@ -150,3 +230,13 @@ $CellArray =foreach ($PosInGrid in (0..80)) {
 $Grid = [SudokuGrid]::New($CellArray)
 $Grid.RemoveSolvedFromPossibles()
 Show-Grid -FnGrid $Grid
+
+do {
+  $ResultHS = $Grid.FindHiddenSingles()
+  $Grid.RemoveSolvedFromPossibles()
+  Show-Grid -FnGrid $Grid
+
+  $ResultNS = $Grid.FindNakedSingles()
+  $Grid.RemoveSolvedFromPossibles()
+  Show-Grid -FnGrid $Grid
+} until ($ResultHS -eq $false -and $ResultNS -eq $false )
