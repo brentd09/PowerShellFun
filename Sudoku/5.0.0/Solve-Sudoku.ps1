@@ -19,8 +19,14 @@ Here are some puzzle strings to try:
 #>
 [CmdletBinding()]
 Param (
-  $SudokuNumbers = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
+  [string]$SudokuNumbers = '-----2-----8-6---1-49---7-------58--56-----4---3-----77-46---8----5-1--3-9-3---6-',
+  [switch]$SketchMarks
 )
+
+if ($SudokuNumbers.Length -ne 81) {
+  Write-Warning "The number of positions in the Sudoku Numbers does not equal 81"
+  break
+} 
 
 # #########################################################################################
 # Classes
@@ -353,32 +359,64 @@ function Show-Grid {
 }
 
 function Show-SketchGrid {
-  Param ([SudokuGrid]$FnGrid)
+  Param (
+    [SudokuGrid]$FnGrid,
+    [switch]$NoClearScreen
+  )
   
-  Clear-Host
+  if ($NoClearScreen -eq $false) {Clear-Host}
   # Boundary box characters and color
   $V = [char]9475 ;    $H = [char]9473;    $C = [char]9547
   $LTC = [char]9487; $RTC = [char]9491;  $LBC = [char]9495; $RBC = [char]9499
   $LT = [char]9507;   $RT = [char]9515;   $TT = [char]9523;  $BT = [char]9531
   $Color = 'Green'
+  $SubColor = 'DarkGray'
+  
 
-  
-  
-  Write-Host -ForegroundColor $Color "   ---- Solve  Sudoku ----"
-  Write-Host -ForegroundColor $Color "    1 2 3   4 5 6   7 8 9"
-  Write-Host -ForegroundColor $Color "  $LTC$H$H$H$H$H$H$H$TT$H$H$H$H$H$H$H$TT$H$H$H$H$H$H$H$RTC"
-  0,9,18,27,36,45,54,63,72 | ForEach-Object {
-    $RowRef = @('A','B','C','D','E','F','G','H','I')[($_ / 9)]
-    Write-Host -NoNewline -ForegroundColor $Color "$RowRef $V "   
-    Write-Host -NoNewline $FnGrid.Cells.DisplayVal[$_..($_ + 2)]
-    Write-Host -NoNewline -ForegroundColor $Color " $V "
-    Write-Host -NoNewline $FnGrid.Cells.DisplayVal[($_ + 3)..($_ + 5)]
-    Write-Host -NoNewline -ForegroundColor $Color " $V "
-    Write-Host -NoNewline $FnGrid.Cells.DisplayVal[($_ + 6)..($_ + 8)]
-    Write-Host -ForegroundColor $Color " $V "  
-    if ($_ -in 18,45){Write-Host -ForegroundColor $Color "  $LT$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H$RT"}
-  }
-    Write-Host -ForegroundColor $Color "  $LBC$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$RBC"
+Write-Host -ForegroundColor $Color "   ----                    Sudoku Pencil Marks                    ----"  
+Write-Host -ForegroundColor $Color $LTC$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$TT$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$TT$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$RTC
+  foreach ($Row in (0..8)) {
+    foreach ($StartNum in (1,4,7)) {
+      foreach ($Col in (0..8)) {
+        $CellToDisplay = $FnGrid.Cells | Where-Object {$_.Row -eq $Row -and $_.Col -eq $Col}
+        if ($CellToDisplay.Solved -eq $true) {$SolvedColor = 'Cyan'}
+        else {$SolvedColor = 'White'}
+        $PosValsToDisplay = $CellToDisplay.PosVal
+        $MatchValues = $StartNum, ($StartNum+1), ($StartNum+2)
+        $DisplayNums  = foreach ($MatchValue in $MatchValues) { 
+          if ( $MatchValue -in $PosValsToDisplay ) {$MatchValue}
+          else {'.'}
+        }
+        if ($Col -eq 0) {
+          Write-Host -NoNewline -ForegroundColor $Color "$V "
+          Write-Host -NoNewline -ForegroundColor $SolvedColor "$DisplayNums"
+          Write-Host -NoNewline -ForegroundColor $SubColor " $V "
+        }
+        elseif ($Col -in 2,5,8) {
+          Write-Host -NoNewline -ForegroundColor $SolvedColor "$DisplayNums"
+          Write-Host -NoNewline -ForegroundColor $Color " $V "          
+        }
+        else {
+          Write-Host -NoNewline -ForegroundColor $SolvedColor "$DisplayNums"
+          Write-Host -NoNewline -ForegroundColor $SubColor " $V "
+        }
+      }
+      Write-Host
+    }
+    if ($Row -in 2,5) {
+      Write-Host -ForegroundColor $Color "$LT$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$RT"
+    }
+    elseif ($Row -ne 8) {
+      Write-Host  -ForegroundColor $Color -NoNewline "$V"
+      Write-Host -ForegroundColor $SubColor  -NoNewline "$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H"
+      Write-Host -ForegroundColor $Color -NoNewline "$V"
+      Write-Host -ForegroundColor $SubColor -NoNewline "$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H"
+      Write-Host -ForegroundColor $Color -NoNewline "$V"
+      Write-Host -ForegroundColor $SubColor -NoNewline "$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H$C$H$H$H$H$H$H$H"
+      Write-Host -ForegroundColor $Color "$V"
+    }
+  }  
+  Write-Host -ForegroundColor $Color $LBC$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$RBC
 }
 
 # ###################################################################################################
@@ -388,33 +426,42 @@ $CellArray =foreach ($PosInGrid in (0..80)) {
 } 
 $Grid = [SudokuGrid]::New($CellArray)
 $Grid.RemoveSolvedFromPossibles()
-Show-Grid -FnGrid $Grid
+if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+else {Show-Grid -FnGrid $Grid}
 
 do {
   $GridStart = $Grid.Cells.PosValStr -join ''
   $Grid.FindHiddenSingles()
   $Grid.RemoveSolvedFromPossibles()
-  Show-Grid -FnGrid $Grid
+  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+  else {Show-Grid -FnGrid $Grid}
 
   $Grid.FindNakedSingles()
   $Grid.RemoveSolvedFromPossibles()
-  Show-Grid -FnGrid $Grid
+  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+  else {Show-Grid -FnGrid $Grid}
 
   $Grid.FindNakedPairs()
   $Grid.RemoveSolvedFromPossibles()
-  Show-Grid -FnGrid $Grid
+  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+  else {Show-Grid -FnGrid $Grid}
 
   $Grid.FindPointingPair()
   $Grid.RemoveSolvedFromPossibles()
-  Show-Grid -FnGrid $Grid
+  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+  else {Show-Grid -FnGrid $Grid}
 
   $Grid.FindHiddenPair()
   #$Grid.RemoveSolvedFromPossibles()
-  Show-Grid -FnGrid $Grid
+  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+  else {Show-Grid -FnGrid $Grid}
 
   $GridEnd = $Grid.Cells.PosValStr -join ''
-  # if the solutions are not changing the sudoku puzzle end in 5 stalled attempts to solve something
+  # if the solutions are not changing the sudoku puzzle end in 15 stalled attempts to solve something
   if ($GridStart -eq $GridEnd) {$Stuck = $Stuck + 1}
   else {$Stuck = 0}
-} until ($Grid.Cells.Solved -notcontains $false -or $Stuck -gt 5 )
-$Grid.Cells | Where-Object {$_.Solved -eq $false} | Sort-Object -Property Coords | Format-Table
+} until ($Grid.Cells.Solved -notcontains $false -or $Stuck -gt 15 )
+if ($Grid.Cells.Solved -contains $false) {
+  Write-Host
+  Write-Host
+  Show-SketchGrid -FnGrid $Grid -NoClearScreen}
