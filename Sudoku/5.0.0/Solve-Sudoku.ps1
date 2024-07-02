@@ -8,10 +8,10 @@ Here are some puzzle strings to try:
 '-2-6------562-----1------28----2-4-9-914-873-2-8-9----71------3-----217------5-6-' - Difficult
 '---4----------8-96----53-8--48------2---49--16-----5-94--1--7---8-9--4---1--7--2-' - Difficult
 '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' - Extreme
-'-2-7---15------6--5--9-----8---------------2---6--4-73--78-1-6---4-7--5---3-49---' = Expert (pointing pairs)
+'-2-7---15------6--5--9-----8---------------2---6--4-73--78-1-6---4-7--5---3-49---' = Expert (pointing pairs, hidden pairs)
 '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' - Impossible (swordfish)
 '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' - Impossible
-'----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----' - impossible
+'----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----' - impossible (swordfish)
 '--7---28---4-25---28---46---9---6---3-------2---1---9---62---75---57-4---78---3--' - impossible 
 '1-----569492-561-8-561-924---964-8-1-64-1----218-356-4-4-5---1-9-5-614-2621-----5' - impossible (xwing)
 '-----2-----8-6---1-49---7-------58--56-----4---3-----77-46---8----5-1--3-9-3---6-' - impossible
@@ -19,15 +19,17 @@ Here are some puzzle strings to try:
 #>
 [CmdletBinding()]
 Param (
-  $SudokuNumbers = '-2-7---15------6--5--9-----8---------------2---6--4-73--78-1-6---4-7--5---3-49---'
+  $SudokuNumbers = '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59'
 )
 
-
+# #########################################################################################
+# Classes
 Class SudokuCell {
   [int]$Pos 
   [int]$Row
   [int]$Col
   [int]$Blk
+  [string]$Coords
   [System.Collections.ArrayList]$PosVal
   [string]$PosValStr
   [int]$Val  
@@ -49,6 +51,9 @@ Class SudokuCell {
     elseif ($Position -in 54,55,56,63,64,65,72,73,74) {$this.Blk = 6}
     elseif ($Position -in 57,58,59,66,67,68,75,76,77) {$this.Blk = 7}
     elseif ($Position -in 60,61,62,69,70,71,78,79,80) {$this.Blk = 8}
+    $RowCoord = [char](([math]::Truncate($Position / 9) + 65) -as [int] )
+    $ColCoord = ($Position % 9) + 1
+    $this.Coords = $RowCoord + $ColCoord
     $this.PosVal = @(1,2,3,4,5,6,7,8,9)
     $this.PosValStr = (@(1,2,3,4,5,6,7,8,9) | Sort-Object) -join ''
     if ($Value -in 1,2,3,4,5,6,7,8,9) {
@@ -68,6 +73,14 @@ Class SudokuCell {
     }
     $this.PosValStr = ($this.PosVal | Sort-Object) -join ''
   }
+
+  [void]RemoveAllOthersFromPossible ([int[]]$ValuesToRemain) {
+    $ValuesToRemove = 1..9 | Where-Object {($_ -notin $ValuesToRemain)}
+    foreach ($ValueToRemove in $ValuesToRemove) {
+      if ($this.PosVal -contains $ValueToRemove) {$this.PosVal.Remove($ValueToRemove)}
+    }
+    $this.PosValStr = ($this.PosVal | Sort-Object) -join ''
+  }  
 
   [void]CheckSinglePossible() {
     if ($this.PosVal.Count -eq 1) {
@@ -248,10 +261,69 @@ class SudokuGrid {
       }
     }
   }
+
+  [void]FindHiddenPair () {
+    $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
+    $Rows = 0..8  
+    foreach ($Row in $Rows) {
+      $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Row}
+      [int[]]$UnsolvedDualNumbers = ($UnsolvedCellsInRow.PosVal | Group-Object | Where-Object {$_.Count -eq 2}).Name
+      foreach ($Num1 in $UnsolvedDualNumbers) {
+        foreach ($Num2 in ($UnsolvedDualNumbers | Where-Object {$_ -ne $Num1})) {
+          $PossibleHiddenPair = $UnsolvedCellsInRow | Where-Object {$_.PosVal -contains $Num1 -and $_.PosVal -contains $Num2}
+          $HPPositions = $PossibleHiddenPair.Pos | Select-Object -Unique
+          if ($HPPositions.Count -eq 2) {
+            $PossibleHiddenPair[0].RemoveAllOthersFromPossible(@($Num1,$Num2))
+            $PossibleHiddenPair[0].RemoveAllOthersFromPossible(@($Num1,$Num2))
+          }
+        }
+      }
+    }
+
+    
+    $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
+    $Cols = 0..8  
+    foreach ($Col in $Cols) {
+      $UnsolvedCellsInCol = $UnsolvedCells | Where-Object {$_.Col -eq $Col}
+      [int[]]$UnsolvedDualNumbers = ($UnsolvedCellsInCol.PosVal | Group-Object | Where-Object {$_.Count -eq 2}).Name
+      foreach ($Num1 in $UnsolvedDualNumbers) {
+        foreach ($Num2 in ($UnsolvedDualNumbers | Where-Object {$_ -ne $Num1})) {
+          $PossibleHiddenPair = $UnsolvedCellsInCol | Where-Object {$_.PosVal -contains $Num1 -and $_.PosVal -contains $Num2}
+          $HPPositions = $PossibleHiddenPair.Pos | Select-Object -Unique
+          if ($HPPositions.Count -eq 2) {
+            $PossibleHiddenPair[0].RemoveAllOthersFromPossible(@($Num1,$Num2))
+            $PossibleHiddenPair[1].RemoveAllOthersFromPossible(@($Num1,$Num2))
+          }
+        }
+      }
+    }
+
+    $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
+    $Blks = 0..8  
+    foreach ($Blk in $Blks) {
+      $UnsolvedCellsInBlk = $UnsolvedCells | Where-Object {$_.Blk -eq $Blk}
+      [int[]]$UnsolvedDualNumbers = ($UnsolvedCellsInBlk.PosVal | Group-Object | Where-Object {$_.Count -eq 2}).Name
+      foreach ($Num1 in $UnsolvedDualNumbers) {
+        foreach ($Num2 in ($UnsolvedDualNumbers | Where-Object {$_ -ne $Num1})) {
+          $PossibleHiddenPair = $UnsolvedCellsInBlk | Where-Object {$_.PosVal -contains $Num1 -and $_.PosVal -contains $Num2}
+          $HPPositions = $PossibleHiddenPair.Pos | Select-Object -Unique
+          if ($HPPositions.Count -eq 2) {
+            $PossibleHiddenPair[0].RemoveAllOthersFromPossible(@($Num1,$Num2))
+            $PossibleHiddenPair[1].RemoveAllOthersFromPossible(@($Num1,$Num2))
+          }
+        }
+      }
+    }
+
+
+
+
+  }
 }
 
 
 
+# ######################################################################################################
 # Functions
 function Show-Grid {
   Param ([SudokuGrid]$FnGrid)
@@ -279,7 +351,6 @@ function Show-Grid {
   }
     Write-Host -ForegroundColor $Color "  $LBC$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$RBC"
 }
-
 
 function Show-SketchGrid {
   Param ([SudokuGrid]$FnGrid)
@@ -310,10 +381,7 @@ function Show-SketchGrid {
     Write-Host -ForegroundColor $Color "  $LBC$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$BT$H$H$H$H$H$H$H$RBC"
 }
 
-
-
-
-
+# ###################################################################################################
 # Main Code
 $CellArray =foreach ($PosInGrid in (0..80)) {
    [SudokuCell]::New($PosInGrid,$SudokuNumbers[$PosInGrid]) 
@@ -339,6 +407,13 @@ do {
   $Grid.FindPointingPair()
   $Grid.RemoveSolvedFromPossibles()
   Show-Grid -FnGrid $Grid
-  $GridEnd = $Grid.Cells.PosValStr -join ''
 
-} until ($Grid.Cells.Solved -notcontains $false -or $GridStart -eq $GridEnd)
+  $Grid.FindHiddenPair()
+  #$Grid.RemoveSolvedFromPossibles()
+  Show-Grid -FnGrid $Grid
+
+  $GridEnd = $Grid.Cells.PosValStr -join ''
+  if ($GridStart -eq $GridEnd) {$Stuck = $Stuck + 1}
+  else {$Stuck = 0}
+} until ($Grid.Cells.Solved -notcontains $false -or $Stuck -gt 5 )
+$Grid.Cells | Where-Object {$_.Solved -eq $false} | Sort-Object -Property Coords | Format-Table
