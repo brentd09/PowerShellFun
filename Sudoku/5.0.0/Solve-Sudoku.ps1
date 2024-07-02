@@ -413,6 +413,7 @@ do {
   Show-Grid -FnGrid $Grid
 
   $GridEnd = $Grid.Cells.PosValStr -join ''
+  # if the solutions are not changing the sudoku puzzle end in 5 stalled attempts to solve something
   if ($GridStart -eq $GridEnd) {$Stuck = $Stuck + 1}
   else {$Stuck = 0}
 } until ($Grid.Cells.Solved -notcontains $false -or $Stuck -gt 5 )
