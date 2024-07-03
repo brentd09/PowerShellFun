@@ -323,8 +323,32 @@ class SudokuGrid {
   }
 
   [void]FindXWing () {
+    $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
+    foreach ($Row in (0..8)) {
+      $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Row}
+      if ($UnsolvedCellsInRow -lt 2) {continue}
+      $AllPossibleValsInRow = $UnsolvedCellsInRow.PosVal
+      $GroupedPossibleVals = $AllPossibleValsInRow | Group-Object
+      [int[]]$PairedPossibleVals = ($GroupedPossibleVals | Where-Object {$_.Count -eq 2}).Name
+      if ($PairedPossibleVals.Count -eq 0) {continue}
+      foreach ($PairedPossibleVal in $PairedPossibleVals) {
+        $LocatedPairCells = $UnsolvedCellsInRow | Where-Object {$_.PosVal -contains $PairedPossibleVal}
+        $OtherRows = $UnsolvedCells | Where-Object {$_.Row -ne $LocatedPairCells[0].Row}
+        foreach ($RowNumber in $OtherRows.Row) {
+          $RowContainingPairedVal = $OtherRows | Where-Object {$_.PosVal -contains $PairedPossibleVal -and $_.Row -eq $RowNumber}
+          if ($RowContainingPairedVal.count -ne 2)  {continue}
+          $ValsOfOtherPairedVals = ($RowContainingPairedVal | Where-Object {$_.PosVal -contains $PairedPossibleVal}).PosVal
+          $ValsOfPossiblePairedVals = ($LocatedPairCells | Where-Object {$_.PosVal -contains $PairedPossibleVal}).PosVal
+          if ($ValsOfOtherPairedVals[0] -in $ValsOfPossiblePairedVals -and $ValsOfOtherPairedVals[1] -in $ValsOfPossiblePairedVals) {
+
+          }
+        }
+      }
+    }
     # Row First
-    # Find a value that exists twice only in a row look for another row that has the same value in the columns of the other row
+    # Find a value that exists only twice only in a row
+    # Locate the cols for these values
+    # look for another row that has the same value in the same columns as the first row
     # if found the same value in other col positions other than the 4 located can be removed from possible
 
     # Do the opposite for Col
