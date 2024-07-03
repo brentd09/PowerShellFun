@@ -19,7 +19,7 @@ Here are some puzzle strings to try:
 #>
 [CmdletBinding()]
 Param (
-  [string]$SudokuNumbers = '-----2-----8-6---1-49---7-------58--56-----4---3-----77-46---8----5-1--3-9-3---6-',
+  [string]$SudokuNumbers = '4-3-8-2-6----6----1--5-7--4--1---3--85-----17--9---6--6--9-8--2----4----3-5-1-7-9',
   [switch]$SketchMarks
 )
 
@@ -320,12 +320,18 @@ class SudokuGrid {
         }
       }
     }
-
-
-
-
   }
+
+  [void]FindXWing () {
+    # Row First
+    # Find a value that exists twice only in a row look for another row that has the same value in the columns of the other row
+    # if found the same value in other col positions other than the 4 located can be removed from possible
+
+    # Do the opposite for Col
+  }
+
 }
+
 
 
 
