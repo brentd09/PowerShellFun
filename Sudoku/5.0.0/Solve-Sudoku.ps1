@@ -326,7 +326,7 @@ class SudokuGrid {
     foreach ($Row in (0..8)) {
       $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
       $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Row}
-      if ($UnsolvedCellsInRow -lt 2) {continue}
+      if ($UnsolvedCellsInRow.Count -lt 2) {continue}
       $AllPossibleValsInRow = $UnsolvedCellsInRow.PosVal
       $GroupedPossibleVals = $AllPossibleValsInRow | Group-Object
       [int[]]$PairedPossibleVals = ($GroupedPossibleVals | Where-Object {$_.Count -eq 2}).Name
@@ -338,25 +338,45 @@ class SudokuGrid {
           $RowContainingPairedVal = $OtherRows | Where-Object {$_.PosVal -contains $PairedPossibleVal -and $_.Row -eq $RowNumber}
           $ColsOfLocatedCells = $LocatedPairCells.Col
           $ColsOfOtherCells = $RowContainingPairedVal.Col
+          if ($ColsOfLocatedCells.Count -eq 0 -or $ColsOfOtherCells.Count -eq 0) {continue}
           $TestSameCol = (Compare-Object $ColsOfLocatedCells $ColsOfOtherCells).Count -eq 0
           if ($TestSameCol -eq $true) {
             $CellsToStrip = $UnsolvedCells | Where-Object {$_.PosVal -contains $PairedPossibleVal -and $_.Col -in $ColsOfLocatedCells -and $_.Col -in $ColsOfOtherCells -and $_.Row -notin $LocatedPairCells.Row -and $_.Row -notin $RowContainingPairedVal.Row}
             foreach ($Cell in $CellsToStrip) {
-              $_.RemoveFromPossible($PairedPossibleVal)
+              $Cell.RemoveFromPossible($PairedPossibleVal)
             }
           }
         }
       }
     }
-    # Row First
-    # Find a value that exists only twice only in a row
-    # Locate the cols for these values
-    # look for another row that has the same value in the same columns as the first row
-    # if found the same value in other col positions other than the 4 located can be removed from possible
 
-    # Do the opposite for Col
+    foreach ($Col in (0..8)) {
+      $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
+      $UnsolvedCellsInCol = $UnsolvedCells | Where-Object {$_.Col -eq $Col}
+      if ($UnsolvedCellsInCol.Count -lt 2) {continue}
+      $AllPossibleValsInCol = $UnsolvedCellsInCol.PosVal
+      $GroupedPossibleVals = $AllPossibleValsInCol | Group-Object
+      [int[]]$PairedPossibleVals = ($GroupedPossibleVals | Where-Object {$_.Count -eq 2}).Name
+      if ($PairedPossibleVals.Count -eq 0) {continue}
+      foreach ($PairedPossibleVal in $PairedPossibleVals) {
+        $LocatedPairCells = $UnsolvedCellsInCol | Where-Object {$_.PosVal -contains $PairedPossibleVal}
+        $OtherCols = $UnsolvedCells | Where-Object {$_.Col -ne $LocatedPairCells[0].Col}
+        foreach ($ColNumber in $OtherCols.Col) {
+          $ColContainingPairedVal = $OtherCols | Where-Object {$_.PosVal -contains $PairedPossibleVal -and $_.Col -eq $ColNumber}
+          $RowsOfLocatedCells = $LocatedPairCells.Row
+          $RowsOfOtherCells = $ColContainingPairedVal.Row
+          if ($RowsOfLocatedCells.Count -eq 0 -or $RowsOfOtherCells.Count -eq 0) {continue}
+          $TestSameRow = (Compare-Object $RowsOfLocatedCells $RowsOfOtherCells).Count -eq 0
+          if ($TestSameRow -eq $true) {
+            $CellsToStrip = $UnsolvedCells | Where-Object {$_.PosVal -contains $PairedPossibleVal -and $_.Row -in $RowsOfLocatedCells -and $_.Row -in $RowsOfOtherCells -and $_.Col -notin $LocatedPairCells.Col -and $_.Col -notin $ColContainingPairedVal.Col}
+            foreach ($Cell in $CellsToStrip) {
+              $Cell.RemoveFromPossible($PairedPossibleVal)
+            }
+          }
+        }
+      }
+    }
   }
-
 }
 
 
@@ -464,30 +484,60 @@ else {Show-Grid -FnGrid $Grid}
 
 do {
   $GridStart = $Grid.Cells.PosValStr -join ''
-  $Grid.FindHiddenSingles()
-  $Grid.RemoveSolvedFromPossibles()
-  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
-  else {Show-Grid -FnGrid $Grid}
 
-  $Grid.FindNakedSingles()
-  $Grid.RemoveSolvedFromPossibles()
-  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
-  else {Show-Grid -FnGrid $Grid}
+  do {
+    $GridTestBegin = $Grid.Cells.PosValStr -join ''
+    $Grid.FindHiddenSingles()
+    $Grid.RemoveSolvedFromPossibles()
+    if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+    else {Show-Grid -FnGrid $Grid}
+    $GridTestEnd = $Grid.Cells.PosValStr -join ''
+  } until ($GridTestBegin -eq $GridTestEnd)
 
-  $Grid.FindNakedPairs()
-  $Grid.RemoveSolvedFromPossibles()
-  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
-  else {Show-Grid -FnGrid $Grid}
+  do {
+    $GridTestBegin = $Grid.Cells.PosValStr -join ''
+    $Grid.FindNakedSingles()
+    $Grid.RemoveSolvedFromPossibles()
+    if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+    else {Show-Grid -FnGrid $Grid}
+    $GridTestEnd = $Grid.Cells.PosValStr -join ''
+  } until ($GridTestBegin -eq $GridTestEnd)
 
-  $Grid.FindPointingPair()
-  $Grid.RemoveSolvedFromPossibles()
-  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
-  else {Show-Grid -FnGrid $Grid}
+  do {
+    $GridTestBegin = $Grid.Cells.PosValStr -join ''
+    $Grid.FindNakedPairs()
+    $Grid.RemoveSolvedFromPossibles()
+    if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+    else {Show-Grid -FnGrid $Grid}
+    $GridTestEnd = $Grid.Cells.PosValStr -join ''
+  } until ($GridTestBegin -eq $GridTestEnd)
 
-  $Grid.FindHiddenPair()
-  #$Grid.RemoveSolvedFromPossibles()
-  if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
-  else {Show-Grid -FnGrid $Grid}
+  do {
+    $GridTestBegin = $Grid.Cells.PosValStr -join ''
+    $Grid.FindPointingPair()
+    $Grid.RemoveSolvedFromPossibles()
+    if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+    else {Show-Grid -FnGrid $Grid}
+    $GridTestEnd = $Grid.Cells.PosValStr -join ''
+  } until ($GridTestBegin -eq $GridTestEnd)
+
+  do {
+    $GridTestBegin = $Grid.Cells.PosValStr -join ''
+    $Grid.FindHiddenPair()
+    $Grid.RemoveSolvedFromPossibles()
+    if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+    else {Show-Grid -FnGrid $Grid}
+    $GridTestEnd = $Grid.Cells.PosValStr -join ''
+  } until ($GridTestBegin -eq $GridTestEnd)
+
+  do {
+    $GridTestBegin = $Grid.Cells.PosValStr -join ''
+    $Grid.FindXWing()
+    $Grid.RemoveSolvedFromPossibles()
+    if ($SketchMarks -eq $true) {Show-SketchGrid -FnGrid $Grid}
+    else {Show-Grid -FnGrid $Grid}
+    $GridTestEnd = $Grid.Cells.PosValStr -join ''
+  } until ($GridTestBegin -eq $GridTestEnd)
 
   $GridEnd = $Grid.Cells.PosValStr -join ''
   # if the solutions are not changing the sudoku puzzle end in 15 stalled attempts to solve something
