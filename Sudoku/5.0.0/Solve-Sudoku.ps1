@@ -1,25 +1,72 @@
 <#
+.SYNOPSIS
+  This is the latest attempts to solve Sudoku by using sudoku solutions
+.DESCRIPTION
+  This does not employ guessing or brute force when solving the puzzle, instead it uses the
+  same techniques a master Sudoku puzzler would use to solve it. It currently uses these 
+  techniques:
+    Hidden Singles
+    Naked Singles
+    Naked Pairs
+    Pointing Pairs
+    Hidden Pairs
+    X Wing
+  At this present time it cannot solve puzzles that rely on:
+    Swordfish
+    Triple's of the above methods   
+.NOTES
+  Created by: Brent Denny
+  Created on: 01-Jul-2024
+
+  ChangeLog:
+  When          What  
+  ----          ----
+  01-Jul-2024   Created a basic sudoku solver using classes and methods
+  03-Jul-2024   Added hidden pairs and naked pairs
+  05-Jul-2024   Added the Xwing method, changed the way the code progresses to the next solving type      
+.EXAMPLE
+  Solve-Sudoku.ps1 
+  This will solve the default puzzle
+.EXAMPLE
+  Solve-Sudoku.ps1 -SketchMarks
+  This will solve the default puzzle solved by sketch marks (penciled values of possibles) instead of 
+  the traditional sudoku board view.
+.EXAMPLE
+  Solve-Sudoku.ps1 -SudokuNumbers '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2'
+  This will solve the puzzle that has been presented as a flat string, which would be the equivalent of:
+  7 - 5   4 2 -   - 6 -
+  6 8 -   1 - -   2 4 -
+  - 4 -   7 6 -   - 1 8
+  
+  - 9 1   - - 2   - 7 4
+  8 2 -   - 5 7   6 - -
+  3 - -   - 1 4   8 2 -
+    
+  1 5 8   - - 6   - - 9
+  - - 2   5 - 9   1 - 6
+  - - 6   8 4 -   7 - 2  
+
 Here are some puzzle strings to try:
-'7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2' - EASY
-'-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------' - Medium
-'-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1--3------' - Difficult
-'--97486--7---------2-1-987---7---24--64-1-59--98---3-----8-3-2---------6---2759--' - Difficult
-'-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' - Difficult
-'-2-6------562-----1------28----2-4-9-914-873-2-8-9----71------3-----217------5-6-' - Difficult
-'---4----------8-96----53-8--48------2---49--16-----5-94--1--7---8-9--4---1--7--2-' - Difficult
-'89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' - Extreme
-'-2-7---15------6--5--9-----8---------------2---6--4-73--78-1-6---4-7--5---3-49---' = Expert (pointing pairs, hidden pairs)
-'--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' - Impossible (swordfish)
-'-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' - Impossible
-'----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----' - impossible (swordfish)
-'--7---28---4-25---28---46---9---6---3-------2---1---9---62---75---57-4---78---3--' - impossible 
-'1-----569492-561-8-561-924---964-8-1-64-1----218-356-4-4-5---1-9-5-614-2621-----5' - impossible (xwing)
-'-----2-----8-6---1-49---7-------58--56-----4---3-----77-46---8----5-1--3-9-3---6-' - impossible
-'--72-41-----169---5-------263---2-89-7-----3-12-5---467-------4---931-----36-79--' - Difficult
+  '7-542--6-68-1--24--4-76--18-91--2-7482--576--3---1482-158--6--9--25-91-6--684-7-2' - EASY
+  '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1-13------' - Medium
+  '-9--2-5----4--5-1--6-----93--18---6----9----2-8--72---5----1-7----3--9-1--3------' - Difficult
+  '--97486--7---------2-1-987---7---24--64-1-59--98---3-----8-3-2---------6---2759--' - Difficult
+  '-714---------17--59------4-5-8-6341--3--------9-----28-----4-6--6--89--1----3--5-' - Difficult
+  '-2-6------562-----1------28----2-4-9-914-873-2-8-9----71------3-----217------5-6-' - Difficult
+  '---4----------8-96----53-8--48------2---49--16-----5-94--1--7---8-9--4---1--7--2-' - Difficult
+  '89-2-3-------------3658---41-8-3--6-----------2--7-3-57---9412-------------8-2-59' - Extreme
+  '-2-7---15------6--5--9-----8---------------2---6--4-73--78-1-6---4-7--5---3-49---' = Expert (pointing pairs, hidden pairs)
+  '--9748---7---------2-1-9-----7---24--64-1-59--98---3-----8-3-2---------6---2759--' - Impossible (swordfish)
+  '-714---------17--59------4-5-8-634---3--------9-----28-----4-6--6--89--1----3--5-' - Impossible
+  '----15-74----3-8---87---5-1-23--4----1--7--2----2--79-8-6---24---1-2----23-64----' - impossible (swordfish)
+  '--7---28---4-25---28---46---9---6---3-------2---1---9---62---75---57-4---78---3--' - impossible 
+  '1-----569492-561-8-561-924---964-8-1-64-1----218-356-4-4-5---1-9-5-614-2621-----5' - impossible (xwing)
+  '-----2-----8-6---1-49---7-------58--56-----4---3-----77-46---8----5-1--3-9-3---6-' - impossible
+  '--72-41-----169---5-------263---2-89-7-----3-12-5---467-------4---931-----36-79--' - Difficult
 #>
 [CmdletBinding()]
 Param (
-  [string]$SudokuNumbers = '4-3-8-2-6----6----1--5-7--4--1---3--85-----17--9---6--6--9-8--2----4----3-5-1-7-9',
+  [string]$SudokuNumbers = '--------937-1------296---1--1-74----75-----63----32-7--6---752------8-974--------',
   [switch]$SketchMarks
 )
 
@@ -135,7 +182,6 @@ class SudokuGrid {
       }
       if ($FoundOne -eq $true) {break}
     }
-
     if ($FoundOne -eq $false) {
       $FoundOne = $false
       foreach ($Col in @(0..8)) {
@@ -151,7 +197,6 @@ class SudokuGrid {
         if ($FoundOne -eq $true) {break}
       }
     }
-
     if ($FoundOne -eq $false) {
       $FoundOne = $false
       foreach ($Blk in @(0..8)) {
@@ -176,6 +221,7 @@ class SudokuGrid {
       $RandomNakedCell.SetValue($RandomNakedCell.PosVal[0])
     }
   }
+
   [void]FindNakedPairs () {
     [bool]$FoundOne = $false
     foreach ($Row in @(0..8)) {
@@ -194,7 +240,6 @@ class SudokuGrid {
         }
       }
     }    
-
     [bool]$FoundOne = $false
     foreach ($Col in @(0..8)) {
       $ColCells = $this.Cells | Where-Object {$_.Solved -eq $false -and $_.Col -eq $Col}
@@ -212,7 +257,6 @@ class SudokuGrid {
         }
       }
     }     
-    
     [bool]$FoundOne = $false
     foreach ($Blk in @(0..8)) {
       $BlkCells = $this.Cells | Where-Object {$_.Solved -eq $false -and $_.Blk -eq $Blk}
@@ -249,7 +293,6 @@ class SudokuGrid {
         }  
       }
     }
-
     $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
     $Rows = 0..8
     $Vals = 1..9
@@ -285,8 +328,6 @@ class SudokuGrid {
         }
       }
     }
-
-    
     $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
     $Cols = 0..8  
     foreach ($Col in $Cols) {
@@ -303,7 +344,6 @@ class SudokuGrid {
         }
       }
     }
-
     $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
     $Blks = 0..8  
     foreach ($Blk in $Blks) {
@@ -349,7 +389,6 @@ class SudokuGrid {
         }
       }
     }
-
     foreach ($Col in (0..8)) {
       $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
       $UnsolvedCellsInCol = $UnsolvedCells | Where-Object {$_.Col -eq $Col}
