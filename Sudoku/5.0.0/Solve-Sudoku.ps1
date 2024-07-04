@@ -426,7 +426,12 @@ class SudokuGrid {
 function Show-Grid {
   Param ([SudokuGrid]$FnGrid)
   
-  Clear-Host
+  if ($Host.Name -eq 'ConsoleHost') {
+    [System.Console]::SetCursorPosition(0,0)
+  }
+  else {
+    Clear-Host
+  }  
   # Boundary box characters and color
   $V = [char]9475 ;    $H = [char]9473;    $C = [char]9547
   $LTC = [char]9487; $RTC = [char]9491;  $LBC = [char]9495; $RBC = [char]9499
@@ -456,7 +461,12 @@ function Show-SketchGrid {
     [switch]$NoClearScreen
   )
   
-  if ($NoClearScreen -eq $false) {Clear-Host}
+  if ($Host.Name -eq 'ConsoleHost') {
+    [System.Console]::SetCursorPosition(0,0)
+  }
+  else {
+    if ($NoClearScreen -eq $false) {Clear-Host}
+  }  
   # Boundary box characters and color
   $V = [char]9475 ;    $H = [char]9473;    $C = [char]9547
   $LTC = [char]9487; $RTC = [char]9491;  $LBC = [char]9495; $RBC = [char]9499
@@ -513,6 +523,8 @@ Write-Host -ForegroundColor $Color $LTC$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$H$
 
 # ###################################################################################################
 # Main Code
+Clear-Host
+$CurrentCursorPos = [System.Console]::GetCursorPosition()
 $CellArray =foreach ($PosInGrid in (0..80)) {
    [SudokuCell]::New($PosInGrid,$SudokuNumbers[$PosInGrid]) 
 } 
