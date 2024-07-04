@@ -323,8 +323,8 @@ class SudokuGrid {
   }
 
   [void]FindXWing () {
-    $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
     foreach ($Row in (0..8)) {
+      $UnsolvedCells = $this.Cells | Where-Object {$_.Solved -eq $false}
       $UnsolvedCellsInRow = $UnsolvedCells | Where-Object {$_.Row -eq $Row}
       if ($UnsolvedCellsInRow -lt 2) {continue}
       $AllPossibleValsInRow = $UnsolvedCellsInRow.PosVal
@@ -336,11 +336,14 @@ class SudokuGrid {
         $OtherRows = $UnsolvedCells | Where-Object {$_.Row -ne $LocatedPairCells[0].Row}
         foreach ($RowNumber in $OtherRows.Row) {
           $RowContainingPairedVal = $OtherRows | Where-Object {$_.PosVal -contains $PairedPossibleVal -and $_.Row -eq $RowNumber}
-          if ($RowContainingPairedVal.count -ne 2)  {continue}
-          $ValsOfOtherPairedVals = ($RowContainingPairedVal | Where-Object {$_.PosVal -contains $PairedPossibleVal}).PosVal
-          $ValsOfPossiblePairedVals = ($LocatedPairCells | Where-Object {$_.PosVal -contains $PairedPossibleVal}).PosVal
-          if ($ValsOfOtherPairedVals[0] -in $ValsOfPossiblePairedVals -and $ValsOfOtherPairedVals[1] -in $ValsOfPossiblePairedVals) {
-
+          $ColsOfLocatedCells = $LocatedPairCells.Col
+          $ColsOfOtherCells = $RowContainingPairedVal.Col
+          $TestSameCol = (Compare-Object $ColsOfLocatedCells $ColsOfOtherCells).Count -eq 0
+          if ($TestSameCol -eq $true) {
+            $CellsToStrip = $UnsolvedCells | Where-Object {$_.PosVal -contains $PairedPossibleVal -and $_.Col -in $ColsOfLocatedCells -and $_.Col -in $ColsOfOtherCells -and $_.Row -notin $LocatedPairCells.Row -and $_.Row -notin $RowContainingPairedVal.Row}
+            foreach ($Cell in $CellsToStrip) {
+              $_.RemoveFromPossible($PairedPossibleVal)
+            }
           }
         }
       }
