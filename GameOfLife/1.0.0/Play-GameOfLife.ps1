@@ -54,7 +54,7 @@ function Show-Grid {
   
   foreach ($Row in @(0..$MaxIndex)){
     foreach ($Col in @(0..$MaxIndex)) {
-      if ($FGrid[$Row,$Col].Value -eq '#') {$Color = 'Cyan'} else {$Color = 'White'}
+      if ($FGrid[$Row,$Col].Value -eq '#') {$Color = 'Cyan'} else {$Color = 'black'}
       Write-Host -ForegroundColor $Color -NoNewline $FGrid[$Row,$Col].Value
       Write-Host -NoNewline '  '
     }

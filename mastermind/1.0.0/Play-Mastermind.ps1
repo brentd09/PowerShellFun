@@ -23,7 +23,7 @@ do {
     if ($ChosenArray[$Index] -eq $SecretNumbers[$Index]) {$BlackPins++}
     elseif ($ChosenArray[$Index] -in $SecretNumbers) {$WhitePins++} 
   }
-  $Output += "$ChosenArray - B=$BlackPins W=$WhitePins"
+  $Output += "$ChosenArray - CorrectPositions=$BlackPins WrongPositions=$WhitePins"
   Clear-Host
   "MASTERMIND"
   "# # # # - Secret numbers"
